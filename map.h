@@ -11,6 +11,7 @@
 #include <time.h>
 #include <initializer_list>
 
+#define XXH_PRIVATE_API
 #include "array.h"
 #include "xxhash.h"
 
