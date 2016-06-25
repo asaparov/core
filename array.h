@@ -5,8 +5,8 @@
  *	  Author: asaparov
  */
 
-#ifndef BUFFER_H_
-#define BUFFER_H_
+#ifndef ARRAY_H_
+#define ARRAY_H_
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -859,7 +859,7 @@ inline void array_test(void)
 	array<char> buf(1);
 	buf.append("0123456789 ", 11);
 
-	buf[buf.length] = '\0';
+	buf[(unsigned int) buf.length] = '\0';
 	if (buf.length != 11)
 		fprintf(stderr, "array test ERROR: First array length test failed.\n");
 	if (buf.capacity != 16)
@@ -869,7 +869,7 @@ inline void array_test(void)
 
 	buf.append("abcdefghijklmnopqrstuvwxyz ", 27);
 
-	buf[buf.length] = '\0';
+	buf[(unsigned int) buf.length] = '\0';
 	if (buf.length != 11 + 27)
 		fprintf(stderr, "array test ERROR: Second array length test failed.\n");
 	if (buf.capacity != 64)
@@ -879,7 +879,7 @@ inline void array_test(void)
 
 	buf.append("9876543210 ", 11);
 
-	buf[buf.length] = '\0';
+	buf[(unsigned int) buf.length] = '\0';
 	if (buf.length != 11 + 27 + 11)
 		fprintf(stderr, "array test ERROR: Third array length test failed.\n");
 	if (buf.capacity != 64)
@@ -934,4 +934,4 @@ inline void array_test(void)
 
 } /* namespace core */
 
-#endif /* BUFFER_H_ */
+#endif /* ARRAY_H_ */
