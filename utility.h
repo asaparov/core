@@ -125,7 +125,7 @@ struct string {
 	}
 
 	static inline unsigned int hash(const string& key) {
-		return XXH32(key.data, key.length * sizeof(char), 0);
+		return default_hash(key.data, key.length);
 	}
 
 	static inline void move(const string& src, string& dst) {
