@@ -14,6 +14,7 @@
 #if defined(_WIN32)
 #include <windows.h>
 #include <intrin.h>
+#undef max
 #else
 #include <dirent.h>
 #include <sys/stat.h>

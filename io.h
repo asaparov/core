@@ -75,7 +75,7 @@ inline bool print(const uint32_t& value, FILE* out) {
 }
 
 inline bool print(const uint64_t& value, FILE* out) {
-	return (fprintf(out, "%lu", value) > 0);
+	return (fprintf(out, "%llu", value) > 0);
 }
 
 inline bool print(const float& value, FILE* out) {

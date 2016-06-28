@@ -47,6 +47,10 @@ inline void move(const unsigned long a, unsigned long& b) {
 	b = a;
 }
 
+inline void move(const unsigned long long a, unsigned long long& b) {
+	b = a;
+}
+
 inline void move(const short a, short& b) {
 	b = a;
 }
@@ -113,6 +117,12 @@ inline void swap(unsigned long& a, unsigned long& b) {
 	b = temp;
 }
 
+inline void swap(unsigned long long& a, unsigned long long& b) {
+	unsigned long long temp = a;
+	a = b;
+	b = temp;
+}
+
 inline void swap(short& a, short& b) {
 	short temp = a;
 	a = b;
@@ -166,6 +176,10 @@ inline constexpr long unsigned int size_of(long a) {
 }
 
 inline constexpr long unsigned int size_of(unsigned long a) {
+	return sizeof(a);
+}
+
+inline constexpr long unsigned int size_of(unsigned long long a) {
 	return sizeof(a);
 }
 
