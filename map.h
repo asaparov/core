@@ -9,6 +9,7 @@
 #define MAP_H_
 
 #include <time.h>
+#include <stdint.h>
 #include <initializer_list>
 
 #define XXH_PRIVATE_API
@@ -30,10 +31,28 @@ inline void set_all_empty(K* keys, unsigned int length) {
 	memset(keys, 0, sizeof(K) * length);
 }
 
+#if defined(__LP64__) || defined(_WIN64) || defined(__x86_64__) || defined(__ppc64__)
+template<typename K>
+inline uint_fast32_t default_hash(const K& key) {
+	return (uint_fast32_t) XXH64(&key, sizeof(K), XXHASH_SEED);
+}
+
+template<typename K>
+inline uint_fast32_t default_hash(const K* keys, unsigned int length) {
+	return (uint_fast32_t) XXH64(keys, sizeof(K) * length, XXHASH_SEED);
+}
+
+#else
 template<typename K>
 inline unsigned int default_hash(const K& key) {
 	return XXH32(&key, sizeof(K), XXHASH_SEED);
 }
+
+template<typename K>
+inline unsigned int default_hash(const K* keys, unsigned int length) {
+	return XXH32(keys, sizeof(K) * length, XXHASH_SEED);
+}
+#endif
 
 template<typename K>
 struct hasher {
