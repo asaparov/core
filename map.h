@@ -1299,7 +1299,7 @@ inline bool array_map_test(void)
 	map.put(4, "four");
 
 	if (map.size != 2) {
-		fprintf(stderr, "array_map_test ERROR: Map size is %llu after adding two elements.\n", map.size);
+		fprintf(stderr, "array_map_test ERROR: Map size is %zu after adding two elements.\n", map.size);
 		return false;
 	}
 	if (strcmp(map.get(-7), "negative seven")
@@ -1316,7 +1316,7 @@ inline bool array_map_test(void)
 	map.put(13, "thirteen");
 
 	if (map.size != 6) {
-		fprintf(stderr, "array_map_test ERROR: Map size is %llu after adding six elements.\n", map.size);
+		fprintf(stderr, "array_map_test ERROR: Map size is %zu after adding six elements.\n", map.size);
 		return false;
 	}
 	if (strcmp(map.get(4), "new four")
