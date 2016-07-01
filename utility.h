@@ -61,16 +61,6 @@ struct string {
 		return data[index];
 	}
 
-	template<typename Stream>
-	inline bool print(Stream* const out) const {
-		return fwrite(data, sizeof(char), length, out) == length;
-	}
-
-	template<typename Stream>
-	inline bool print(Stream& out) const {
-		return fwrite(data, sizeof(char), length, out) == length;
-	}
-
 	inline void operator = (const string& s) {
 		initialize(s.data, s.length);
 	}
@@ -196,6 +186,11 @@ inline bool read(string& s, FILE* in) {
 inline bool write(const string& s, FILE* out) {
 	if (!write(s.length, out)) return false;
 	return write(s.data, out, s.length);
+}
+
+template<typename Stream>
+inline bool print(const string& s, Stream& stream) {
+	return fwrite(s.data, sizeof(char), s.length, stream) == s.length;
 }
 
 inline bool operator == (const string& first, const string& second) {

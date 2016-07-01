@@ -301,8 +301,8 @@ inline bool print(const T& key, Stream& out, const dummy_scribe& scribe) {
 	return print(key, out);
 }
 
-template<typename T, char LeftBracket = '[', char RightBracket = ']', typename Stream, typename Printer>
-bool print(const T* values, unsigned int length, Stream& out, Printer& printer) {
+template<typename T, char LeftBracket = '[', char RightBracket = ']', typename SizeType, typename Stream, typename Printer>
+bool print(const T* values, SizeType length, Stream& out, Printer& printer) {
 	if (!print(LeftBracket, out)) return false;
 	if (length == 0)
 		return print(RightBracket, out);
