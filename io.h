@@ -18,12 +18,16 @@
 
 using namespace core;
 
-inline bool read(uint32_t& value, FILE* in) {
-	return (fread(&value, sizeof(uint32_t), 1, in) == 1);
+inline bool read(unsigned int& value, FILE* in) {
+	return (fread(&value, sizeof(unsigned int), 1, in) == 1);
 }
 
-inline bool read(uint64_t& value, FILE* in) {
-	return (fread(&value, sizeof(uint64_t), 1, in) == 1);
+inline bool read(unsigned long& value, FILE* in) {
+	return (fread(&value, sizeof(unsigned long), 1, in) == 1);
+}
+
+inline bool read(unsigned long long& value, FILE* in) {
+	return (fread(&value, sizeof(unsigned long long), 1, in) == 1);
 }
 
 inline bool read(double& value, FILE* in) {
@@ -42,12 +46,16 @@ inline bool read(char* values, FILE* in, unsigned int length) {
 	return (fread(values, sizeof(char), length, in) == length);
 }
 
-inline bool write(const uint32_t& value, FILE* out) {
-	return (fwrite(&value, sizeof(uint32_t), 1, out) == 1);
+inline bool write(const unsigned int& value, FILE* out) {
+	return (fwrite(&value, sizeof(unsigned int), 1, out) == 1);
 }
 
-inline bool write(const uint64_t& value, FILE* out) {
-	return (fwrite(&value, sizeof(uint64_t), 1, out) == 1);
+inline bool write(const unsigned long& value, FILE* out) {
+	return (fwrite(&value, sizeof(unsigned long), 1, out) == 1);
+}
+
+inline bool write(const unsigned long long& value, FILE* out) {
+	return (fwrite(&value, sizeof(unsigned long long), 1, out) == 1);
 }
 
 inline bool write(const double& value, FILE* out) {
@@ -70,16 +78,20 @@ inline bool print(const char& value, FILE* out) {
 	return (fputc(value, out) != EOF);
 }
 
-inline bool print(const uint32_t& value, FILE* out) {
+inline bool print(const unsigned int& value, FILE* out) {
 	return (fprintf(out, "%u", value) > 0);
 }
 
-inline bool print(const uint64_t& value, FILE* out) {
+inline bool print(const unsigned long& value, FILE* out) {
 	return (fprintf(out, "%lu", value) > 0);
 }
 
+inline bool print(const unsigned long long& value, FILE* out) {
+	return (fprintf(out, "%llu", value) > 0);
+}
+
 inline bool print(const float& value, FILE* out) {
-	return (fprintf(out, "%f", value) > 0);
+	return (fprintf(out, "%f", (double) value) > 0);
 }
 
 inline bool print(const double& value, FILE* out) {
