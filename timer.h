@@ -27,13 +27,13 @@ struct timer
 #endif
 	}
 
-	inline uint64_t milliseconds() {
+	inline unsigned long long milliseconds() {
 #if defined(_WIN32)
 		end_time = GetTickCount64();
-		return (uint64_t) (end_time - start_time);
+		return (unsigned long long) (end_time - start_time);
 #else
 		clock_gettime(CLOCK_REALTIME, &end_time);
-		return (uint64_t) (end_time.tv_sec - start_time.tv_sec) * 1000 + (end_time.tv_nsec - start_time.tv_nsec) / 1000000;
+		return (unsigned long long) (end_time.tv_sec - start_time.tv_sec) * 1000 + (end_time.tv_nsec - start_time.tv_nsec) / 1000000;
 #endif
 	}
 
@@ -48,13 +48,13 @@ struct timer
 	}
 };
 
-inline uint64_t milliseconds() {
+inline unsigned long long milliseconds() {
 #if defined(_WIN32)
 	return GetTickCount64();
 #else
 	timespec time;
 	clock_gettime(CLOCK_REALTIME, &time);
-	return (uint64_t) time.tv_sec * 1000 + time.tv_nsec / 1000000;
+	return (unsigned long long) time.tv_sec * 1000 + time.tv_nsec / 1000000;
 #endif
 }
 
