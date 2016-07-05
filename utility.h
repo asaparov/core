@@ -193,12 +193,34 @@ inline bool print(const string& s, Stream& stream) {
 	return fwrite(s.data, sizeof(char), s.length, stream) == s.length;
 }
 
+inline bool operator == (const string& first, const char* second) {
+	for (unsigned int i = 0; i < first.length; i++) {
+		if (first[i] != second[i])
+			return false;
+	}
+	if (second[first.length] != '\0')
+		return false;
+	return true;
+}
+
+inline bool operator == (const char* first, const string& second) {
+	return (second == first);
+}
+
 inline bool operator == (const string& first, const string& second) {
 	if (first.length != second.length) return false;
 	/* we are guaranteed that only the first may be uninitialized */
 	if (first.data == NULL)
 		return false;
 	return memcmp(first.data, second.data, first.length * sizeof(char)) == 0;
+}
+
+inline bool operator != (const string& first, const char* second) {
+	return !(first == second);
+}
+
+inline bool operator != (const char* first, const string& second) {
+	return !(second == first);
 }
 
 inline bool operator != (const string& first, const string& second) {

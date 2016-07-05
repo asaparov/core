@@ -21,16 +21,6 @@ inline bool compare_strings(const array<char>& first, const char* second) {
 	return true;
 }
 
-inline bool compare_strings(const string& first, const char* second) {
-	for (unsigned int i = 0; i < first.length; i++) {
-		if (first[i] != second[i])
-			return false;
-	}
-	if (second[first.length] != '\0')
-		return false;
-	return true;
-}
-
 inline bool compare_strings(const string& first, const char* second, unsigned int second_length) {
 	if (first.length != second_length)
 		return false;
