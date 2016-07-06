@@ -107,7 +107,7 @@ struct array {
 		for (unsigned int i = 0; i < length; i++)
 			if (data[i] == element)
 				return i;
-		return length;
+		return (unsigned int) length;
 	}
 
 	T& first()
@@ -228,7 +228,7 @@ inline void swap(array<T>& a, array<T>& b)
 	a.data = b.data;
 	b.data = temp;
 
-	unsigned int swap = a.length;
+	size_t swap = a.length;
 	a.length = b.length;
 	b.length = swap;
 
