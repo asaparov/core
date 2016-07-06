@@ -26,6 +26,17 @@ typedef void*(alloc_keys_func)(size_t, size_t);
 
 namespace core {
 
+/* forward declarations */
+
+template<typename T>
+struct hash_set;
+
+template<typename K, typename V>
+struct hash_map;
+
+template<typename K, typename V>
+struct array_map;
+
 template<typename K>
 inline void set_all_empty(K* keys, unsigned int length) {
 	memset(keys, 0, sizeof(K) * length);
@@ -311,6 +322,87 @@ inline constexpr key_value_metric<dummy_metric, dummy_metric> make_key_value_met
 	return make_key_value_metric(dummy_metric(), dummy_metric());
 }
 
+
+/**
+ * STL-style iterator implementations (useful for range-based for loops).
+ */
+
+template<typename T, bool IsConst>
+struct hash_set_iterator {
+	typedef typename std::conditional<IsConst, const hash_set<T>&, hash_set<T>&>::type container_type;
+	typedef typename std::conditional<IsConst, const T&, T&>::type value_type;
+
+	container_type set;
+	unsigned int position;
+
+	hash_set_iterator(container_type& set, unsigned int position) : set(set), position(position) { }
+
+	inline bool operator != (const hash_set_iterator<T, IsConst>& other) const {
+		return position != other.position;
+	}
+
+	inline value_type operator * () {
+		return set.keys[position];
+	}
+
+	inline const hash_set_iterator<T, IsConst>& operator ++ () {
+		do {
+			++position;
+		} while (position < set.capacity && hasher<T>::is_empty(set.keys[position]));
+		return *this;
+	}
+};
+
+template<typename K, typename V, bool IsConst>
+struct hash_map_iterator {
+	typedef typename std::conditional<IsConst, const hash_map<K, V>&, hash_map<K, V>&>::type container_type;
+	typedef typename std::conditional<IsConst, pair<const K&, const V&>, pair<K&, V&>>::type value_type;
+
+	container_type map;
+	unsigned int position;
+
+	hash_map_iterator(container_type& map, unsigned int position) : map(map), position(position) { }
+
+	inline bool operator != (const hash_map_iterator<K, V, IsConst>& other) const {
+		return position != other.position;
+	}
+
+	inline value_type operator * () {
+		return { map.table.keys[position], map.values[position] };
+	}
+
+	inline const hash_map_iterator<K, V, IsConst>& operator ++ () {
+		do {
+			++position;
+		} while (position < map.table.capacity && hasher<K>::is_empty(map.table.keys[position]));
+		return *this;
+	}
+};
+
+template<typename K, typename V, bool IsConst>
+struct array_map_iterator {
+	typedef typename std::conditional<IsConst, const array_map<K, V>&, array_map<K, V>&>::type container_type;
+	typedef typename std::conditional<IsConst, pair<const K&, const V&>, pair<K&, V&>>::type value_type;
+
+	container_type map;
+	unsigned int position;
+
+	array_map_iterator(container_type map, unsigned int position) : map(map), position(position) { }
+
+	inline bool operator != (const array_map_iterator<K, V, IsConst>& other) const {
+		return position != other.position;
+	}
+
+	inline value_type operator * () {
+		return{ map.keys[position], map.values[position] };
+	}
+
+	inline const array_map_iterator<K, V, IsConst>& operator ++ () {
+		++position;
+		return *this;
+	}
+};
+
 /**
  * Returns true only if probe > start and probe <= end
  * where probe, start, and end are in the group of
@@ -572,6 +664,22 @@ struct hash_set
 		return is_subset(other);
 	}
 
+	inline hash_set_iterator<T, false> begin() {
+		return hash_set_iterator<T, false>(*this, 0);
+	}
+
+	inline hash_set_iterator<T, false> end() {
+		return hash_set_iterator<T, false>(*this, capacity);
+	}
+
+	inline hash_set_iterator<T, true> begin() const {
+		return hash_set_iterator<T, true>(*this, 0);
+	}
+
+	inline hash_set_iterator<T, true> end() const {
+		return hash_set_iterator<T, true>(*this, capacity);
+	}
+
 	static void swap(hash_set<T>& first, hash_set<T>& second) {
 		core::swap(first.keys, second.keys);
 		core::swap(first.capacity, second.capacity);
@@ -754,6 +862,9 @@ void swap(hash_set<T>& first, hash_set<T>& second) {
 template<typename K, typename V>
 struct hash_map
 {
+	typedef K key_type;
+	typedef V value_type;
+
 	hash_set<K> table;
 	V* values;
 
@@ -920,6 +1031,22 @@ struct hash_map
 		table.clear();
 	}
 
+	inline hash_map_iterator<K, V, false> begin() {
+		return hash_map_iterator<K, V, false>(*this, 0);
+	}
+
+	inline hash_map_iterator<K, V, false> end() {
+		return hash_map_iterator<K, V, false>(*this, table.capacity);
+	}
+
+	inline hash_map_iterator<K, V, true> begin() const {
+		return hash_map_iterator<K, V, true>(*this, 0);
+	}
+
+	inline hash_map_iterator<K, V, true> end() const {
+		return hash_map_iterator<K, V, true>(*this, table.capacity);
+	}
+
 	static inline void swap(hash_map<K, V>& first, hash_map<K, V>& second) {
 		hash_set<K>::swap(first.table, second.table);
 		core::swap(first.values, second.values);
@@ -1037,6 +1164,9 @@ void swap(hash_map<K, V>& first, hash_map<K, V>& second) {
 
 template<typename K, typename V>
 struct array_map {
+	typedef K key_type;
+	typedef V value_type;
+
 	K* keys;
 	V* values;
 	size_t capacity;
@@ -1141,6 +1271,22 @@ struct array_map {
 		size = 0;
 	}
 
+	inline array_map_iterator<K, V, false> begin() {
+		return array_map_iterator<K, V, false>(*this, 0);
+	}
+
+	inline array_map_iterator<K, V, false> end() {
+		return array_map_iterator<K, V, false>(*this, size);
+	}
+
+	inline array_map_iterator<K, V, true> begin() const {
+		return array_map_iterator<K, V, true>(*this, 0);
+	}
+
+	inline array_map_iterator<K, V, true> end() const {
+		return array_map_iterator<K, V, true>(*this, size);
+	}
+
 	static inline void swap(array_map<K, V>& first, array_map<K, V>& second) {
 		core::swap(first.keys, second.keys);
 		core::swap(first.values, second.values);
@@ -1207,6 +1353,37 @@ bool array_map_init(array_map<K, V>& map, unsigned int initial_capacity) {
 template<typename K, typename V>
 inline void array_map_free(array_map<K, V>& map) {
 	map.free();
+}
+
+template<typename T>
+inline unsigned int size(const hash_set<T>& set) {
+	return set.size;
+}
+
+template<typename K, typename V>
+inline unsigned int size(const hash_map<K, V>& map) {
+	return map.table.size;
+}
+
+template<typename K, typename V>
+inline unsigned int size(const array_map<K, V>& map) {
+	return map.size;
+}
+
+template<typename MapType>
+inline typename const MapType::key_type** invert(const MapType& map) {
+	const MapType::key_type** inverse = (const MapType::key_type**) calloc(size(map) + 1, sizeof(MapType::key_type*));
+	if (inverse == NULL) {
+		fprintf(stderr, "invert ERROR: Unable to invert map. Out of memory.\n");
+		return NULL;
+	}
+	for (const auto& entry : map)
+		inverse[entry.value] = &entry.key;
+	/*for (auto i = map.begin(); i != map.end(); i++) {
+		pair<MapType::key_type&, unsigned int&> entry = *i;
+		inverse[entry.value] = &entry.key;
+	}*/
+	return inverse;
 }
 
 inline bool hash_map_test(void)

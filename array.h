@@ -145,6 +145,22 @@ struct array {
 		return data[length];
 	}
 
+	inline T* begin() {
+		return data;
+	}
+
+	inline T* end() {
+		return data + length;
+	}
+
+	inline const T* begin() const {
+		return data;
+	}
+
+	inline const T* end() const {
+		return data + length;
+	}
+
 	static inline void move(const array<T>& src, array<T>& dst) {
 		dst.length = src.length;
 		dst.capacity = src.capacity;
