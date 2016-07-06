@@ -665,7 +665,7 @@ struct hash_set
 	}
 
 	inline hash_set_iterator<T, false> begin() {
-		return hash_set_iterator<T, false>(*this, 0);
+		return hash_set_iterator<T, false>(*this, first_empty());
 	}
 
 	inline hash_set_iterator<T, false> end() {
@@ -673,7 +673,7 @@ struct hash_set
 	}
 
 	inline hash_set_iterator<T, true> begin() const {
-		return hash_set_iterator<T, true>(*this, 0);
+		return hash_set_iterator<T, true>(*this, first_empty());
 	}
 
 	inline hash_set_iterator<T, true> end() const {
@@ -748,6 +748,13 @@ private:
 	inline void insert_unique(const T& element)
 	{
 		place(element, next_empty(element));
+	}
+
+	inline unsigned int first_empty() const {
+		unsigned int index = 0;
+		while (index < capacity && hasher<T>::is_empty(keys[index]))
+			index++;
+		return index;
 	}
 
 	inline unsigned int next_empty(const T& element)
@@ -1032,7 +1039,7 @@ struct hash_map
 	}
 
 	inline hash_map_iterator<K, V, false> begin() {
-		return hash_map_iterator<K, V, false>(*this, 0);
+		return hash_map_iterator<K, V, false>(*this, table.first_empty());
 	}
 
 	inline hash_map_iterator<K, V, false> end() {
@@ -1040,7 +1047,7 @@ struct hash_map
 	}
 
 	inline hash_map_iterator<K, V, true> begin() const {
-		return hash_map_iterator<K, V, true>(*this, 0);
+		return hash_map_iterator<K, V, true>(*this, table.first_empty());
 	}
 
 	inline hash_map_iterator<K, V, true> end() const {
@@ -1371,18 +1378,15 @@ inline unsigned int size(const array_map<K, V>& map) {
 }
 
 template<typename MapType>
-inline typename const MapType::key_type** invert(const MapType& map) {
-	const MapType::key_type** inverse = (const MapType::key_type**) calloc(size(map) + 1, sizeof(MapType::key_type*));
+inline const typename MapType::key_type** invert(const MapType& map) {
+	const typename MapType::key_type** inverse =
+			(const typename MapType::key_type**) calloc(size(map) + 1, sizeof(typename MapType::key_type*));
 	if (inverse == NULL) {
 		fprintf(stderr, "invert ERROR: Unable to invert map. Out of memory.\n");
 		return NULL;
 	}
 	for (const auto& entry : map)
 		inverse[entry.value] = &entry.key;
-	/*for (auto i = map.begin(); i != map.end(); i++) {
-		pair<MapType::key_type&, unsigned int&> entry = *i;
-		inverse[entry.value] = &entry.key;
-	}*/
 	return inverse;
 }
 
