@@ -385,9 +385,9 @@ struct array_map_iterator {
 	typedef typename std::conditional<IsConst, pair<const K&, const V&>, pair<K&, V&>>::type value_type;
 
 	container_type map;
-	unsigned int position;
+	size_t position;
 
-	array_map_iterator(container_type map, unsigned int position) : map(map), position(position) { }
+	array_map_iterator(container_type map, size_t position) : map(map), position(position) { }
 
 	inline bool operator != (const array_map_iterator<K, V, IsConst>& other) const {
 		return position != other.position;
@@ -526,10 +526,10 @@ struct hash_set
 		unsigned int hash_value = hasher<T>::hash(element) % capacity;
 		unsigned int index = hash_value;
 		while (true) {
-			if (hasher<T>::is_empty(keys[index])) {
-				return false;
-			} if (keys[index] == element)
+			if (keys[index] == element) {
 				break;
+			} else if (hasher<T>::is_empty(keys[index]))
+				return false;
 			index = (index + 1) % capacity;
 		}
 
@@ -548,10 +548,10 @@ struct hash_set
 		unsigned int hash_value = hasher<T>::hash(element) % capacity;
 		unsigned int index = hash_value;
 		while (true) {
-			if (hasher<T>::is_empty(keys[index])) {
-				return false;
-			} if (keys[index] == element)
+			if (keys[index] == element) {
 				break;
+			} else if (hasher<T>::is_empty(keys[index]))
+				return false;
 			index = (index + 1) % capacity;
 		}
 
@@ -664,6 +664,10 @@ struct hash_set
 		return is_subset(other);
 	}
 
+	/* NOTE: Unlike the libstdc++ unordered_set and unordered_map
+	   iterators, we do not keep a linked list among the elements,
+	   so if rapid iteration over elements is more critical than
+	   rapid queries, consider using an array_map. */
 	inline hash_set_iterator<T, false> begin() {
 		return hash_set_iterator<T, false>(*this, first_empty());
 	}
@@ -1038,6 +1042,10 @@ struct hash_map
 		table.clear();
 	}
 
+	/* NOTE: Unlike the libstdc++ unordered_set and unordered_map
+	   iterators, we do not keep a linked list among the elements,
+	   so if rapid iteration over elements is more critical than
+	   rapid queries, consider using an array_map. */
 	inline hash_map_iterator<K, V, false> begin() {
 		return hash_map_iterator<K, V, false>(*this, table.first_empty());
 	}
@@ -1229,7 +1237,7 @@ struct array_map {
 		for (unsigned int i = start; i < size; i++)
 			if (keys[i] == key)
 				return i;
-		return size;
+		return (unsigned int) size;
 	}
 
 	inline bool contains(const K& key) const {

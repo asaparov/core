@@ -18,6 +18,16 @@ inline constexpr size_t array_length(T (&array)[N]) {
 }
 
 template<typename T>
+inline T min(const T& first, const T& second) {
+	return (first < second) ? first : second;
+}
+
+template<typename T>
+inline T max(const T& first, const T& second) {
+	return (first < second) ? second : first;
+}
+
+template<typename T>
 inline void move(const T& src, T& dst) {
 	T::move(src, dst);
 }
@@ -244,6 +254,15 @@ inline long unsigned int size_of(const T& a, const dummy_metric& metric) {
 template<typename T, typename Metric>
 inline long unsigned int size_of(const T& a, const Metric& metric) {
 	return T::size_of(a, metric);
+}
+
+template<typename T,
+	typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
+inline void free(T& a) { }
+
+template<typename T>
+inline void free(T* a) {
+	::free(a);
 }
 
 } /* namespace core */

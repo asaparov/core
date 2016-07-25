@@ -218,6 +218,11 @@ void array_free(array<T>& m) {
 	m.free();
 }
 
+template<typename T>
+inline size_t size(const array<T>& m) {
+	return m.length;
+}
+
 /**
  * Swaps the underlying buffers of the given arrays.
  */
@@ -282,7 +287,7 @@ void insertion_sort(T* keys, unsigned int count)
 }
 
 template<typename T, typename Sorter,
-	typename std::enable_if<!std::is_integral<Sorter>::value, Sorter>::type* = nullptr>
+	typename std::enable_if<!std::is_integral<Sorter>::value>::type* = nullptr>
 void insertion_sort(T* keys, unsigned int count, const Sorter& sorter)
 {
 	T& item = *((T*) malloc(sizeof(T)));
@@ -320,7 +325,7 @@ void insertion_sort(K* keys, V* values, unsigned int count)
 }
 
 template<typename K, typename V, typename Sorter,
-	typename std::enable_if<!std::is_integral<Sorter>::value, Sorter>::type* = nullptr>
+	typename std::enable_if<!std::is_integral<Sorter>::value>::type* = nullptr>
 void insertion_sort(K* keys, V* values, unsigned int count, const Sorter& sorter)
 {
 	K& item = *((K*) malloc(sizeof(K)));
@@ -348,7 +353,7 @@ inline void insertion_sort(array<T>& keys) {
 }
 
 template<typename T, typename Sorter,
-	typename std::enable_if<!std::is_integral<Sorter>::value, Sorter>::type* = nullptr>
+	typename std::enable_if<!std::is_integral<Sorter>::value>::type* = nullptr>
 inline void insertion_sort(array<T>& keys, const Sorter& sorter)
 {
 	insertion_sort(keys.data, (unsigned int) keys.length, sorter);
@@ -360,7 +365,7 @@ inline void insertion_sort(array<K>& keys, array<V>& values) {
 }
 
 template<typename K, typename V, typename Sorter,
-	typename std::enable_if<!std::is_integral<Sorter>::value, Sorter>::type* = nullptr>
+	typename std::enable_if<!std::is_integral<Sorter>::value>::type* = nullptr>
 inline void insertion_sort(array<K>& keys, array<V>& values, const Sorter& sorter)
 {
 	insertion_sort(keys.data, values.data, (unsigned int) keys.length, sorter);
@@ -405,7 +410,7 @@ inline void quick_sort_partition(T* array,
 }
 
 template<typename T, typename Sorter,
-	typename std::enable_if<!std::is_integral<Sorter>::value, Sorter>::type* = nullptr>
+	typename std::enable_if<!std::is_integral<Sorter>::value>::type* = nullptr>
 inline void quick_sort_partition(
 		T* array, unsigned int start, unsigned int end,
 		unsigned int& l, unsigned int& r, const Sorter& sorter)
@@ -448,7 +453,7 @@ inline void quick_sort_partition(K* keys, V* values,
 }
 
 template<typename K, typename V, typename Sorter,
-	typename std::enable_if<!std::is_integral<Sorter>::value, Sorter>::type* = nullptr>
+	typename std::enable_if<!std::is_integral<Sorter>::value>::type* = nullptr>
 inline void quick_sort_partition(
 		K* keys, V* values, unsigned int start, unsigned int end,
 		unsigned int& l, unsigned int& r, const Sorter& sorter)
@@ -483,7 +488,7 @@ void quick_sort(T* array, unsigned int start, unsigned int end)
 }
 
 template<typename T, typename Sorter,
-	typename std::enable_if<!std::is_integral<Sorter>::value, Sorter>::type* = nullptr>
+	typename std::enable_if<!std::is_integral<Sorter>::value>::type* = nullptr>
 void quick_sort(T* array, unsigned int start, unsigned int end, const Sorter& sorter)
 {
 	if (start >= end)
@@ -506,7 +511,7 @@ void quick_sort(K* keys, V* values, unsigned int start, unsigned int end)
 }
 
 template<typename K, typename V, typename Sorter,
-	typename std::enable_if<!std::is_integral<Sorter>::value, Sorter>::type* = nullptr>
+	typename std::enable_if<!std::is_integral<Sorter>::value>::type* = nullptr>
 void quick_sort(K* keys, V* values,
 		unsigned int start, unsigned int end, const Sorter& sorter)
 {
@@ -530,7 +535,7 @@ inline void quick_sort(T* keys, unsigned int length) {
 }
 
 template<typename T, typename Sorter,
-	typename std::enable_if<!std::is_integral<Sorter>::value, Sorter>::type* = nullptr>
+	typename std::enable_if<!std::is_integral<Sorter>::value>::type* = nullptr>
 inline void quick_sort(T* keys, unsigned int length, const Sorter& sorter)
 {
 #if !defined(NDEBUG)
@@ -554,7 +559,7 @@ inline void quick_sort(K* keys, V* values, unsigned int length) {
 }
 
 template<typename K, typename V, typename Sorter,
-	typename std::enable_if<!std::is_integral<Sorter>::value, Sorter>::type* = nullptr>
+	typename std::enable_if<!std::is_integral<Sorter>::value>::type* = nullptr>
 inline void quick_sort(K* keys, V* values, unsigned int length, const Sorter& sorter)
 {
 #if !defined(NDEBUG)
@@ -578,7 +583,7 @@ inline void quick_sort(array<T>& keys) {
 }
 
 template<typename T, typename Sorter,
-	typename std::enable_if<!std::is_integral<Sorter>::value, Sorter>::type* = nullptr>
+	typename std::enable_if<!std::is_integral<Sorter>::value>::type* = nullptr>
 inline void quick_sort(array<T>& keys, const Sorter& sorter)
 {
 #if !defined(NDEBUG)
@@ -602,7 +607,7 @@ inline void quick_sort(array<K>& keys, array<V>& values) {
 }
 
 template<typename K, typename V, typename Sorter,
-	typename std::enable_if<!std::is_integral<Sorter>::value, Sorter>::type* = nullptr>
+	typename std::enable_if<!std::is_integral<Sorter>::value>::type* = nullptr>
 inline void quick_sort(array<K>& keys, array<V>& values, const Sorter& sorter)
 {
 #if !defined(NDEBUG)
@@ -635,7 +640,7 @@ void sort(T* array, unsigned int start, unsigned int end)
 }
 
 template<typename T, typename Sorter,
-	typename std::enable_if<!std::is_integral<Sorter>::value, Sorter>::type* = nullptr>
+	typename std::enable_if<!std::is_integral<Sorter>::value>::type* = nullptr>
 void sort(T* array, unsigned int start, unsigned int end, const Sorter& sorter)
 {
 	if (start >= end)
@@ -666,7 +671,7 @@ void sort(K* keys, V* values, unsigned int start, unsigned int end)
 }
 
 template<typename K, typename V, typename Sorter,
-	typename std::enable_if<!std::is_integral<Sorter>::value, Sorter>::type* = nullptr>
+	typename std::enable_if<!std::is_integral<Sorter>::value>::type* = nullptr>
 void sort(K* keys, V* values, unsigned int start, unsigned int end, const Sorter& sorter)
 {
 	if (start >= end)
@@ -693,7 +698,7 @@ inline void sort(T* keys, unsigned int length) {
 }
 
 template<typename T, typename Sorter,
-	typename std::enable_if<!std::is_integral<Sorter>::value, Sorter>::type* = nullptr>
+	typename std::enable_if<!std::is_integral<Sorter>::value>::type* = nullptr>
 inline void sort(T* keys, unsigned int length, const Sorter& sorter)
 {
 #if !defined(NDEBUG)
@@ -717,7 +722,7 @@ inline void sort(K* keys, V* values, unsigned int length) {
 }
 
 template<typename K, typename V, typename Sorter,
-	typename std::enable_if<!std::is_integral<Sorter>::value, Sorter>::type* = nullptr>
+	typename std::enable_if<!std::is_integral<Sorter>::value>::type* = nullptr>
 inline void sort(K* keys, V* values, unsigned int length, const Sorter& sorter)
 {
 #if !defined(NDEBUG)
@@ -741,7 +746,7 @@ inline void sort(array<T>& keys) {
 }
 
 template<typename T, typename Sorter,
-	typename std::enable_if<!std::is_integral<Sorter>::value, Sorter>::type* = nullptr>
+	typename std::enable_if<!std::is_integral<Sorter>::value>::type* = nullptr>
 inline void sort(array<T>& keys, const Sorter& sorter)
 {
 #if !defined(NDEBUG)
@@ -765,7 +770,7 @@ inline void sort(array<K>& keys, array<V>& values) {
 }
 
 template<typename K, typename V, typename Sorter,
-	typename std::enable_if<!std::is_integral<Sorter>::value, Sorter>::type* = nullptr>
+	typename std::enable_if<!std::is_integral<Sorter>::value>::type* = nullptr>
 inline void sort(array<K>& keys, array<V>& values, const Sorter& sorter)
 {
 #if !defined(NDEBUG)
@@ -836,6 +841,34 @@ void shuffle(K* keys, V* values, unsigned int length) {
 	}
 }
 
+/**
+ * Given sorted array a, this function finds
+ * the smallest index i such that a[i] >= b.
+ */
+template<typename T>
+unsigned int binary_search(
+	const T* a, const T& b,
+	unsigned int min,
+	unsigned int max)
+{
+	if (a[max] < b)
+		return max + 1;
+
+	while (min < max) {
+		unsigned int mid = (max + min) / 2;
+		if (a[mid] < b)
+			min = mid + 1;
+		else max = mid;
+	}
+
+	return min;
+}
+
+
+/**
+ * A simple pair data structure.
+ */
+
 template<typename K, typename V>
 struct pair {
 	K key;
@@ -868,6 +901,310 @@ template<typename K, typename V>
 inline void swap(pair<K, V>& first, pair<K, V>& second) {
 	swap(first.key, second.key);
 	swap(first.value, second.value);
+}
+
+
+/**
+ * Functions for performing set operations with sorted arrays.
+ * These functions assume the input arrays are sorted and
+ * their elements are *distinct*.
+ *
+ * TODO: Extend these functions to non copy-assignable types.
+ */
+
+template<typename T>
+void shift_right(T* list, unsigned int length, unsigned int index)
+{
+	for (unsigned int i = length; i > index; i--)
+		move(list[i - 1], list[i]);
+}
+
+template<typename T>
+unsigned int shift_right(const T& element, T* list, unsigned int length)
+{
+	unsigned int i;
+	for (i = length; i > 0 && element < list[i - 1]; i--)
+		move(list[i - 1], list[i]);
+	return i;
+}
+
+template<typename T>
+bool set_union(array<T>& dst,
+	const T* first, unsigned int first_length,
+	const T* second, unsigned int second_length)
+{
+	if (!dst.ensure_capacity(dst.length + first_length + second_length))
+		return false;
+
+	unsigned int i = 0, j = 0;
+	while (i < first_length && j < second_length)
+	{
+		if (first[i] == second[j]) {
+			dst[(unsigned int) dst.length] = first[i];
+			dst.length++;
+			i++; j++;
+		} else if (first[i] < second[j]) {
+			dst[(unsigned int) dst.length] = first[i];
+			dst.length++;
+			i++;
+		} else {
+			dst[(unsigned int) dst.length] = second[j];
+			dst.length++;
+			j++;
+		}
+	}
+
+	if (i < first_length) {
+		memcpy(dst.data + dst.length, first + i, sizeof(T) * (first_length - i));
+		dst.length += first_length - i;
+	} else if (j < second_length) {
+		memcpy(dst.data + dst.length, second + j, sizeof(T) * (second_length - j));
+		dst.length += second_length - j;
+	}
+	return true;
+}
+
+template<typename T>
+inline bool set_union(array<T>& dst, const array<T>& first, const array<T>& second) {
+	return set_union(dst,
+		first.data, (unsigned int) first.length,
+		second.data, (unsigned int) second.length);
+}
+
+template<typename T>
+struct array_position {
+	unsigned int array_id;
+	unsigned int position;
+	T* element;
+};
+
+/* NOTE: this function assumes the given arrays are all non-empty */
+template<typename T, typename ArraySetCollection>
+bool set_union(array<T>& dst, const ArraySetCollection& arrays, unsigned int array_count)
+{
+	/* first ensure the destination array has enough space */
+	unsigned int total_size = dst.length;
+	for (unsigned int i = 0; i < array_count; i++) {
+#if !defined(NDEBUG)
+		if (size(arrays[i]) == 0)
+			fprintf(stderr, "set_union WARNING: Input array %u is empty.\n", i);
+#endif
+		total_size += size(arrays[i]);
+	}
+	if (!dst.ensure_capacity(total_size))
+		return false;
+
+	/* TODO: we can probably use a faster heap structure */
+	array_position<T>* heap = (array_position<T>*) malloc(array_count * sizeof(array_position<T>));
+	if (heap == NULL) {
+		fprintf(stderr, "set_union ERROR: Out of memory.\n");
+		return false;
+	}
+	for (unsigned int i = 0; i < array_count; i++)
+		heap[i] = { i, 0, &arrays[i][0] };
+	std::make_heap(heap, heap + array_count);
+
+	/* add the first item to the destination set */
+	unsigned int heap_size = array_count;
+	std::pop_heap(heap, heap + heap_size);
+	const array_position<T>& first = heap[heap_size];
+	dst.data[dst.length] = first.key;
+	dst.length++;
+	if (size(arrays[first.value]) > 1) {
+		heap[heap_size] = { first.array_id, 1, &arrays[first.array_id][1] };
+		std::push_heap(heap, heap + heap_size);
+	} else { heap_size--; }
+
+	while (heap_size > 0)
+	{
+		std::pop_heap(heap, heap + heap_size);
+		const array_position<T>& next = heap[heap_size];
+		if (next.key != dst.last()) {
+			dst.data[dst.length] = next.key;
+			dst.length++;
+		}
+		if (next.value + 1 < size(arrays[next.value])) {
+			heap[heap_size] = { next.array_id, next.position + 1, arrays[next.array_id][next.position + 1] };
+			std::push_heap(heap, heap + heap_size);
+		} else { heap_size--; }
+	}
+	free(heap);
+	return true;
+}
+
+template<typename T, bool BinarySearch = false>
+bool set_intersect(
+	array<T>& intersection,
+	const T* first, unsigned int first_length,
+	const T* second, unsigned int second_length)
+{
+	if (!intersection.ensure_capacity(intersection.length + max(first_length, second_length)))
+		return false;
+
+	unsigned int i = 0, j = 0;
+	while (i < first_length && j < second_length)
+	{
+		if (first[i] == second[j]) {
+			intersection[(unsigned int) intersection.length] = first[i];
+			intersection.length++;
+			i++; j++;
+		} else if (first[i] < second[j]) {
+			if (BinarySearch) {
+				/* use binary search to find the value of i
+				   such that first.data[i] >= second.data[j] */
+				i = binary_search(first, second[j], i, first_length - 1);
+			} else {
+				i++;
+			}
+		} else {
+			if (BinarySearch) {
+				/* use binary search to find the value of j
+				   such that second.data[j] >= first.data[i] */
+				j = binary_search(second, first[i], j, second_length - 1);
+			} else {
+				j++;
+			}
+		}
+	}
+	return true;
+}
+
+template<typename T, bool BinarySearch = false>
+inline bool set_intersect(
+	array<T>& intersection,
+	const array<T>& first,
+	const array<T>& second)
+{
+	return set_intersect<T, BinarySearch>(intersection,
+		first.data, (unsigned int) first.length,
+		second.data, (unsigned int) second.length);
+}
+
+/* in-place variant of set_intersect */
+template<typename T, bool BinarySearch = false>
+void set_intersect(array<T>& first,
+	const T* second, unsigned int second_length)
+{
+	unsigned int index = 0;
+	unsigned int i = 0, j = 0;
+	while (i < first.length && j < second_length)
+	{
+		if (first[i] == second[j]) {
+			first[index] = first[i];
+			index++; i++; j++;
+		} else if (first[i] < second[j]) {
+			if (BinarySearch) {
+				/* use binary search to find the value of i
+				   such that first.data[i] >= second.data[j] */
+				i = binary_search(first, second[j], i, first_length - 1);
+			} else {
+				i++;
+			}
+		} else {
+			if (BinarySearch) {
+				/* use binary search to find the value of j
+				   such that second.data[j] >= first.data[i] */
+				j = binary_search(second, first[i], j, second_length - 1);
+			} else {
+				j++;
+			}
+		}
+	}
+	first.length = index;
+}
+
+template<typename T, bool BinarySearch = false>
+inline void set_intersect(array<T>& first, const array<T>& second) {
+	return set_intersect<T, BinarySearch>(first, second.data, second.length);
+}
+
+template<typename T, bool BinarySearch = false>
+bool is_intersection_empty(
+	const T* first, unsigned int first_length,
+	const T* second, unsigned int second_length)
+{
+	unsigned int i = 0, j = 0;
+	while (i < first_length && j < second_length)
+	{
+		if (first[i] == second[j]) {
+			return false;
+			i++; j++;
+		} else if (first[i] < second[j]) {
+			if (BinarySearch) {
+				/* use binary search to find the value of i
+				   such that first.data[i] >= second.data[j] */
+				i = binary_search(first, second[j], i, first_length - 1);
+			} else {
+				i++;
+			}
+		} else {
+			if (BinarySearch) {
+				/* use binary search to find the value of j
+				   such that second.data[j] >= first.data[i] */
+				j = binary_search(second, first[i], j, second_length - 1);
+			} else {
+				j++;
+			}
+		}
+	}
+	return true;
+}
+
+template<typename T, bool BinarySearch = false>
+inline bool is_intersection_empty(const array<T>& first, const array<T>& second) {
+	return is_intersection_empty<T, BinarySearch>(
+		first.data, (unsigned int) first.length,
+		second.data, (unsigned int) second.length);
+}
+
+template<typename T, bool BinarySearch = false>
+bool set_subtract(array<T>& dst,
+	const T* first, unsigned int first_length,
+	const T* second, unsigned int second_length)
+{
+	if (!dst.ensure_capacity(dst.length + max(first_length, second_length)))
+		return false;
+
+	unsigned int i = 0, j = 0;
+	while (i < first_length && j < second_length)
+	{
+		if (first[i] == second[j]) {
+			i++; j++;
+		} else if (first[i] < second[j]) {
+			if (BinarySearch) {
+				/* use binary search to find the value of i
+				   such that first.data[i] >= second.data[j] */
+				unsigned int next_i = binary_search(first, second[j], i, first_length - 1);
+				for (; i < next_i; i++)
+					dst[(unsigned int) dst.length] = first[i];
+				dst.length += next_i - i;
+				i = next_i;
+			} else {
+				dst[(unsigned int) dst.length] = first[i];
+				dst.length++;
+				i++;
+			}
+		} else {
+			if (BinarySearch) {
+				/* use binary search to find the value of j
+				   such that second.data[j] >= first.data[i] */
+				j = binary_search(second, first[i], j, second_length - 1);
+			} else {
+				j++;
+			}
+		}
+	}
+	return true;
+}
+
+template<typename T, bool BinarySearch = false>
+inline bool set_subtract(array<T>& dst,
+	const array<T>& first,
+	const array<T>& second)
+{
+	return set_subtract<T, BinarySearch>(dst,
+		first.data, (unsigned int) first.length,
+		second.data, (unsigned int) second.length);
 }
 
 inline void array_test(void)

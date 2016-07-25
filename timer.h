@@ -3,6 +3,7 @@
 
 #if defined(_WIN32)
 #include <Windows.h>
+#undef max
 #else
 #include <time.h>
 #endif

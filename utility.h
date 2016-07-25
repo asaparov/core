@@ -28,6 +28,8 @@ static uint32_t __inline __builtin_clz(uint32_t x) {
 }
 #endif
 
+namespace core {
+
 struct string {
 	unsigned int length;
 	char* data;
@@ -225,8 +227,11 @@ inline bool operator != (const char* first, const string& second) {
 
 inline bool operator != (const string& first, const string& second) {
 	if (first.length != second.length) return true;
-	if ((first.data == NULL && second.data != NULL) || (first.data != NULL && second.data == NULL))
-		return true;
+	if (first.data == NULL) {
+		if (second.data == NULL) return true;
+		else return false;
+	} else if (second.data == NULL)
+		return false;
 	return memcmp(first.data, second.data, first.length * sizeof(char)) != 0;
 }
 
@@ -347,5 +352,7 @@ inline bool get_files_in_directory(array<string>& out, const char* directory)
     return true;
 #endif
 }
+
+} /* namespace core */
 
 #endif /* UTILITY_H_ */
