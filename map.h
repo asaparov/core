@@ -448,9 +448,7 @@ struct hash_set
 			insert(*i);
 	}
 
-	~hash_set() {
-		free();
-	}
+	~hash_set() { free(); }
 
 	bool resize(unsigned int new_capacity,
 			alloc_keys_func alloc_keys = calloc)
@@ -471,7 +469,7 @@ struct hash_set
 			if (!hasher<T>::is_empty(old_keys[i]))
 				core::move(old_keys[i], keys[next_empty(old_keys[i])]);
 		}
-		::free(old_keys);
+		core::free(old_keys);
 		return true;
 	}
 
@@ -717,6 +715,8 @@ struct hash_set
 		return sum;
 	}
 
+	static inline void free(hash_set<T>& set) { set.free(); }
+
 private:
 	bool initialize(
 			unsigned int initial_capacity,
@@ -734,8 +734,8 @@ private:
 		return (keys != NULL);
 	}
 
-	void free() {
-		::free(keys);
+	inline void free() {
+		core::free(keys);
 	}
 
 	inline void place(
@@ -831,9 +831,6 @@ private:
 	friend bool hash_set_init(hash_set<K>& set,
 			const std::initializer_list<T>& list,
 			alloc_keys_func alloc_keys);
-
-	template<typename K>
-	friend void hash_set_free(hash_set<K>& set);
 };
 
 template<typename T>
@@ -846,11 +843,6 @@ bool hash_set_init(
 		return false;
 	}
 	return true;
-}
-
-template<typename T>
-inline void hash_set_free(hash_set<T>& set) {
-	set.free();
 }
 
 /* swaps the underlying buffers */
@@ -1096,12 +1088,17 @@ struct hash_map
 		return sum;
 	}
 
+	static inline void free(hash_map<K, V>& map) {
+		core::free(map.table);
+		core::free(map.values);
+	}
+
 private:
 	/* NOTE: this function assumes table is initialized */
 	bool initialize_values() {
 		values = (V*) malloc(sizeof(V) * table.capacity);
 		if (values == NULL) {
-			table.free();
+			core::free(table);
 			return false;
 		}
 		return true;
@@ -1151,12 +1148,6 @@ bool hash_map_init(
 	return true;
 }
 
-template<typename K, typename V>
-inline void hash_map_free(hash_map<K, V>& map) {
-	hash_set_free(map.table);
-	free(map.values);
-}
-
 /* swaps the underlying buffers */
 template<typename K, typename V>
 void swap(hash_map<K, V>& first, hash_map<K, V>& second) {
@@ -1194,9 +1185,7 @@ struct array_map {
 		}
 	}
 
-	~array_map() {
-		free();
-	}
+	~array_map() { free(); }
 
 	bool ensure_capacity(unsigned int new_length) {
 		if (new_length <= capacity)
@@ -1227,10 +1216,7 @@ struct array_map {
 	}
 
 	inline unsigned int index_of(const K& key) const {
-		for (unsigned int i = 0; i < size; i++)
-			if (keys[i] == key)
-				return i;
-		return (unsigned int) size;
+		return core::index_of(key, keys, (unsigned int) size);
 	}
 
 	inline unsigned int index_of(const K& key, unsigned int start) const {
@@ -1330,6 +1316,8 @@ struct array_map {
 		return size_of(map, make_key_value_metric(dummy_metric(), dummy_metric()));
 	}
 
+	static inline void free(array_map<K, V>& map) { map.free(); }
+
 private:
 	inline bool initialize(unsigned int initial_capacity) {
 		capacity = initial_capacity;
@@ -1340,7 +1328,7 @@ private:
 		}
 		values = (V*) malloc(sizeof(V) * capacity);
 		if (values == NULL) {
-			::free(keys);
+			core::free(keys);
 			fprintf(stderr, "array_map.initialize ERROR: Out of memory.\n");
 			return false;
 		}
@@ -1348,26 +1336,18 @@ private:
 	}
 
 	inline void free() {
-		::free(keys);
-		::free(values);
+		core::free(keys);
+		core::free(values);
 	}
 
 	template<typename A, typename B>
 	friend bool array_map_init(array_map<A, B>&, unsigned int);
-
-	template<typename A, typename B>
-	friend void array_map_free(array_map<A, B>&);
 };
 
 template<typename K, typename V>
 bool array_map_init(array_map<K, V>& map, unsigned int initial_capacity) {
 	map.size = 0;
 	return map.initialize(initial_capacity);
-}
-
-template<typename K, typename V>
-inline void array_map_free(array_map<K, V>& map) {
-	map.free();
 }
 
 template<typename T>

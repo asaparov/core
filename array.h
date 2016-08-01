@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <algorithm>
 
 #include "core.h"
 
@@ -51,21 +52,27 @@ inline bool ensure_capacity(T*& data, SizeType& capacity, size_t new_length)
 }
 
 template<typename T>
+inline unsigned int index_of(const T& element, const T* data, unsigned int length)
+{
+	for (unsigned int i = 0; i < length; i++)
+		if (element == data[i])
+			return i;
+	return length;
+}
+
+template<typename T>
 struct array {
 	T* data;
 	size_t length;
 	size_t capacity;
 
-	array(unsigned int initial_capacity)
+	array(size_t initial_capacity)
 	{
 		if (!initialize(initial_capacity))
 			exit(EXIT_FAILURE);
 	}
 
-	~array()
-	{
-		free();
-	}
+	~array() { free(); }
 
 	inline T& operator[] (unsigned int index) {
 		return data[index];
@@ -104,10 +111,7 @@ struct array {
 	}
 
 	inline unsigned int index_of(const T& element) const {
-		for (unsigned int i = 0; i < length; i++)
-			if (data[i] == element)
-				return i;
-		return (unsigned int) length;
+		return core::index_of(element, data, (unsigned int) length);
 	}
 
 	T& first()
@@ -175,8 +179,10 @@ struct array {
 		return sum + (a.capacity - a.length) * sizeof(T);
 	}
 
+	static inline void free(array<T>& a) { a.free(); }
+
 private:
-	inline bool initialize(unsigned int initial_capacity)
+	inline bool initialize(size_t initial_capacity)
 	{
 #if !defined(NDEBUG)
 		if (initial_capacity == 0)
@@ -193,29 +199,20 @@ private:
 		return true;
 	}
 
-	inline void free()
-	{
-		if (data) {
-			::free(data);
+	inline void free() {
+		if (data != NULL) {
+			core::free(data);
 			data = NULL;
 		}
 	}
 
 	template<typename K>
 	friend bool array_init(array<K>& m, unsigned int initial_capacity);
-
-	template<typename K>
-	friend void array_free(array<K>& m);
 };
 
 template<typename T>
 bool array_init(array<T>& m, unsigned int initial_capacity) {
 	return m.initialize(initial_capacity);
-}
-
-template<typename T>
-void array_free(array<T>& m) {
-	m.free();
 }
 
 template<typename T>
@@ -277,7 +274,7 @@ void insertion_sort(T* keys, unsigned int count)
 		T item = keys[i];
 		unsigned int hole = i;
 
-		while (hole > 0 && keys[hole - 1] > item) {
+		while (hole > 0 && item < keys[hole - 1]) {
 			keys[hole] = keys[hole - 1];
 			hole--;
 		}
@@ -313,7 +310,7 @@ void insertion_sort(K* keys, V* values, unsigned int count)
 		V value = values[i];
 		unsigned int hole = i;
 
-		while (hole > 0 && keys[hole - 1] > item) {
+		while (hole > 0 && item < keys[hole - 1]) {
 			keys[hole] = keys[hole - 1];
 			values[hole] = values[hole - 1];
 			hole--;
@@ -875,6 +872,11 @@ struct pair {
 	V value;
 
 	pair(const K& key, const V& value) : key(key), value(value) { }
+
+	static inline void move(const pair<K, V>& src, pair<K, V>& dst) {
+		core::move(src.key, dst.key);
+		core::move(src.value, dst.value);
+	}
 };
 
 template<typename K, typename V>
@@ -929,38 +931,45 @@ unsigned int shift_right(const T& element, T* list, unsigned int length)
 }
 
 template<typename T>
-bool set_union(array<T>& dst,
+void set_union(T* dst, unsigned int& dst_length,
 	const T* first, unsigned int first_length,
 	const T* second, unsigned int second_length)
 {
-	if (!dst.ensure_capacity(dst.length + first_length + second_length))
-		return false;
-
 	unsigned int i = 0, j = 0;
 	while (i < first_length && j < second_length)
 	{
 		if (first[i] == second[j]) {
-			dst[(unsigned int) dst.length] = first[i];
-			dst.length++;
+			dst[dst_length] = first[i];
+			dst_length++;
 			i++; j++;
 		} else if (first[i] < second[j]) {
-			dst[(unsigned int) dst.length] = first[i];
-			dst.length++;
+			dst[dst_length] = first[i];
+			dst_length++;
 			i++;
 		} else {
-			dst[(unsigned int) dst.length] = second[j];
-			dst.length++;
+			dst[dst_length] = second[j];
+			dst_length++;
 			j++;
 		}
 	}
 
 	if (i < first_length) {
-		memcpy(dst.data + dst.length, first + i, sizeof(T) * (first_length - i));
-		dst.length += first_length - i;
+		memcpy(dst + dst_length, first + i, sizeof(T) * (first_length - i));
+		dst_length += first_length - i;
 	} else if (j < second_length) {
-		memcpy(dst.data + dst.length, second + j, sizeof(T) * (second_length - j));
-		dst.length += second_length - j;
+		memcpy(dst + dst_length, second + j, sizeof(T) * (second_length - j));
+		dst_length += second_length - j;
 	}
+}
+
+template<typename T>
+inline bool set_union(array<T>& dst,
+	const T* first, unsigned int first_length,
+	const T* second, unsigned int second_length)
+{
+	if (!dst.ensure_capacity(dst.length + first_length + second_length))
+		return false;
+	set_union(dst.data, dst.length, first, first_length, second, second_length);
 	return true;
 }
 
@@ -1034,19 +1043,16 @@ bool set_union(array<T>& dst, const ArraySetCollection& arrays, unsigned int arr
 
 template<typename T, bool BinarySearch = false>
 bool set_intersect(
-	array<T>& intersection,
+	T* intersection, unsigned int& intersection_length,
 	const T* first, unsigned int first_length,
 	const T* second, unsigned int second_length)
 {
-	if (!intersection.ensure_capacity(intersection.length + max(first_length, second_length)))
-		return false;
-
 	unsigned int i = 0, j = 0;
 	while (i < first_length && j < second_length)
 	{
 		if (first[i] == second[j]) {
-			intersection[(unsigned int) intersection.length] = first[i];
-			intersection.length++;
+			intersection[intersection_length] = first[i];
+			intersection_length++;
 			i++; j++;
 		} else if (first[i] < second[j]) {
 			if (BinarySearch) {
@@ -1067,6 +1073,20 @@ bool set_intersect(
 		}
 	}
 	return true;
+}
+
+template<typename T, bool BinarySearch = false>
+inline bool set_intersect(
+	array<T>& intersection,
+	const T* first, unsigned int first_length,
+	const T* second, unsigned int second_length)
+{
+	if (!intersection.ensure_capacity(intersection.length + max(first_length, second_length)))
+		return false;
+
+	return set_intersect<T, BinarySearch>(
+		intersection.data, (unsigned int) intersection.length,
+		first, first_length, second, second_length);
 }
 
 template<typename T, bool BinarySearch = false>
@@ -1096,7 +1116,7 @@ void set_intersect(array<T>& first,
 			if (BinarySearch) {
 				/* use binary search to find the value of i
 				   such that first.data[i] >= second.data[j] */
-				i = binary_search(first, second[j], i, first_length - 1);
+				i = binary_search(first, second[j], i, first.length - 1);
 			} else {
 				i++;
 			}

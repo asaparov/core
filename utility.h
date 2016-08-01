@@ -52,7 +52,7 @@ struct string {
 	}
 
 	~string() {
-		free(data);
+		core::free(data);
 	}
 
 	inline char& operator [] (unsigned int index) {
@@ -139,6 +139,10 @@ struct string {
 		return core::size_of(str.length) + sizeof(char) * str.length;
 	}
 
+	static inline void free(string& str) {
+		core::free(str.data);
+	}
+
 private:
 	bool initialize(unsigned int src_length) {
 		length = src_length;
@@ -171,10 +175,6 @@ inline bool string_init(string& dest, const string& src) {
 
 inline bool string_init(string& dest, unsigned int length) {
 	return dest.initialize(length);
-}
-
-inline void string_free(string& s) {
-	free(s.data);
 }
 
 inline bool read(string& s, FILE* in) {

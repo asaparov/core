@@ -1,9 +1,9 @@
-/*
-* lex.h - Common functionality for lexical analysis.
-*
-*  Created on: Jan 6, 2015
-*      Author: asaparov
-*/
+/**
+ * lex.h - Common functionality for lexical analysis.
+ *
+ *  Created on: Jan 6, 2015
+ *      Author: asaparov
+ */
 
 #ifndef LEX_H_
 #define LEX_H_
@@ -125,7 +125,7 @@ template<typename TokenType>
 void free_tokens(array<lexical_token<TokenType>>& tokens) {
 	for (unsigned int i = 0; i < tokens.length; i++)
 		if (tokens[i].text.data != NULL)
-			string_free(tokens[i].text);
+			core::free(tokens[i].text);
 }
 
 template<typename TokenType>
