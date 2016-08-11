@@ -19,7 +19,8 @@
 
 namespace core {
 
-template<typename T, typename SizeType>
+template<typename T, typename SizeType,
+	typename std::enable_if<std::is_integral<SizeType>::value>::type* = nullptr>
 inline bool resize(T*& data, const SizeType& new_capacity) {
 	T* new_data = (T*) realloc(data, new_capacity * sizeof(T));
 	if (new_data == NULL) {
@@ -30,7 +31,8 @@ inline bool resize(T*& data, const SizeType& new_capacity) {
 	return true;
 }
 
-template<typename T, typename SizeType>
+template<typename T, typename SizeType,
+	typename std::enable_if<std::is_integral<SizeType>::value>::type* = nullptr>
 inline bool expand(T*& data, SizeType& capacity, size_t new_length) {
 	do {
 		/* increase the size of the underlying array */
@@ -39,7 +41,8 @@ inline bool expand(T*& data, SizeType& capacity, size_t new_length) {
 	return resize(data, capacity);
 }
 
-template<typename T, typename SizeType>
+template<typename T, typename SizeType,
+	typename std::enable_if<std::is_integral<SizeType>::value>::type* = nullptr>
 inline bool ensure_capacity(T*& data, SizeType& capacity, size_t new_length)
 {
 	if (new_length <= capacity)
@@ -89,7 +92,7 @@ struct array {
 
 	void remove(unsigned int index)
 	{
-		data[index] = data[length - 1];
+		core::move(data[length - 1], data[index]);
 		length--;
 	}
 
@@ -739,7 +742,7 @@ inline void sort(array<T>& keys) {
 		return;
 	}
 #endif
-	sort(keys.data, 0, keys.length - 1);
+	sort(keys.data, 0, (unsigned int) keys.length - 1);
 }
 
 template<typename T, typename Sorter,
@@ -752,7 +755,7 @@ inline void sort(array<T>& keys, const Sorter& sorter)
 		return;
 	}
 #endif
-	sort(keys.data, 0, keys.length - 1, sorter);
+	sort(keys.data, 0, (unsigned int) keys.length - 1, sorter);
 }
 
 template<typename K, typename V>
@@ -763,7 +766,7 @@ inline void sort(array<K>& keys, array<V>& values) {
 		return;
 	}
 #endif
-	sort(keys.data, values.data, 0, keys.length - 1);
+	sort(keys.data, values.data, 0, (unsigned int) keys.length - 1);
 }
 
 template<typename K, typename V, typename Sorter,
@@ -776,7 +779,7 @@ inline void sort(array<K>& keys, array<V>& values, const Sorter& sorter)
 		return;
 	}
 #endif
-	sort(keys.data, values.data, 0, keys.length - 1, sorter);
+	sort(keys.data, values.data, 0, (unsigned int) keys.length - 1, sorter);
 }
 
 struct dummy_sorter { };
@@ -930,8 +933,59 @@ unsigned int shift_right(const T& element, T* list, unsigned int length)
 	return i;
 }
 
-template<typename T>
-void set_union(T* dst, unsigned int& dst_length,
+template<bool RemoveDuplicates, typename T, typename UnionFunc>
+inline void set_union_helper(UnionFunc do_union, const T& item, const T*& prev) {
+	if (RemoveDuplicates) {
+		if (prev == NULL || *prev != item) {
+			do_union(item);
+			prev = &item;
+		}
+	} else {
+		do_union(item);
+	}
+}
+
+template<typename T, typename UnionFunc, bool RemoveDuplicates = true>
+void set_union(UnionFunc do_union,
+	const T* first, unsigned int first_length,
+	const T* second, unsigned int second_length)
+{
+	unsigned int i = 0, j = 0;
+	const T* prev = NULL;
+	while (i < first_length && j < second_length)
+	{
+		if (first[i] == second[j]) {
+			set_union_helper<RemoveDuplicates>(do_union, first[i], prev);
+			i++; j++;
+		} else if (first[i] < second[j]) {
+			set_union_helper<RemoveDuplicates>(do_union, first[i], prev);
+			i++;
+		} else {
+			set_union_helper<RemoveDuplicates>(do_union, second[j], prev);
+			j++;
+		}
+	}
+
+	while (i < first_length) {
+		set_union_helper<RemoveDuplicates>(do_union, first[i], prev);
+		i++;
+	} while (j < second_length) {
+		set_union_helper<RemoveDuplicates>(do_union, second[j], prev);
+		j++;
+	}
+}
+
+template<bool RemoveDuplicates, typename T, typename SizeType>
+inline void set_union_helper(T* dst, SizeType& dst_length, const T& item) {
+	if (!RemoveDuplicates || dst_length == 0 || dst[dst_length - 1] != item) {
+		dst[dst_length] = item;
+		dst_length++;
+	}
+}
+
+template<typename T, typename SizeType, bool RemoveDuplicates = true,
+	typename std::enable_if<std::is_integral<SizeType>::value>::type* = nullptr>
+void set_union(T* dst, SizeType& dst_length,
 	const T* first, unsigned int first_length,
 	const T* second, unsigned int second_length)
 {
@@ -939,43 +993,40 @@ void set_union(T* dst, unsigned int& dst_length,
 	while (i < first_length && j < second_length)
 	{
 		if (first[i] == second[j]) {
-			dst[dst_length] = first[i];
-			dst_length++;
+			set_union_helper<RemoveDuplicates>(dst, dst_length, first[i]);
 			i++; j++;
 		} else if (first[i] < second[j]) {
-			dst[dst_length] = first[i];
-			dst_length++;
+			set_union_helper<RemoveDuplicates>(dst, dst_length, first[i]);
 			i++;
 		} else {
-			dst[dst_length] = second[j];
-			dst_length++;
+			set_union_helper<RemoveDuplicates>(dst, dst_length, second[i]);
 			j++;
 		}
 	}
 
-	if (i < first_length) {
-		memcpy(dst + dst_length, first + i, sizeof(T) * (first_length - i));
-		dst_length += first_length - i;
-	} else if (j < second_length) {
-		memcpy(dst + dst_length, second + j, sizeof(T) * (second_length - j));
-		dst_length += second_length - j;
+	while (i < first_length) {
+		set_union_helper<RemoveDuplicates>(dst, dst_length, first[i]);
+		i++;
+	} while (j < second_length) {
+		set_union_helper<RemoveDuplicates>(dst, dst_length, second[j]);
+		j++;
 	}
 }
 
-template<typename T>
+template<typename T, bool RemoveDuplicates = true>
 inline bool set_union(array<T>& dst,
 	const T* first, unsigned int first_length,
 	const T* second, unsigned int second_length)
 {
 	if (!dst.ensure_capacity(dst.length + first_length + second_length))
 		return false;
-	set_union(dst.data, dst.length, first, first_length, second, second_length);
+	set_union<T, size_t, RemoveDuplicates>(dst.data, dst.length, first, first_length, second, second_length);
 	return true;
 }
 
-template<typename T>
+template<typename T, bool RemoveDuplicates = true>
 inline bool set_union(array<T>& dst, const array<T>& first, const array<T>& second) {
-	return set_union(dst,
+	return set_union<T, RemoveDuplicates>(dst,
 		first.data, (unsigned int) first.length,
 		second.data, (unsigned int) second.length);
 }
@@ -1041,9 +1092,10 @@ bool set_union(array<T>& dst, const ArraySetCollection& arrays, unsigned int arr
 	return true;
 }
 
-template<typename T, bool BinarySearch = false>
+template<typename T, typename SizeType, bool BinarySearch = false,
+	typename std::enable_if<std::is_integral<SizeType>::value>::type* = nullptr>
 bool set_intersect(
-	T* intersection, unsigned int& intersection_length,
+	T* intersection, SizeType& intersection_length,
 	const T* first, unsigned int first_length,
 	const T* second, unsigned int second_length)
 {
@@ -1177,14 +1229,11 @@ inline bool is_intersection_empty(const array<T>& first, const array<T>& second)
 		second.data, (unsigned int) second.length);
 }
 
-template<typename T, bool BinarySearch = false>
-bool set_subtract(array<T>& dst,
+template<typename T, typename EmitFunction, bool BinarySearch = false>
+void set_subtract(EmitFunction emit,
 	const T* first, unsigned int first_length,
 	const T* second, unsigned int second_length)
 {
-	if (!dst.ensure_capacity(dst.length + max(first_length, second_length)))
-		return false;
-
 	unsigned int i = 0, j = 0;
 	while (i < first_length && j < second_length)
 	{
@@ -1196,12 +1245,10 @@ bool set_subtract(array<T>& dst,
 				   such that first.data[i] >= second.data[j] */
 				unsigned int next_i = binary_search(first, second[j], i, first_length - 1);
 				for (; i < next_i; i++)
-					dst[(unsigned int) dst.length] = first[i];
-				dst.length += next_i - i;
+					emit(i);
 				i = next_i;
 			} else {
-				dst[(unsigned int) dst.length] = first[i];
-				dst.length++;
+				emit(i);
 				i++;
 			}
 		} else {
@@ -1214,6 +1261,61 @@ bool set_subtract(array<T>& dst,
 			}
 		}
 	}
+
+	while (i < first_length) {
+		emit(i);
+		i++;
+	}
+}
+
+template<typename T, typename SizeType, bool BinarySearch = false,
+	typename std::enable_if<std::is_integral<SizeType>::value>::type* = nullptr>
+void set_subtract(T* dst, SizeType& dst_length,
+	const T* first, unsigned int first_length,
+	const T* second, unsigned int second_length)
+{
+	unsigned int i = 0, j = 0;
+	while (i < first_length && j < second_length)
+	{
+		if (first[i] == second[j]) {
+			i++; j++;
+		} else if (first[i] < second[j]) {
+			if (BinarySearch) {
+				/* use binary search to find the value of i
+				   such that first.data[i] >= second.data[j] */
+				unsigned int next_i = binary_search(first, second[j], i, first_length - 1);
+				for (; i < next_i; i++) {
+					dst[dst_length] = first[i];
+					dst_length++;
+				}
+				i = next_i;
+			} else {
+				dst[dst_length] = first[i];
+				dst_length++;
+				i++;
+			}
+		} else {
+			if (BinarySearch) {
+				/* use binary search to find the value of j
+				   such that second.data[j] >= first.data[i] */
+				j = binary_search(second, first[i], j, second_length - 1);
+			} else {
+				j++;
+			}
+		}
+	}
+
+	memcpy(dst + dst_length, (first_length - i) * sizeof(T));
+}
+
+template<typename T, bool BinarySearch = false>
+bool set_subtract(array<T>& dst,
+	const T* first, unsigned int first_length,
+	const T* second, unsigned int second_length)
+{
+	if (!dst.ensure_capacity(dst.length + max(first_length, second_length)))
+		return false;
+	set_subtract(dst.data, dst.length, first, first_length, second, second_length);
 	return true;
 }
 
