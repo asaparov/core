@@ -18,6 +18,18 @@
 
 using namespace core;
 
+inline bool read(bool& value, FILE* in) {
+	return (fread(&value, sizeof(bool), 1, in) == 1);
+}
+
+inline bool read(char& value, FILE* in) {
+	return (fread(&value, sizeof(char), 1, in) == 1);
+}
+
+inline bool read(unsigned char& value, FILE* in) {
+	return (fread(&value, sizeof(unsigned char), 1, in) == 1);
+}
+
 inline bool read(unsigned int& value, FILE* in) {
 	return (fread(&value, sizeof(unsigned int), 1, in) == 1);
 }
@@ -44,6 +56,18 @@ inline bool read(double* values, FILE* in, unsigned int length) {
 
 inline bool read(char* values, FILE* in, unsigned int length) {
 	return (fread(values, sizeof(char), length, in) == length);
+}
+
+inline bool write(const bool& value, FILE* out) {
+	return (fwrite(&value, sizeof(bool), 1, out) == 1);
+}
+
+inline bool write(const char& value, FILE* out) {
+	return (fwrite(&value, sizeof(char), 1, out) == 1);
+}
+
+inline bool write(const unsigned char& value, FILE* out) {
+	return (fwrite(&value, sizeof(unsigned char), 1, out) == 1);
 }
 
 inline bool write(const unsigned int& value, FILE* out) {
@@ -160,12 +184,28 @@ struct memory_stream {
 	}
 };
 
-inline bool read(uint32_t& value, memory_stream& in) {
-	return in.read(&value, sizeof(uint32_t));
+inline bool read(bool& value, memory_stream& in) {
+	return in.read(&value, sizeof(bool));
 }
 
-inline bool read(uint64_t& value, memory_stream& in) {
-	return in.read(&value, sizeof(uint64_t));
+inline bool read(char& value, memory_stream& in) {
+	return in.read(&value, sizeof(char));
+}
+
+inline bool read(unsigned char& value, memory_stream& in) {
+	return in.read(&value, sizeof(unsigned char));
+}
+
+inline bool read(unsigned int& value, memory_stream& in) {
+	return in.read(&value, sizeof(unsigned int));
+}
+
+inline bool read(long unsigned int& value, memory_stream& in) {
+	return in.read(&value, sizeof(long unsigned int));
+}
+
+inline bool read(long long unsigned int& value, memory_stream& in) {
+	return in.read(&value, sizeof(long long unsigned int));
 }
 
 inline bool read(double& value, memory_stream& in) {
@@ -184,12 +224,28 @@ inline bool read(char* values, memory_stream& in, unsigned int length) {
 	return in.read(values, (unsigned int) sizeof(char) * length);
 }
 
-inline bool write(const uint32_t& value, memory_stream& out) {
-	return out.write(&value, sizeof(uint32_t));
+inline bool write(const bool& value, memory_stream& out) {
+	return out.write(&value, sizeof(bool));
 }
 
-inline bool write(const uint64_t& value, memory_stream& out) {
-	return out.write(&value, sizeof(uint64_t));
+inline bool write(const char& value, memory_stream& out) {
+	return out.write(&value, sizeof(char));
+}
+
+inline bool write(const unsigned char& value, memory_stream& out) {
+	return out.write(&value, sizeof(unsigned char));
+}
+
+inline bool write(const unsigned int& value, memory_stream& out) {
+	return out.write(&value, sizeof(unsigned int));
+}
+
+inline bool write(const long unsigned int& value, memory_stream& out) {
+	return out.write(&value, sizeof(long unsigned int));
+}
+
+inline bool write(const long long unsigned int& value, memory_stream& out) {
+	return out.write(&value, sizeof(long long unsigned int));
 }
 
 inline bool write(const double& value, memory_stream& out) {
@@ -320,6 +376,13 @@ inline bool print(const T* values, unsigned int length, Stream& out) {
 	return print<T, LeftBracket, RightBracket>(values, length, out, printer);
 }
 
+template<typename T, typename Stream, typename Reader = dummy_scribe>
+inline bool read(T* a, Stream& in, unsigned int length, Reader& reader = dummy_scribe()) {
+	for (unsigned int i = 0; i < length; i++)
+		if (!read(a[i], in, reader)) return false;
+	return true;
+}
+
 template<typename T, typename Stream, typename Reader>
 bool read(array<T>& a, Stream& in, Reader& reader) {
 	size_t length;
@@ -328,8 +391,10 @@ bool read(array<T>& a, Stream& in, Reader& reader) {
 	size_t capacity = (length == 0) ? 1 : length;
 	a.data = (T*) malloc(sizeof(T) * capacity);
 	if (a.data == NULL) return false;
-	for (unsigned int i = 0; i < length; i++)
-		if (!read(a[i], in, reader)) return false;
+	if (!read(a, in, length, reader)) {
+		free(a.data);
+		return false;
+	}
 	a.length = length;
 	a.capacity = capacity;
 	return true;
@@ -341,12 +406,16 @@ inline bool read(array<T>& a, Stream& in) {
 	return read(a, in, scribe);
 }
 
-template<typename T, typename Stream, typename Writer>
-bool write(const array<T>& a, Stream& out, Writer& writer) {
-	if (!write(a.length, out)) return false;
-	for (unsigned int i = 0; i < a.length; i++)
+template<typename T, typename Stream, typename Writer = dummy_scribe>
+inline bool write(const T* a, Stream& out, unsigned int length, Writer& writer = dummy_scribe()) {
+	for (unsigned int i = 0; i < length; i++)
 		if (!write(a[i], out, writer)) return false;
 	return true;
+}
+
+template<typename T, typename Stream, typename Writer>
+bool write(const array<T>& a, Stream& out, Writer& writer) {
+	return write(a.length, out) && write(a.data, out, (unsigned int) a.length, writer);
 }
 
 template<typename T, typename Stream>

@@ -14,6 +14,7 @@
 #include <algorithm>
 
 #include "core.h"
+#include "random.h"
 
 #define RESIZE_FACTOR 2
 
@@ -818,7 +819,7 @@ void shuffle(T* array, unsigned int length) {
 	}
 #endif
 	for (unsigned int i = length - 1; i > 0; i--) {
-		unsigned int next = rand() % (i + 1);
+		unsigned int next = sample_uniform(i + 1);
 		if (next != i)
 			core::swap(array[next], array[i]);
 	}
@@ -833,7 +834,7 @@ void shuffle(K* keys, V* values, unsigned int length) {
 	}
 #endif
 	for (unsigned int i = length - 1; i > 0; i--) {
-		unsigned int next = rand() % (i + 1);
+		unsigned int next = sample_uniform(i + 1);
 		if (next != i) {
 			core::swap(keys[next], keys[i]);
 			core::swap(values[next], values[i]);
