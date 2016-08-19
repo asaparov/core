@@ -14,7 +14,6 @@
 #include <algorithm>
 
 #include "core.h"
-#include "random.h"
 
 #define RESIZE_FACTOR 2
 
@@ -810,6 +809,10 @@ inline void unique(array<T>& a) {
 	a.length = unique(a.data, a.length);
 }
 
+/* forward declarations */
+
+unsigned int sample_uniform(unsigned int);
+
 template<typename T>
 void shuffle(T* array, unsigned int length) {
 #if !defined(NDEBUG)
@@ -901,6 +904,11 @@ inline bool operator > (const pair<K, V>& first, const pair<K, V>& second) {
 template<typename K, typename V>
 inline bool operator >= (const pair<K, V>& first, const pair<K, V>& second) {
 	return first.key >= second.key;
+}
+
+template<typename K, typename V>
+constexpr pair<K, V> make_pair(const K& key, const V& value) {
+	return pair<K, V>(key, value);
 }
 
 template<typename K, typename V>

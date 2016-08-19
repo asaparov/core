@@ -18,84 +18,24 @@
 
 using namespace core;
 
-inline bool read(bool& value, FILE* in) {
-	return (fread(&value, sizeof(bool), 1, in) == 1);
+template<typename T, typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
+inline bool read(T& value, FILE* in) {
+	return (fread(&value, sizeof(T), 1, in) == 1);
 }
 
-inline bool read(char& value, FILE* in) {
-	return (fread(&value, sizeof(char), 1, in) == 1);
+template<typename T, typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
+inline bool read(T* values, FILE* in, unsigned int length) {
+	return (fread(values, sizeof(T), length, in) == length);
 }
 
-inline bool read(unsigned char& value, FILE* in) {
-	return (fread(&value, sizeof(unsigned char), 1, in) == 1);
+template<typename T, typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
+inline bool write(const T& value, FILE* out) {
+	return (fwrite(&value, sizeof(T), 1, out) == 1);
 }
 
-inline bool read(unsigned int& value, FILE* in) {
-	return (fread(&value, sizeof(unsigned int), 1, in) == 1);
-}
-
-inline bool read(unsigned long& value, FILE* in) {
-	return (fread(&value, sizeof(unsigned long), 1, in) == 1);
-}
-
-inline bool read(unsigned long long& value, FILE* in) {
-	return (fread(&value, sizeof(unsigned long long), 1, in) == 1);
-}
-
-inline bool read(double& value, FILE* in) {
-	return (fread(&value, sizeof(double), 1, in) == 1);
-}
-
-inline bool read(unsigned int* values, FILE* in, unsigned int length) {
-	return (fread(values, sizeof(unsigned int), length, in) == length);
-}
-
-inline bool read(double* values, FILE* in, unsigned int length) {
-	return (fread(values, sizeof(double), length, in) == length);
-}
-
-inline bool read(char* values, FILE* in, unsigned int length) {
-	return (fread(values, sizeof(char), length, in) == length);
-}
-
-inline bool write(const bool& value, FILE* out) {
-	return (fwrite(&value, sizeof(bool), 1, out) == 1);
-}
-
-inline bool write(const char& value, FILE* out) {
-	return (fwrite(&value, sizeof(char), 1, out) == 1);
-}
-
-inline bool write(const unsigned char& value, FILE* out) {
-	return (fwrite(&value, sizeof(unsigned char), 1, out) == 1);
-}
-
-inline bool write(const unsigned int& value, FILE* out) {
-	return (fwrite(&value, sizeof(unsigned int), 1, out) == 1);
-}
-
-inline bool write(const unsigned long& value, FILE* out) {
-	return (fwrite(&value, sizeof(unsigned long), 1, out) == 1);
-}
-
-inline bool write(const unsigned long long& value, FILE* out) {
-	return (fwrite(&value, sizeof(unsigned long long), 1, out) == 1);
-}
-
-inline bool write(const double& value, FILE* out) {
-	return (fwrite(&value, sizeof(double), 1, out) == 1);
-}
-
-inline bool write(const unsigned int* values, FILE* out, unsigned int length) {
-	return (fwrite(values, sizeof(unsigned int), length, out) == length);
-}
-
-inline bool write(const double* values, FILE* out, unsigned int length) {
-	return (fwrite(values, sizeof(double), length, out) == length);
-}
-
-inline bool write(const char* values, FILE* out, unsigned int length) {
-	return (fwrite(values, sizeof(char), length, out) == length);
+template<typename T, typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
+inline bool write(const T* values, FILE* out, unsigned int length) {
+	return (fwrite(values, sizeof(T), length, out) == length);
 }
 
 inline bool print(const char& value, FILE* out) {
@@ -184,84 +124,24 @@ struct memory_stream {
 	}
 };
 
-inline bool read(bool& value, memory_stream& in) {
-	return in.read(&value, sizeof(bool));
+template<typename T, typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
+inline bool read(T& value, memory_stream& in) {
+	return in.read(&value, sizeof(T));
 }
 
-inline bool read(char& value, memory_stream& in) {
-	return in.read(&value, sizeof(char));
+template<typename T, typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
+inline bool read(T* values, memory_stream& in, unsigned int length) {
+	return in.read(values, (unsigned int) sizeof(T) * length);
 }
 
-inline bool read(unsigned char& value, memory_stream& in) {
-	return in.read(&value, sizeof(unsigned char));
+template<typename T, typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
+inline bool write(const T& value, memory_stream& out) {
+	return out.write(&value, sizeof(T));
 }
 
-inline bool read(unsigned int& value, memory_stream& in) {
-	return in.read(&value, sizeof(unsigned int));
-}
-
-inline bool read(long unsigned int& value, memory_stream& in) {
-	return in.read(&value, sizeof(long unsigned int));
-}
-
-inline bool read(long long unsigned int& value, memory_stream& in) {
-	return in.read(&value, sizeof(long long unsigned int));
-}
-
-inline bool read(double& value, memory_stream& in) {
-	return in.read(&value, sizeof(double));
-}
-
-inline bool read(unsigned int* values, memory_stream& in, unsigned int length) {
-	return in.read(values, (unsigned int) sizeof(unsigned int) * length);
-}
-
-inline bool read(double* values, memory_stream& in, unsigned int length) {
-	return in.read(values, (unsigned int) sizeof(double) * length);
-}
-
-inline bool read(char* values, memory_stream& in, unsigned int length) {
-	return in.read(values, (unsigned int) sizeof(char) * length);
-}
-
-inline bool write(const bool& value, memory_stream& out) {
-	return out.write(&value, sizeof(bool));
-}
-
-inline bool write(const char& value, memory_stream& out) {
-	return out.write(&value, sizeof(char));
-}
-
-inline bool write(const unsigned char& value, memory_stream& out) {
-	return out.write(&value, sizeof(unsigned char));
-}
-
-inline bool write(const unsigned int& value, memory_stream& out) {
-	return out.write(&value, sizeof(unsigned int));
-}
-
-inline bool write(const long unsigned int& value, memory_stream& out) {
-	return out.write(&value, sizeof(long unsigned int));
-}
-
-inline bool write(const long long unsigned int& value, memory_stream& out) {
-	return out.write(&value, sizeof(long long unsigned int));
-}
-
-inline bool write(const double& value, memory_stream& out) {
-	return out.write(&value, sizeof(double));
-}
-
-inline bool write(const unsigned int* values, memory_stream& out, unsigned int length) {
-	return out.write(values, (unsigned int) sizeof(unsigned int) * length);
-}
-
-inline bool write(const double* values, memory_stream& out, unsigned int length) {
-	return out.write(values, (unsigned int) sizeof(double) * length);
-}
-
-inline bool write(const char* values, memory_stream& out, unsigned int length) {
-	return out.write(values, (unsigned int) sizeof(char) * length);
+template<typename T, typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
+inline bool write(const T* values, memory_stream& out, unsigned int length) {
+	return out.write(values, (unsigned int) sizeof(T) * length);
 }
 
 inline size_t fwrite(const void* src, size_t size, size_t n, memory_stream& out) {
@@ -342,19 +222,22 @@ inline bool write(const char* values, Stream& out) {
 
 struct dummy_scribe { };
 
-template<typename T, typename Stream>
-inline bool read(T& key, Stream& in, const dummy_scribe& scribe) {
-	return read(key, in);
+template<typename T, typename Stream,
+	typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
+inline bool read(T& value, Stream& in, dummy_scribe& scribe) {
+	return read(value, in);
 }
 
-template<typename T, typename Stream>
-inline bool write(const T& key, Stream& out, const dummy_scribe& scribe) {
-	return write(key, out);
+template<typename T, typename Stream,
+	typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
+inline bool write(const T& value, Stream& out, dummy_scribe& scribe) {
+	return write(value, out);
 }
 
-template<typename T, typename Stream>
-inline bool print(const T& key, Stream& out, const dummy_scribe& scribe) {
-	return print(key, out);
+template<typename T, typename Stream,
+	typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
+inline bool print(const T& value, Stream& out, dummy_scribe& scribe) {
+	return print(value, out);
 }
 
 template<typename T, char LeftBracket = '[', char RightBracket = ']', typename SizeType, typename Stream, typename Printer>
@@ -376,22 +259,22 @@ inline bool print(const T* values, unsigned int length, Stream& out) {
 	return print<T, LeftBracket, RightBracket>(values, length, out, printer);
 }
 
-template<typename T, typename Stream, typename Reader = dummy_scribe>
-inline bool read(T* a, Stream& in, unsigned int length, Reader& reader = dummy_scribe()) {
+template<typename T, typename Stream, typename... Reader>
+inline bool read(T* a, Stream& in, unsigned int length, Reader&&... reader) {
 	for (unsigned int i = 0; i < length; i++)
-		if (!read(a[i], in, reader)) return false;
+		if (!read(a[i], in, std::forward<Reader>(reader)...)) return false;
 	return true;
 }
 
-template<typename T, typename Stream, typename Reader>
-bool read(array<T>& a, Stream& in, Reader& reader) {
+template<typename T, typename Stream, typename... Reader>
+bool read(array<T>& a, Stream& in, Reader&&... reader) {
 	size_t length;
 	if (!read(length, in))
 		return false;
 	size_t capacity = (length == 0) ? 1 : length;
 	a.data = (T*) malloc(sizeof(T) * capacity);
 	if (a.data == NULL) return false;
-	if (!read(a, in, length, reader)) {
+	if (!read(a.data, in, (unsigned int) length, std::forward<Reader>(reader)...)) {
 		free(a.data);
 		return false;
 	}
@@ -400,39 +283,22 @@ bool read(array<T>& a, Stream& in, Reader& reader) {
 	return true;
 }
 
-template<typename T, typename Stream>
-inline bool read(array<T>& a, Stream& in) {
-	dummy_scribe scribe;
-	return read(a, in, scribe);
-}
-
-template<typename T, typename Stream, typename Writer = dummy_scribe>
-inline bool write(const T* a, Stream& out, unsigned int length, Writer& writer = dummy_scribe()) {
+template<typename T, typename Stream, typename... Writer>
+inline bool write(const T* a, Stream& out, unsigned int length, Writer&&... writer) {
 	for (unsigned int i = 0; i < length; i++)
-		if (!write(a[i], out, writer)) return false;
+		if (!write(a[i], out, std::forward<Writer>(writer)...)) return false;
 	return true;
 }
 
-template<typename T, typename Stream, typename Writer>
-bool write(const array<T>& a, Stream& out, Writer& writer) {
-	return write(a.length, out) && write(a.data, out, (unsigned int) a.length, writer);
+template<typename T, typename Stream, typename... Writer>
+bool write(const array<T>& a, Stream& out, Writer&&... writer) {
+	return write(a.length, out)
+		&& write(a.data, out, (unsigned int) a.length, std::forward<Writer>(writer)...);
 }
 
-template<typename T, typename Stream>
-inline bool write(const array<T>& a, Stream& out) {
-	dummy_scribe scribe;
-	return write(a, out, scribe);
-}
-
-template<typename T, typename Stream, typename Printer>
-inline bool print(const array<T>& a, Stream& out, Printer& printer) {
-	return print(a.data, a.length, out, printer);
-}
-
-template<typename T, typename Stream>
-inline bool print(const array<T>& a, Stream& out) {
-	dummy_scribe scribe;
-	return print(a, out, scribe);
+template<typename T, typename Stream, typename... Printer>
+inline bool print(const array<T>& a, Stream& out, Printer&&... printer) {
+	return print(a.data, a.length, out, std::forward<Printer>(printer)...);
 }
 
 template<typename T, typename Stream>
@@ -465,9 +331,9 @@ bool write(const hash_set<T>& set, Stream& out) {
 
 template<typename K, typename V, typename Stream,
 	typename KeyReader, typename ValueReader>
-bool read(hash_map<K, V>& map, Stream& in,
-		KeyReader& key_reader, ValueReader& value_reader,
-		alloc_keys_func alloc_keys = calloc)
+bool read(hash_map<K, V>& map,
+	Stream& in, alloc_keys_func alloc_keys,
+	KeyReader& key_reader, ValueReader& value_reader)
 {
 	unsigned int length;
 	if (!read(length, in)) return false;
@@ -504,14 +370,16 @@ bool read(hash_map<K, V>& map, Stream& in,
 template<typename K, typename V, typename Stream, typename KeyReader>
 inline bool read(hash_map<K, V>& map, Stream& in,
 		KeyReader& key_reader,
-		alloc_keys_func alloc_keys = calloc) {
+		alloc_keys_func alloc_keys = calloc)
+{
 	dummy_scribe scribe;
 	return read(map, in, key_reader, scribe, alloc_keys);
 }
 
 template<typename K, typename V, typename Stream>
 inline bool read(hash_map<K, V>& map, Stream& in,
-		alloc_keys_func alloc_keys = calloc) {
+		alloc_keys_func alloc_keys = calloc)
+{
 	dummy_scribe scribe;
 	return read(map, in, scribe, scribe, alloc_keys);
 }

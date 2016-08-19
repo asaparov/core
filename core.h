@@ -261,7 +261,7 @@ template<typename T,
 inline void free(T& a) { }
 
 template<typename T, typename... Args,
-        typename std::enable_if<!std::is_fundamental<T>::value>::type* = nullptr>
+	typename std::enable_if<!std::is_fundamental<T>::value>::type* = nullptr>
 inline void free(T& a, Args&&... args) {
 	T::free(a, std::forward<Args>(args)...);
 }

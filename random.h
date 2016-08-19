@@ -9,9 +9,11 @@
 #define RANDOM_H_
 
 #include <random>
+#include <sstream>
 
 #include "timer.h"
 #include "array.h"
+#include "io.h"
 
 namespace core {
 
@@ -31,6 +33,28 @@ inline unsigned int get_seed() {
 inline void set_seed(unsigned int new_seed) {
 	engine.seed(new_seed);
 	seed = new_seed;
+}
+
+template<typename Stream>
+inline bool read_random_state(Stream& in)
+{
+	size_t length;
+	if (!read(length, in)) return false;
+	char* state = (char*) alloca(sizeof(char) * length);
+	if (state == NULL || !read(state, in, (unsigned int) length))
+		return false;
+
+	std::stringstream buffer(std::string(state, length));
+	buffer >> engine;
+	return true;
+}
+
+template<typename Stream>
+inline bool write_random_state(Stream& out) {
+	std::stringstream buffer;
+	buffer << engine;
+	std::string data = buffer.str();
+	return write(data.length(), out) && write(data.c_str(), out, (unsigned int) data.length());
 }
 
 template<typename V,
@@ -135,6 +159,11 @@ inline V sample_uniform() {
 }
 
 template<typename V>
+inline bool sample_bernoulli(const V& p) {
+	return sample_uniform<V>() < p;
+}
+
+template<typename V>
 inline V sample_beta(const V& alpha) {
 	std::gamma_distribution<V> first_gamma = std::gamma_distribution<V>(1.0);
 	std::gamma_distribution<V> second_gamma = std::gamma_distribution<V>(alpha);
@@ -150,6 +179,12 @@ inline V sample_beta(const V& alpha, const V& beta) {
 	V first = first_gamma(engine);
 	V second = second_gamma(engine);
 	return first / (first + second);
+}
+
+template<typename V>
+inline V sample_gamma(const V& alpha, const V& beta) {
+	std::gamma_distribution<V> gamma = std::gamma_distribution<V>(alpha, beta);
+	return gamma(engine);
 }
 
 template<typename V>
