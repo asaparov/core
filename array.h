@@ -1008,7 +1008,7 @@ void set_union(T* dst, SizeType& dst_length,
 			set_union_helper<RemoveDuplicates>(dst, dst_length, first[i]);
 			i++;
 		} else {
-			set_union_helper<RemoveDuplicates>(dst, dst_length, second[i]);
+			set_union_helper<RemoveDuplicates>(dst, dst_length, second[j]);
 			j++;
 		}
 	}

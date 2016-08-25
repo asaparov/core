@@ -19,7 +19,7 @@ namespace core {
 
 
 #if defined(NDEBUG)
-static unsigned int seed = 225383240; //(unsigned int) milliseconds(); // 209912433
+static unsigned int seed = (unsigned int) milliseconds();
 #else
 static unsigned int seed = 0;
 #endif
@@ -174,8 +174,8 @@ inline V sample_beta(const V& alpha) {
 
 template<typename V>
 inline V sample_beta(const V& alpha, const V& beta) {
-	std::gamma_distribution<V> first_gamma = std::gamma_distribution<V>(alpha);
-	std::gamma_distribution<V> second_gamma = std::gamma_distribution<V>(beta);
+	std::gamma_distribution<V> first_gamma = std::gamma_distribution<V>(alpha, 1.0);
+	std::gamma_distribution<V> second_gamma = std::gamma_distribution<V>(beta, 1.0);
 	V first = first_gamma(engine);
 	V second = second_gamma(engine);
 	return first / (first + second);
@@ -183,7 +183,7 @@ inline V sample_beta(const V& alpha, const V& beta) {
 
 template<typename V>
 inline V sample_gamma(const V& alpha, const V& beta) {
-	std::gamma_distribution<V> gamma = std::gamma_distribution<V>(alpha, beta);
+	std::gamma_distribution<V> gamma = std::gamma_distribution<V>(alpha, 1.0 / beta);
 	return gamma(engine);
 }
 
