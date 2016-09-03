@@ -1145,8 +1145,8 @@ inline bool set_intersect(
 	if (!intersection.ensure_capacity(intersection.length + max(first_length, second_length)))
 		return false;
 
-	return set_intersect<T, BinarySearch>(
-		intersection.data, (unsigned int) intersection.length,
+	return set_intersect<T, decltype(intersection.length), BinarySearch>(
+		intersection.data, intersection.length,
 		first, first_length, second, second_length);
 }
 
@@ -1238,6 +1238,31 @@ inline bool is_intersection_empty(const array<T>& first, const array<T>& second)
 		second.data, (unsigned int) second.length);
 }
 
+template<typename T, bool BinarySearch = false>
+bool is_subset(
+	const T* first, unsigned int first_length,
+	const T* second, unsigned int second_length)
+{
+	unsigned int i = 0, j = 0;
+	while (i < first_length && j < second_length)
+	{
+		if (first[i] == second[j]) {
+			i++; j++;
+		} else if (first[i] < second[j]) {
+			return false;
+		} else {
+			if (BinarySearch) {
+				/* use binary search to find the value of j
+				   such that second.data[j] >= first.data[i] */
+				j = binary_search(second, first[i], j, second_length - 1);
+			} else {
+				j++;
+			}
+		}
+	}
+	return (i == first_length);
+}
+
 template<typename T, typename EmitFunction, bool BinarySearch = false>
 void set_subtract(EmitFunction emit,
 	const T* first, unsigned int first_length,
@@ -1314,7 +1339,7 @@ void set_subtract(T* dst, SizeType& dst_length,
 		}
 	}
 
-	memcpy(dst + dst_length, (first_length - i) * sizeof(T));
+	memcpy(dst + dst_length, first + i, (first_length - i) * sizeof(T));
 }
 
 template<typename T, bool BinarySearch = false>
