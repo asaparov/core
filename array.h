@@ -1162,13 +1162,15 @@ inline bool set_intersect(
 }
 
 /* in-place variant of set_intersect */
-template<typename T, bool BinarySearch = false>
-void set_intersect(array<T>& first,
+template<typename T, typename SizeType, bool BinarySearch = false,
+	typename std::enable_if<std::is_integral<SizeType>::value>::type* = nullptr>
+void set_intersect(
+	T* first, SizeType& first_length,
 	const T* second, unsigned int second_length)
 {
 	unsigned int index = 0;
 	unsigned int i = 0, j = 0;
-	while (i < first.length && j < second_length)
+	while (i < first_length && j < second_length)
 	{
 		if (first[i] == second[j]) {
 			first[index] = first[i];
@@ -1177,7 +1179,7 @@ void set_intersect(array<T>& first,
 			if (BinarySearch) {
 				/* use binary search to find the value of i
 				   such that first.data[i] >= second.data[j] */
-				i = binary_search(first, second[j], i, first.length - 1);
+				i = binary_search(first, second[j], i, first_length - 1);
 			} else {
 				i++;
 			}
@@ -1191,7 +1193,15 @@ void set_intersect(array<T>& first,
 			}
 		}
 	}
-	first.length = index;
+	first_length = index;
+}
+
+template<typename T, bool BinarySearch = false>
+inline void set_intersect(array<T>& first,
+	const T* second, unsigned int second_length)
+{
+	return set_intersect<T, decltype(first.length), BinarySearch>(
+			first.data, first.length, second, second_length);
 }
 
 template<typename T, bool BinarySearch = false>
