@@ -1373,6 +1373,51 @@ inline bool set_subtract(array<T>& dst,
 		second.data, (unsigned int) second.length);
 }
 
+/* in-place variant of set_subtract */
+template<typename T, typename SizeType, bool BinarySearch = false,
+	typename std::enable_if<std::is_integral<SizeType>::value>::type* = nullptr>
+void set_subtract(
+	T* first, SizeType& first_length,
+	const T* second, unsigned int second_length)
+{
+	unsigned int index = 0;
+	unsigned int i = 0, j = 0;
+	while (i < first_length && j < second_length)
+	{
+		if (first[i] == second[j]) {
+			i++; j++;
+		} else if (first[i] < second[j]) {
+			if (BinarySearch) {
+				/* use binary search to find the value of i
+				   such that first.data[i] >= second.data[j] */
+				unsigned int next_i = binary_search(first, second[j], i, first_length - 1);
+				for (; i < next_i; i++) {
+					first[index] = first[i];
+					index++;
+				}
+				i = next_i;
+			} else {
+				first[index] = first[i];
+				index++; i++;
+			}
+		} else {
+			if (BinarySearch) {
+				/* use binary search to find the value of j
+				   such that second.data[j] >= first.data[i] */
+				j = binary_search(second, first[i], j, second_length - 1);
+			} else {
+				j++;
+			}
+		}
+	}
+
+	while (i < first_length) {
+		first[index] = first[i];
+		index++; i++;
+	}
+	first_length = index;
+}
+
 inline void array_test(void)
 {
 	array<char> buf(1);
