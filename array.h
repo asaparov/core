@@ -1350,6 +1350,7 @@ void set_subtract(T* dst, SizeType& dst_length,
 	}
 
 	memcpy(dst + dst_length, first + i, (first_length - i) * sizeof(T));
+	dst_length += first_length - i;
 }
 
 template<typename T, bool BinarySearch = false>
