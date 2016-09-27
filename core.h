@@ -342,11 +342,11 @@ struct hasher<K*> {
 template<typename K>
 struct hasher<K, typename std::enable_if<std::is_fundamental<K>::value>::type> {
 	static inline bool is_empty(const K& key) {
-		return (key == 0);
+		return (key == static_cast<K>(0));
 	}
 
 	static inline void set_empty(K& key) {
-		key = 0;
+		key = static_cast<K>(0);
 	}
 
 	static inline void set_empty(K* keys, unsigned int length) {
