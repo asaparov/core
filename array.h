@@ -880,9 +880,21 @@ struct pair {
 
 	pair(const K& key, const V& value) : key(key), value(value) { }
 
+	inline bool operator == (const pair<K, V>& other) {
+		return key == other.key && value == other.value;
+	}
+
 	static inline void move(const pair<K, V>& src, pair<K, V>& dst) {
 		core::move(src.key, dst.key);
 		core::move(src.value, dst.value);
+	}
+
+	static inline unsigned int hash(const pair<K, V>& pair) {
+		return hasher<K>::hash(pair.key) ^ hasher<V>::hash(pair.value);
+	}
+
+	static inline bool is_empty(const pair<K, V>& pair) {
+		return hasher<K>::is_empty(pair.key);
 	}
 };
 

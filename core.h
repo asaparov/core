@@ -12,6 +12,7 @@
 
 namespace core {
 
+
 template<typename T, size_t N>
 inline constexpr size_t array_length(T (&array)[N]) {
 	return N;
@@ -270,6 +271,103 @@ template<typename T>
 inline void free(T* a) {
 	::free(a);
 }
+
+
+/**
+ * Common functionality for hashing.
+ */
+
+/* these are defined in map.h */
+#if defined(__LP64__) || defined(_WIN64) || defined(__x86_64__) || defined(__ppc64__)
+
+#include <stdint.h>
+
+template<typename K>
+inline uint_fast32_t default_hash(const K& key);
+
+template<typename K>
+inline uint_fast32_t default_hash(const K* keys, unsigned int length);
+
+#else
+template<typename K>
+inline unsigned int default_hash(const K& key);
+
+template<typename K>
+inline unsigned int default_hash(const K* keys, unsigned int length);
+#endif
+
+template<typename K>
+inline void set_all_empty(K* keys, unsigned int length) {
+	memset(keys, 0, sizeof(K) * length);
+}
+
+template<typename K, class Enable = void>
+struct hasher {
+	static inline bool is_empty(const K& key) {
+		return K::is_empty(key);
+	}
+
+	static inline void set_empty(K& key) {
+		K::set_empty(key);
+	}
+
+	static inline void set_empty(K* keys, unsigned int length) {
+		K::set_empty(keys, length);
+	}
+
+	static inline unsigned int hash(const K& key) {
+		return K::hash(key);
+	}
+};
+
+template<typename K>
+struct hasher<K*> {
+	static inline bool is_empty(const K* const& key) {
+		return (key == NULL);
+	}
+
+	static inline void set_empty(K* const& key) {
+		key = NULL;
+	}
+
+	static inline void set_empty(K* const* keys, unsigned int length) {
+		set_all_empty(keys, length);
+	}
+
+	static inline unsigned int hash(const K* const& key) {
+		return default_hash(key);
+	}
+};
+
+template<typename K>
+struct hasher<K, typename std::enable_if<std::is_fundamental<K>::value>::type> {
+	static inline bool is_empty(const K& key) {
+		return (key == 0);
+	}
+
+	static inline void set_empty(K& key) {
+		key = 0;
+	}
+
+	static inline void set_empty(K* keys, unsigned int length) {
+		set_all_empty(keys, length);
+	}
+
+	static inline unsigned int hash(const K& key) {
+		return default_hash(key);
+	}
+};
+
+template<typename K>
+inline bool is_empty(const K& key) {
+	return hasher<K>::is_empty(key);
+}
+
+template<typename K>
+inline void set_empty(K& key) {
+	hasher<K>::set_empty(key);
+}
+
 
 } /* namespace core */
 
