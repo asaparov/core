@@ -890,7 +890,7 @@ struct pair {
 	}
 
 	static inline unsigned int hash(const pair<K, V>& pair) {
-		return hasher<K>::hash(pair.key) ^ hasher<V>::hash(pair.value);
+		return hasher<K>::hash(pair.key) + hasher<V>::hash(pair.value);
 	}
 
 	static inline bool is_empty(const pair<K, V>& pair) {
