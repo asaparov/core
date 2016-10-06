@@ -972,7 +972,7 @@ struct array_map {
 	}
 
 	inline unsigned int index_of(const K& key) const {
-		return core::index_of(key, keys, (unsigned int) size);
+		return core::index_of(key, keys, size);
 	}
 
 	inline unsigned int index_of(const K& key, unsigned int start) const {
@@ -980,6 +980,10 @@ struct array_map {
 			if (keys[i] == key)
 				return i;
 		return (unsigned int) size;
+	}
+
+	inline unsigned int last_index_of(const K& key) const {
+		return core::last_index_of(key, keys, size);
 	}
 
 	inline bool contains(const K& key) const {

@@ -54,12 +54,27 @@ inline bool ensure_capacity(T*& data, SizeType& capacity, size_t new_length)
 	return true;
 }
 
-template<typename T>
-inline unsigned int index_of(const T& element, const T* data, unsigned int length)
+template<typename T, typename SizeType,
+	typename std::enable_if<std::is_integral<SizeType>::value>::type* = nullptr>
+inline unsigned int index_of(const T& element, const T* data,
+		const SizeType& length, const SizeType& start = 0)
 {
-	for (unsigned int i = 0; i < length; i++)
+	for (unsigned int i = start; i < length; i++)
 		if (element == data[i])
 			return i;
+	return length;
+}
+
+template<typename T, typename SizeType,
+	typename std::enable_if<std::is_integral<SizeType>::value>::type* = nullptr>
+inline unsigned int last_index_of(const T& element, const T* data, const SizeType& length)
+{
+	unsigned int i = length;
+	while (i != 0) {
+		i--;
+		if (element == data[i])
+			return i;
+	}
 	return length;
 }
 
@@ -996,7 +1011,8 @@ void set_union(UnionFunc do_union,
 	}
 }
 
-template<bool RemoveDuplicates, typename T, typename SizeType>
+template<bool RemoveDuplicates, typename T, typename SizeType,
+	typename std::enable_if<std::is_integral<SizeType>::value>::type* = nullptr>
 inline void set_union_helper(T* dst, SizeType& dst_length, const T& item) {
 	if (!RemoveDuplicates || dst_length == 0 || dst[dst_length - 1] != item) {
 		dst[dst_length] = item;
