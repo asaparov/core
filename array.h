@@ -75,7 +75,7 @@ inline unsigned int last_index_of(const T& element, const T* data, const SizeTyp
 		if (element == data[i])
 			return i;
 	}
-	return length;
+	return static_cast<unsigned int>(-1);
 }
 
 template<typename T>
@@ -861,9 +861,55 @@ void shuffle(K* keys, V* values, unsigned int length) {
 }
 
 /**
- * Given sorted array a, this function finds
- * the smallest index i such that a[i] >= b.
+ * Given sorted array a, this function finds the smallest
+ * index i such that a[i] >= b and i >= start and i < end.
  */
+template<typename T>
+unsigned int linear_search(
+	const T* a, const T& b,
+	unsigned int start,
+	unsigned int end)
+{
+	for (unsigned int i = start; i < end; i++)
+		if (a[i] >= b) return i;
+	return end;
+}
+
+/**
+ * Given sorted array a, this function finds the smallest
+ * index i such that a[i] > b and i >= start and i < end.
+ */
+template<typename T>
+unsigned int strict_linear_search(
+	const T* a, const T& b,
+	unsigned int start,
+	unsigned int end)
+{
+	for (unsigned int i = start; i < end; i++)
+		if (a[i] > b) return i;
+	return end;
+}
+
+/**
+ * Given sorted array a, this function finds the smallest
+ * index i such that a[i] > b and i >= start and i < end.
+ */
+template<typename T>
+unsigned int reverse_strict_linear_search(
+	const T* a, const T& b,
+	unsigned int start,
+	unsigned int end)
+{
+	for (unsigned int i = end; i > start; i--)
+		if (a[i - 1] <= b) return i;
+	return start;
+}
+
+/**
+ * Given sorted array a, this function finds the smallest
+ * index i such that a[i] >= b and i >= min and i <= max.
+ */
+/* TODO: implement a strict variant */
 template<typename T>
 unsigned int binary_search(
 	const T* a, const T& b,
@@ -958,15 +1004,6 @@ void shift_right(T* list, unsigned int length, unsigned int index)
 {
 	for (unsigned int i = length; i > index; i--)
 		move(list[i - 1], list[i]);
-}
-
-template<typename T>
-unsigned int shift_right(const T& element, T* list, unsigned int length)
-{
-	unsigned int i;
-	for (i = length; i > 0 && element < list[i - 1]; i--)
-		move(list[i - 1], list[i]);
-	return i;
 }
 
 template<bool RemoveDuplicates, typename T, typename UnionFunc>
