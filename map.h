@@ -317,16 +317,14 @@ struct hash_set
 	{
 		unsigned int last = index;
 		unsigned int search = (index + 1) % capacity;
-		if (!hasher<T>::is_empty(keys[search]))
+		while (!hasher<T>::is_empty(keys[search]))
 		{
-			do {
-				unsigned int search_hash = hasher<T>::hash(keys[search]) % capacity;
-				if (!index_between(search_hash, last, search)) {
-					core::move(keys[search], keys[last]);
-					last = search;
-				}
-				search = (search + 1) % capacity;
-			} while (!hasher<T>::is_empty(keys[search]));
+			unsigned int search_hash = hasher<T>::hash(keys[search]) % capacity;
+			if (!index_between(search_hash, last, search)) {
+				core::move(keys[search], keys[last]);
+				last = search;
+			}
+			search = (search + 1) % capacity;
 		}
 
 		hasher<T>::set_empty(keys[last]);

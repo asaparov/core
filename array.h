@@ -1007,19 +1007,23 @@ void shift_right(T* list, unsigned int length, unsigned int index)
 }
 
 template<bool RemoveDuplicates, typename T, typename UnionFunc>
-inline void set_union_helper(UnionFunc do_union, const T& item, const T*& prev) {
+inline void set_union_helper(UnionFunc do_union, const T& item,
+		unsigned int i, unsigned int j, const T*& prev)
+{
 	if (RemoveDuplicates) {
 		if (prev == NULL || *prev != item) {
-			do_union(item);
+			do_union(item, i, j);
 			prev = &item;
 		}
 	} else {
-		do_union(item);
+		do_union(item, i, j);
 	}
 }
 
-template<typename T, typename UnionFunc, bool RemoveDuplicates = true>
-void set_union(UnionFunc do_union,
+template<typename T, typename UnionBoth,
+	typename UnionFirst, typename UnionSecond, bool RemoveDuplicates = true>
+void set_union(UnionBoth union_both,
+	UnionFirst union_first, UnionSecond union_second,
 	const T* first, unsigned int first_length,
 	const T* second, unsigned int second_length)
 {
@@ -1028,22 +1032,22 @@ void set_union(UnionFunc do_union,
 	while (i < first_length && j < second_length)
 	{
 		if (first[i] == second[j]) {
-			set_union_helper<RemoveDuplicates>(do_union, first[i], prev);
+			set_union_helper<RemoveDuplicates>(union_both, first[i], i, j, prev);
 			i++; j++;
 		} else if (first[i] < second[j]) {
-			set_union_helper<RemoveDuplicates>(do_union, first[i], prev);
+			set_union_helper<RemoveDuplicates>(union_first, first[i], i, j, prev);
 			i++;
 		} else {
-			set_union_helper<RemoveDuplicates>(do_union, second[j], prev);
+			set_union_helper<RemoveDuplicates>(union_second, second[j], i, j, prev);
 			j++;
 		}
 	}
 
 	while (i < first_length) {
-		set_union_helper<RemoveDuplicates>(do_union, first[i], prev);
+		set_union_helper<RemoveDuplicates>(union_first, first[i], i, j, prev);
 		i++;
 	} while (j < second_length) {
-		set_union_helper<RemoveDuplicates>(do_union, second[j], prev);
+		set_union_helper<RemoveDuplicates>(union_second, second[j], i, j, prev);
 		j++;
 	}
 }
