@@ -18,6 +18,24 @@
 
 using namespace core;
 
+namespace detail {
+	template<typename C> static auto test_readable(int) ->
+			decltype(size_t(fread(std::declval<void*>(), 1, 1, std::declval<C>())), std::true_type{});
+	template<typename C> static auto test_readable(long) -> std::false_type;
+
+	template<typename C> static auto test_writeable(int) ->
+			decltype(size_t(fwrite(std::declval<const void*>(), 1, 1, std::declval<C>())), std::true_type{});
+	template<typename C> static auto test_writeable(long) -> std::false_type;
+
+	template<typename C> static auto test_printable(int) ->
+			decltype(int(fprintf(std::declval<C>(), " ")), std::true_type{});
+	template<typename C> static auto test_printable(long) -> std::false_type;
+}
+
+template<typename T> struct is_readable : decltype(detail::test_readable<T>(0)){};
+template<typename T> struct is_writeable : decltype(detail::test_writeable<T>(0)){};
+template<typename T> struct is_printable : decltype(detail::test_printable<T>(0)){};
+
 template<typename T, typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
 inline bool read(T& value, FILE* in) {
 	return (fread(&value, sizeof(T), 1, in) == 1);
@@ -215,7 +233,8 @@ inline int fprintf(memory_stream& out, const char* format, ...) {
 	return written;
 }
 
-template<typename Stream>
+template<typename Stream,
+	typename std::enable_if<is_writeable<Stream>::value>::type* = nullptr>
 inline bool write(const char* values, Stream& out) {
 	return write(values, out, strlen(values));
 }
@@ -223,24 +242,26 @@ inline bool write(const char* values, Stream& out) {
 struct dummy_scribe { };
 
 template<typename T, typename Stream,
-	typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
+	typename std::enable_if<is_readable<Stream>::value>::type* = nullptr>
 inline bool read(T& value, Stream& in, dummy_scribe& scribe) {
 	return read(value, in);
 }
 
 template<typename T, typename Stream,
-	typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
+	typename std::enable_if<is_writeable<Stream>::value>::type* = nullptr>
 inline bool write(const T& value, Stream& out, dummy_scribe& scribe) {
 	return write(value, out);
 }
 
 template<typename T, typename Stream,
-	typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
+	typename std::enable_if<is_printable<Stream>::value>::type* = nullptr>
 inline bool print(const T& value, Stream& out, dummy_scribe& scribe) {
 	return print(value, out);
 }
 
-template<typename T, char LeftBracket = '[', char RightBracket = ']', typename SizeType, typename Stream, typename Printer>
+template<typename T, char LeftBracket = '[', char RightBracket = ']',
+	typename SizeType, typename Stream, typename Printer,
+	typename std::enable_if<is_printable<Stream>::value>::type* = nullptr>
 bool print(const T* values, SizeType length, Stream& out, Printer& printer) {
 	if (!print(LeftBracket, out)) return false;
 	if (length == 0)
@@ -253,20 +274,23 @@ bool print(const T* values, SizeType length, Stream& out, Printer& printer) {
 	return print(RightBracket, out);
 }
 
-template<typename T, char LeftBracket = '[', char RightBracket = ']', typename Stream>
+template<typename T, char LeftBracket = '[', char RightBracket = ']', typename Stream,
+	typename std::enable_if<is_printable<Stream>::value>::type* = nullptr>
 inline bool print(const T* values, unsigned int length, Stream& out) {
 	dummy_scribe printer;
 	return print<T, LeftBracket, RightBracket>(values, length, out, printer);
 }
 
-template<typename T, typename Stream, typename... Reader>
+template<typename T, typename Stream, typename... Reader,
+	typename std::enable_if<is_readable<Stream>::value>::type* = nullptr>
 inline bool read(T* a, Stream& in, unsigned int length, Reader&&... reader) {
 	for (unsigned int i = 0; i < length; i++)
 		if (!read(a[i], in, std::forward<Reader>(reader)...)) return false;
 	return true;
 }
 
-template<typename T, typename Stream, typename... Reader>
+template<typename T, typename Stream, typename... Reader,
+	typename std::enable_if<is_readable<Stream>::value>::type* = nullptr>
 bool read(array<T>& a, Stream& in, Reader&&... reader) {
 	size_t length;
 	if (!read(length, in))
@@ -283,25 +307,29 @@ bool read(array<T>& a, Stream& in, Reader&&... reader) {
 	return true;
 }
 
-template<typename T, typename Stream, typename... Writer>
+template<typename T, typename Stream, typename... Writer,
+	typename std::enable_if<is_writeable<Stream>::value>::type* = nullptr>
 inline bool write(const T* a, Stream& out, unsigned int length, Writer&&... writer) {
 	for (unsigned int i = 0; i < length; i++)
 		if (!write(a[i], out, std::forward<Writer>(writer)...)) return false;
 	return true;
 }
 
-template<typename T, typename Stream, typename... Writer>
+template<typename T, typename Stream, typename... Writer,
+	typename std::enable_if<is_writeable<Stream>::value>::type* = nullptr>
 bool write(const array<T>& a, Stream& out, Writer&&... writer) {
 	return write(a.length, out)
 		&& write(a.data, out, (unsigned int) a.length, std::forward<Writer>(writer)...);
 }
 
-template<typename T, typename Stream, typename... Printer>
+template<typename T, typename Stream, typename... Printer,
+	typename std::enable_if<is_printable<Stream>::value>::type* = nullptr>
 inline bool print(const array<T>& a, Stream& out, Printer&&... printer) {
 	return print(a.data, a.length, out, std::forward<Printer>(printer)...);
 }
 
-template<typename T, typename Stream>
+template<typename T, typename Stream,
+	typename std::enable_if<is_readable<Stream>::value>::type* = nullptr>
 bool read(hash_set<T>& set, Stream& in) {
 	unsigned int length;
 	if (!read(length, in)) return false;
@@ -319,7 +347,8 @@ bool read(hash_set<T>& set, Stream& in) {
 	return true;
 }
 
-template<typename T, typename Stream>
+template<typename T, typename Stream,
+	typename std::enable_if<is_writeable<Stream>::value>::type* = nullptr>
 bool write(const hash_set<T>& set, Stream& out) {
 	if (!write(set.size, out)) return false;
 	for (unsigned int i = 0; i < set.capacity; i++) {
@@ -330,7 +359,8 @@ bool write(const hash_set<T>& set, Stream& out) {
 }
 
 template<typename K, typename V, typename Stream,
-	typename KeyReader, typename ValueReader>
+	typename KeyReader, typename ValueReader,
+	typename std::enable_if<is_readable<Stream>::value>::type* = nullptr>
 bool read(hash_map<K, V>& map,
 	Stream& in, alloc_keys_func alloc_keys,
 	KeyReader& key_reader, ValueReader& value_reader)
@@ -367,25 +397,28 @@ bool read(hash_map<K, V>& map,
 	return true;
 }
 
-template<typename K, typename V, typename Stream, typename KeyReader>
+template<typename K, typename V, typename Stream, typename KeyReader,
+	typename std::enable_if<is_readable<Stream>::value>::type* = nullptr>
 inline bool read(hash_map<K, V>& map, Stream& in,
 		KeyReader& key_reader,
 		alloc_keys_func alloc_keys = calloc)
 {
 	dummy_scribe scribe;
-	return read(map, in, key_reader, scribe, alloc_keys);
+	return read(map, in, alloc_keys, key_reader, scribe);
 }
 
-template<typename K, typename V, typename Stream>
+template<typename K, typename V, typename Stream,
+	typename std::enable_if<is_readable<Stream>::value>::type* = nullptr>
 inline bool read(hash_map<K, V>& map, Stream& in,
 		alloc_keys_func alloc_keys = calloc)
 {
 	dummy_scribe scribe;
-	return read(map, in, scribe, scribe, alloc_keys);
+	return read(map, in, alloc_keys, scribe, scribe);
 }
 
 template<typename K, typename V, typename Stream,
-	typename KeyWriter, typename ValueWriter>
+	typename KeyWriter, typename ValueWriter,
+	typename std::enable_if<is_writeable<Stream>::value>::type* = nullptr>
 bool write(const hash_map<K, V>& map, Stream& out,
 		KeyWriter& key_writer, ValueWriter& value_writer)
 {
@@ -399,20 +432,23 @@ bool write(const hash_map<K, V>& map, Stream& out,
 	return true;
 }
 
-template<typename K, typename V, typename Stream, typename KeyWriter>
+template<typename K, typename V, typename Stream, typename KeyWriter,
+	typename std::enable_if<is_writeable<Stream>::value>::type* = nullptr>
 inline bool write(const hash_map<K, V>& map, Stream& out, KeyWriter& key_writer) {
 	dummy_scribe scribe;
 	return write(map, out, key_writer, scribe);
 }
 
-template<typename K, typename V, typename Stream>
+template<typename K, typename V, typename Stream,
+	typename std::enable_if<is_writeable<Stream>::value>::type* = nullptr>
 inline bool write(const hash_map<K, V>& map, Stream& out) {
 	dummy_scribe scribe;
 	return write(map, out, scribe, scribe);
 }
 
 template<typename K, typename V, typename Stream,
-	typename KeyReader, typename ValueReader>
+	typename KeyReader, typename ValueReader,
+	typename std::enable_if<is_readable<Stream>::value>::type* = nullptr>
 bool read(array_map<K, V>& map, Stream& in,
 		KeyReader& key_reader, ValueReader& value_reader)
 {
@@ -437,20 +473,23 @@ bool read(array_map<K, V>& map, Stream& in,
 	return true;
 }
 
-template<typename K, typename V, typename Stream, typename KeyReader>
+template<typename K, typename V, typename Stream, typename KeyReader,
+	typename std::enable_if<is_readable<Stream>::value>::type* = nullptr>
 inline bool read(array_map<K, V>& map, Stream& in, KeyReader& key_reader) {
 	dummy_scribe scribe;
 	return read(map, in, key_reader, scribe);
 }
 
-template<typename K, typename V, typename Stream>
+template<typename K, typename V, typename Stream,
+	typename std::enable_if<is_readable<Stream>::value>::type* = nullptr>
 inline bool read(array_map<K, V>& map, Stream& in) {
 	dummy_scribe scribe;
 	return read(map, in, scribe, scribe);
 }
 
 template<typename K, typename V, typename Stream,
-	typename KeyWriter, typename ValueWriter>
+	typename KeyWriter, typename ValueWriter,
+	typename std::enable_if<is_writeable<Stream>::value>::type* = nullptr>
 bool write(const array_map<K, V>& map, Stream& out,
 		KeyWriter& key_writer, ValueWriter& value_writer)
 {
@@ -462,16 +501,32 @@ bool write(const array_map<K, V>& map, Stream& out,
 	return true;
 }
 
-template<typename K, typename V, typename Stream, typename KeyWriter>
+template<typename K, typename V, typename Stream, typename KeyWriter,
+	typename std::enable_if<is_writeable<Stream>::value>::type* = nullptr>
 inline bool write(const array_map<K, V>& map, Stream& out, KeyWriter& key_writer) {
 	dummy_scribe scribe;
 	return write(map, out, key_writer, scribe);
 }
 
-template<typename K, typename V, typename Stream>
+template<typename K, typename V, typename Stream,
+	typename std::enable_if<is_writeable<Stream>::value>::type* = nullptr>
 inline bool write(const array_map<K, V>& map, Stream& out) {
 	dummy_scribe scribe;
 	return write(map, out, scribe, scribe);
+}
+
+template<typename K, typename V, typename Stream,
+	typename std::enable_if<is_readable<Stream>::value>::type* = nullptr>
+inline bool read(pair<K, V>& p, Stream& stream)
+{
+	return read(p.key, stream) && read(p.value, stream);
+}
+
+template<typename K, typename V, typename Stream,
+	typename std::enable_if<is_writeable<Stream>::value>::type* = nullptr>
+inline bool write(const pair<K, V>& p, Stream& stream)
+{
+	return write(p.key, stream) && write(p.value, stream);
 }
 
 #endif /* IO_H_ */
