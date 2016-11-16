@@ -28,7 +28,8 @@ inline T max(const T& first, const T& second) {
 	return (first < second) ? second : first;
 }
 
-template<typename T>
+template<typename T,
+	typename std::enable_if<!std::is_fundamental<T>::value>::type* = nullptr>
 inline void move(const T& src, T& dst) {
 	T::move(src, dst);
 }
@@ -38,55 +39,27 @@ inline void move(T* a, T*& b) {
 	b = a;
 }
 
-inline void move(const bool a, bool& b) {
+template<typename T,
+	typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
+inline void move(const T& a, T& b) {
 	b = a;
 }
 
-inline void move(const int a, int& b) {
-	b = a;
+template<typename T,
+	typename std::enable_if<!std::is_fundamental<T>::value>::type* = nullptr>
+inline bool copy(const T& src, T& dst) {
+	return T::copy(src, dst);
 }
 
-inline void move(const unsigned int a, unsigned int& b) {
+template<typename T,
+	typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
+inline bool copy(const T& a, T& b) {
 	b = a;
+	return true;
 }
 
-inline void move(const long a, long& b) {
-	b = a;
-}
-
-inline void move(const unsigned long a, unsigned long& b) {
-	b = a;
-}
-
-inline void move(const unsigned long long a, unsigned long long& b) {
-	b = a;
-}
-
-inline void move(const short a, short& b) {
-	b = a;
-}
-
-inline void move(const unsigned short a, unsigned short& b) {
-	b = a;
-}
-
-inline void move(const char a, char& b) {
-	b = a;
-}
-
-inline void move(const unsigned char a, unsigned char& b) {
-	b = a;
-}
-
-inline void move(const float a, float& b) {
-	b = a;
-}
-
-inline void move(const double a, double& b) {
-	b = a;
-}
-
-template<typename T>
+template<typename T,
+	typename std::enable_if<!std::is_fundamental<T>::value>::type* = nullptr>
 inline void swap(T& a, T& b) {
 	T::swap(a, b);
 }
@@ -98,124 +71,18 @@ inline void swap(T*& a, T*& b) {
 	b = temp;
 }
 
-inline void swap(bool& a, bool& b) {
-	bool temp = a;
+template<typename T,
+	typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
+inline void swap(T& a, T& b) {
+	T temp = a;
 	a = b;
 	b = temp;
 }
 
-inline void swap(int& a, int& b) {
-	int temp = a;
-	a = b;
-	b = temp;
-}
-
-inline void swap(unsigned int& a, unsigned int& b) {
-	unsigned int temp = a;
-	a = b;
-	b = temp;
-}
-
-inline void swap(long& a, long& b) {
-	long temp = a;
-	a = b;
-	b = temp;
-}
-
-inline void swap(unsigned long& a, unsigned long& b) {
-	unsigned long temp = a;
-	a = b;
-	b = temp;
-}
-
-inline void swap(unsigned long long& a, unsigned long long& b) {
-	unsigned long long temp = a;
-	a = b;
-	b = temp;
-}
-
-inline void swap(short& a, short& b) {
-	short temp = a;
-	a = b;
-	b = temp;
-}
-
-inline void swap(unsigned short& a, unsigned short& b) {
-	unsigned short temp = a;
-	a = b;
-	b = temp;
-}
-
-inline void swap(char& a, char& b) {
-	char temp = a;
-	a = b;
-	b = temp;
-}
-
-inline void swap(unsigned char& a, unsigned char& b) {
-	unsigned char temp = a;
-	a = b;
-	b = temp;
-}
-
-inline void swap(float& a, float& b) {
-	float temp = a;
-	a = b;
-	b = temp;
-}
-
-inline void swap(double& a, double& b) {
-	double temp = a;
-	a = b;
-	b = temp;
-}
-
-inline constexpr long unsigned int size_of(bool a) {
-	return sizeof(a);
-}
-
-inline constexpr long unsigned int size_of(int a) {
-	return sizeof(a);
-}
-
-inline constexpr long unsigned int size_of(unsigned int a) {
-	return sizeof(a);
-}
-
-inline constexpr long unsigned int size_of(long a) {
-	return sizeof(a);
-}
-
-inline constexpr long unsigned int size_of(unsigned long a) {
-	return sizeof(a);
-}
-
-inline constexpr long unsigned int size_of(unsigned long long a) {
-	return sizeof(a);
-}
-
-inline constexpr long unsigned int size_of(short a) {
-	return sizeof(a);
-}
-
-inline constexpr long unsigned int size_of(unsigned short a) {
-	return sizeof(a);
-}
-
-inline constexpr long unsigned int size_of(char a) {
-	return sizeof(a);
-}
-
-inline constexpr long unsigned int size_of(unsigned char a) {
-	return sizeof(a);
-}
-
-inline constexpr long unsigned int size_of(float a) {
-	return sizeof(a);
-}
-
-inline constexpr long unsigned int size_of(double a) {
-	return sizeof(a);
+template<typename T,
+	typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
+inline constexpr T size_of(const T& a) {
+	return sizeof(T);
 }
 
 template<typename E,
@@ -227,8 +94,7 @@ inline constexpr long unsigned int size_of(const E& a) {
 struct dummy_metric { };
 
 template<typename T,
-	typename std::enable_if<!std::is_pointer<T>::value>::type* = nullptr,
-	typename std::enable_if<!std::is_enum<T>::value>::type* = nullptr>
+	typename std::enable_if<!std::is_fundamental<T>::value && !std::is_pointer<T>::value && !std::is_enum<T>::value>::type* = nullptr>
 inline long unsigned int size_of(const T& a) {
 	return T::size_of(a, dummy_metric());
 }
