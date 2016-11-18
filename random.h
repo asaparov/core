@@ -81,17 +81,14 @@ unsigned int sample_categorical(V* probability, unsigned int length)
 	return selected_table;
 }
 
-template<typename V,
-	typename std::enable_if<std::is_floating_point<V>::value>::type* = nullptr>
-unsigned int sample_categorical(const V* probability, V sum, unsigned int length)
+template<typename U, typename V>
+inline unsigned int select_categorical(
+		const U* probability, V random, unsigned int length)
 {
 #if !defined(NDEBUG)
 	if (length == 0)
-		fprintf(stderr, "sample_categorical WARNING: Specified length is zero.\n");
+		fprintf(stderr, "select_categorical WARNING: Specified length is zero.\n");
 #endif
-
-	/* select the new table assignment */
-	V random = sum * ((V) engine() / engine.max());
 
 	V aggregator = 0.0;
 	unsigned int selected_table = length - 1;
@@ -105,6 +102,20 @@ unsigned int sample_categorical(const V* probability, V sum, unsigned int length
 	return selected_table;
 }
 
+template<typename V,
+	typename std::enable_if<std::is_floating_point<V>::value>::type* = nullptr>
+unsigned int sample_categorical(const V* probability, V sum, unsigned int length)
+{
+#if !defined(NDEBUG)
+	if (length == 0)
+		fprintf(stderr, "sample_categorical WARNING: Specified length is zero.\n");
+#endif
+
+	/* select the new table assignment */
+	V random = sum * ((V) engine() / engine.max());
+	return select_categorical(probability, random, length);
+}
+
 unsigned int sample_categorical(
 	const unsigned int* probability,
 	unsigned int sum, unsigned int length)
@@ -116,17 +127,7 @@ unsigned int sample_categorical(
 
 	/* select the new table assignment */
 	unsigned int random = engine() % sum;
-
-	unsigned int aggregator = 0;
-	unsigned int selected_table = length - 1;
-	for (unsigned int j = 0; j < length; j++) {
-		aggregator += probability[j];
-		if (random < aggregator) {
-			selected_table = j;
-			break;
-		}
-	}
-	return selected_table;
+	return select_categorical(probability, random, length);
 }
 
 
@@ -146,6 +147,11 @@ inline unsigned int sample_uniform(unsigned int n) {
 template<typename T>
 inline const T& sample_uniform(const T* elements, unsigned int length) {
 	return elements[engine() % length];
+}
+
+template<typename T, size_t N>
+inline const T& sample_uniform(const T (&elements)[N]) {
+	return elements[engine() % N];
 }
 
 template<typename T>
