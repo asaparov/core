@@ -281,6 +281,29 @@ inline bool print(const T* values, unsigned int length, Stream& out) {
 	return print<T, LeftBracket, RightBracket>(values, length, out, printer);
 }
 
+template<typename T, size_t N, char LeftBracket = '[',
+	char RightBracket = ']', typename Stream, typename Printer,
+	typename std::enable_if<is_printable<Stream>::value>::type* = nullptr>
+bool print(const T (&values)[N], Stream& out, Printer& printer) {
+	if (!print(LeftBracket, out)) return false;
+	if (N == 0)
+		return print(RightBracket, out);
+	if (!print(values[0], out, printer)) return false;
+	for (unsigned int i = 1; i < N; i++) {
+		if (!print(", ", out) || !print(values[i], out, printer))
+			return false;
+	}
+	return print(RightBracket, out);
+}
+
+template<typename T, size_t N, char LeftBracket = '[',
+	char RightBracket = ']', typename Stream,
+	typename std::enable_if<is_printable<Stream>::value>::type* = nullptr>
+inline bool print(const T (&values)[N], Stream& out) {
+	dummy_scribe printer;
+	return print<T, N, LeftBracket, RightBracket>(values, out, printer);
+}
+
 template<typename T, typename Stream, typename... Reader,
 	typename std::enable_if<is_readable<Stream>::value>::type* = nullptr>
 inline bool read(T* a, Stream& in, unsigned int length, Reader&&... reader) {

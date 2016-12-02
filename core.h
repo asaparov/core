@@ -14,7 +14,7 @@ namespace core {
 
 
 template<typename T, size_t N>
-inline constexpr size_t array_length(T (&array)[N]) {
+inline constexpr size_t array_length(const T (&array)[N]) {
 	return N;
 }
 
@@ -105,7 +105,7 @@ inline constexpr long unsigned int size_of(const T* const& a) {
 }
 
 template<typename T, size_t N>
-inline long unsigned int size_of(T (&array)[N]) {
+inline long unsigned int size_of(const T (&array)[N]) {
 	long unsigned int size = 0;
 	for (unsigned int i = 0; i < N; i++)
 		size += size_of(array[i]);
