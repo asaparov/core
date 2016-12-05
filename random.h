@@ -170,8 +170,14 @@ inline bool sample_bernoulli(const V& p) {
 }
 
 template<typename V>
+inline unsigned int sample_geometric(const V& p) {
+	static auto geom = std::geometric_distribution<unsigned int>(p);
+	return geom(engine);
+}
+
+template<typename V>
 inline V sample_beta(const V& alpha) {
-	std::gamma_distribution<V> first_gamma = std::gamma_distribution<V>(1.0);
+	static std::gamma_distribution<V> first_gamma = std::gamma_distribution<V>(1.0);
 	std::gamma_distribution<V> second_gamma = std::gamma_distribution<V>(alpha);
 	V first = first_gamma(engine);
 	V second = second_gamma(engine);
