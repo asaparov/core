@@ -29,7 +29,7 @@ inline T max(const T& first, const T& second) {
 }
 
 template<typename T,
-	typename std::enable_if<!std::is_fundamental<T>::value>::type* = nullptr>
+	typename std::enable_if<!std::is_fundamental<T>::value && !std::is_enum<T>::value>::type* = nullptr>
 inline void move(const T& src, T& dst) {
 	T::move(src, dst);
 }
@@ -40,26 +40,26 @@ inline void move(T* a, T*& b) {
 }
 
 template<typename T,
-	typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
+	typename std::enable_if<std::is_fundamental<T>::value || std::is_enum<T>::value>::type* = nullptr>
 inline void move(const T& a, T& b) {
 	b = a;
 }
 
 template<typename T,
-	typename std::enable_if<!std::is_fundamental<T>::value>::type* = nullptr>
+	typename std::enable_if<!std::is_fundamental<T>::value && !std::is_enum<T>::value>::type* = nullptr>
 inline bool copy(const T& src, T& dst) {
 	return T::copy(src, dst);
 }
 
 template<typename T,
-	typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
+	typename std::enable_if<std::is_fundamental<T>::value || std::is_enum<T>::value>::type* = nullptr>
 inline bool copy(const T& a, T& b) {
 	b = a;
 	return true;
 }
 
 template<typename T,
-	typename std::enable_if<!std::is_fundamental<T>::value>::type* = nullptr>
+	typename std::enable_if<!std::is_fundamental<T>::value && !std::is_enum<T>::value>::type* = nullptr>
 inline void swap(T& a, T& b) {
 	T::swap(a, b);
 }
@@ -72,7 +72,7 @@ inline void swap(T*& a, T*& b) {
 }
 
 template<typename T,
-	typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
+	typename std::enable_if<std::is_fundamental<T>::value || std::is_enum<T>::value>::type* = nullptr>
 inline void swap(T& a, T& b) {
 	T temp = a;
 	a = b;
@@ -80,7 +80,7 @@ inline void swap(T& a, T& b) {
 }
 
 template<typename T,
-	typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
+	typename std::enable_if<std::is_fundamental<T>::value || std::is_enum<T>::value>::type* = nullptr>
 inline constexpr T size_of(const T& a) {
 	return sizeof(T);
 }
@@ -113,7 +113,7 @@ inline long unsigned int size_of(const T (&array)[N]) {
 }
 
 template<typename T,
-	typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
+	typename std::enable_if<std::is_fundamental<T>::value || std::is_enum<T>::value>::type* = nullptr>
 inline long unsigned int size_of(const T& a, const dummy_metric& metric) {
 	return size_of(a);
 }
@@ -124,11 +124,11 @@ inline long unsigned int size_of(const T& a, const Metric& metric) {
 }
 
 template<typename T,
-	typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
+	typename std::enable_if<std::is_fundamental<T>::value || std::is_enum<T>::value>::type* = nullptr>
 inline void free(T& a) { }
 
 template<typename T, typename... Args,
-	typename std::enable_if<!std::is_fundamental<T>::value>::type* = nullptr>
+	typename std::enable_if<!std::is_fundamental<T>::value && !std::is_enum<T>::value>::type* = nullptr>
 inline void free(T& a, Args&&... args) {
 	T::free(a, std::forward<Args>(args)...);
 }
@@ -206,7 +206,7 @@ struct hasher<K*> {
 };
 
 template<typename K>
-struct hasher<K, typename std::enable_if<std::is_fundamental<K>::value>::type> {
+struct hasher<K, typename std::enable_if<std::is_fundamental<K>::value || std::is_enum<K>::value>::type> {
 	static inline bool is_empty(const K& key) {
 		return (key == static_cast<K>(0));
 	}
