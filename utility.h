@@ -1,4 +1,4 @@
-/*
+/**
  * utility.h
  *
  *  Created on: Jan 8, 2014

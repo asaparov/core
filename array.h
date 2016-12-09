@@ -31,13 +31,18 @@ inline bool resize(T*& data, const SizeType& new_capacity) {
 	return true;
 }
 
-template<typename T, typename SizeType,
-	typename std::enable_if<std::is_integral<SizeType>::value>::type* = nullptr>
-inline bool expand(T*& data, SizeType& capacity, size_t new_length) {
+template<typename SizeType, typename std::enable_if<std::is_integral<SizeType>::value>::type* = nullptr>
+inline void expand_capacity(SizeType& capacity, size_t new_length) {
 	do {
 		/* increase the size of the underlying array */
 		capacity *= RESIZE_FACTOR;
 	} while (new_length > capacity);
+}
+
+template<typename T, typename SizeType,
+	typename std::enable_if<std::is_integral<SizeType>::value>::type* = nullptr>
+inline bool expand(T*& data, SizeType& capacity, size_t new_length) {
+	expand_capacity(capacity, new_length);
 	return resize(data, capacity);
 }
 
@@ -858,6 +863,11 @@ void shuffle(K* keys, V* values, unsigned int length) {
 			core::swap(values[next], values[i]);
 		}
 	}
+}
+
+template<typename T>
+inline void shuffle(array<T>& items) {
+	shuffle(items.data, items.length);
 }
 
 /**

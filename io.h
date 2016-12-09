@@ -255,7 +255,7 @@ inline bool write(const T& value, Stream& out, dummy_scribe& scribe) {
 
 template<typename T, typename Stream,
 	typename std::enable_if<is_printable<Stream>::value>::type* = nullptr>
-inline bool print(const T& value, Stream& out, dummy_scribe& scribe) {
+inline auto print(const T& value, Stream& out, dummy_scribe& scribe) -> decltype(print(value, out)) {
 	return print(value, out);
 }
 
