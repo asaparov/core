@@ -200,6 +200,11 @@ inline V sample_gamma(const V& alpha, const V& beta) {
 }
 
 template<typename V>
+inline V log_probability_gamma(const V& x, const V& alpha, const V& beta) {
+	return alpha * log(beta) - lgamma(alpha) + (alpha - 1) * log(x) - beta * x;
+}
+
+template<typename V>
 inline void sample_dirichlet(V* dst, const V* alpha, unsigned int length) {
 	V sum = 0.0;
 	for (unsigned int i = 0; i < length; i++) {

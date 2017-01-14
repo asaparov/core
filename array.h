@@ -17,7 +17,16 @@
 
 #define RESIZE_FACTOR 2
 
+
+namespace detail {
+	template<typename C> static auto test_resizeable(int) ->
+			decltype(void(std::declval<C>().on_resize()), std::true_type{});
+	template<typename C> static auto test_resizeable(long) -> std::false_type;
+}
+
 namespace core {
+
+template<typename T> struct is_resizeable : decltype(detail::test_resizeable<T>(0)){};
 
 template<typename T, typename SizeType,
 	typename std::enable_if<std::is_integral<SizeType>::value>::type* = nullptr>
@@ -116,6 +125,18 @@ struct array {
 		length--;
 	}
 
+	template<typename C = T, typename std::enable_if<is_resizeable<C>::value>::type* = nullptr>
+	bool ensure_capacity(size_t new_length) {
+		const T* old_data = data;
+		if (!core::ensure_capacity(data, capacity, new_length)) return false;
+		if (data != old_data) {
+			for (unsigned int i = 0; i < length; i++)
+				data[i].on_resize();
+		}
+		return true;
+	}
+
+	template<typename C = T, typename std::enable_if<!is_resizeable<C>::value>::type* = nullptr>
 	bool ensure_capacity(size_t new_length) {
 		return core::ensure_capacity(data, capacity, new_length);
 	}
