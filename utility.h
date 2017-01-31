@@ -251,8 +251,8 @@ inline FILE* open_file(const char* filename, const char* mode) {
 #endif
 }
 
-inline char* read_file(const char* filename,
-		size_t& bytes_read, bool append_null)
+template<bool AppendNull>
+inline char* read_file(const char* filename, size_t& bytes_read)
 {
 	FILE* fin = open_file(filename, "r");
 	if (fseek(fin, 0, SEEK_END) != 0)
@@ -262,15 +262,14 @@ inline char* read_file(const char* filename,
 	if (filesize == -1L)
 		return NULL;
 
-	if (append_null)
-		filesize++;
+	if (AppendNull) filesize++;
 	char* data = (char*) malloc(sizeof(char) * filesize);
 	if (data == NULL)
 		return NULL;
 	if (fseek(fin, 0, SEEK_SET) != 0)
 		return NULL;
 	bytes_read = fread(data, sizeof(char), filesize, fin);
-	if (append_null)
+	if (AppendNull)
 		data[filesize - 1] = '\0';
 	return data;
 }
