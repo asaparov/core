@@ -161,19 +161,19 @@ private:
 		return true;
 	}
 
-	friend bool string_init(string&, const char*, unsigned int);
-	friend bool string_init(string&, unsigned int);
+	friend bool init(string&, const char*, unsigned int);
+	friend bool init(string&, unsigned int);
 };
 
-inline bool string_init(string& dest, const char* src, unsigned int length) {
+inline bool init(string& dest, const char* src, unsigned int length) {
 	return dest.initialize(src, length);
 }
 
-inline bool string_init(string& dest, const string& src) {
-	return string_init(dest, src.data, src.length);
+inline bool init(string& dest, const string& src) {
+	return init(dest, src.data, src.length);
 }
 
-inline bool string_init(string& dest, unsigned int length) {
+inline bool init(string& dest, unsigned int length) {
 	return dest.initialize(length);
 }
 
@@ -313,7 +313,7 @@ inline bool get_files_in_directory(array<string>& out, const char* directory)
 			return false;
 
 		if (wcstombs_s(&required, NULL, 0, file_data.cFileName, 0) != 0
-		 || !string_init(out[(unsigned int) out.length], (unsigned int) required + 1))
+		 || !init(out[(unsigned int) out.length], (unsigned int) required + 1))
 			return false;
 		out.length++;
 		if (wcstombs_s(&required, out.last().data, required + 1, file_data.cFileName, wcslen(file_data.cFileName)) != 0)
@@ -345,7 +345,7 @@ inline bool get_files_in_directory(array<string>& out, const char* directory)
 
         if (!out.ensure_capacity(out.length + 1))
         	return false;
-        string_init(out[out.length], ent->d_name);
+        init(out[out.length], ent->d_name);
         out.length++;
     }
     closedir(dir);

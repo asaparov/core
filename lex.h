@@ -109,7 +109,7 @@ bool emit_token(
 	}
 
 	lexical_token<TokenType>& new_token = tokens[(unsigned int) tokens.length];
-	if (!string_init(new_token.text, token.data, (unsigned int) token.length)) {
+	if (!init(new_token.text, token.data, (unsigned int) token.length)) {
 		fprintf(stderr, "emit_token ERROR: Unable to create string.\n");
 		return false;
 	}
