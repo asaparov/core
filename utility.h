@@ -240,6 +240,10 @@ inline unsigned int log2(unsigned int x) {
 	return (unsigned int) sizeof(unsigned int) * 8 - __builtin_clz(x) - 1;
 }
 
+constexpr unsigned int static_log2(unsigned int x) {
+	return (x < 2) ? 1 : (1 + static_log2(x));
+}
+
 inline FILE* open_file(const char* filename, const char* mode) {
 #if defined(_WIN32)
 	FILE* file;
