@@ -46,7 +46,7 @@ struct string {
 			exit(EXIT_FAILURE);
 	}
 
-	string(unsigned int length) {
+	explicit string(unsigned int length) {
 		if (!initialize(length))
 			exit(EXIT_FAILURE);
 	}
