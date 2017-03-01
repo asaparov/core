@@ -31,6 +31,64 @@ inline bool compare_strings(const string& first, const char* second, unsigned in
 	return true;
 }
 
+bool get_token(const string& identifier, unsigned int& id, hash_map<string, unsigned int>& map) {
+	if (!map.check_size()) {
+		fprintf(stderr, "get_identifier ERROR: Unable to expand identifier map.\n");
+		return false;
+	}
+
+	bool contains;
+	unsigned int bucket;
+	unsigned int& value = map.get(identifier, contains, bucket);
+	if (!contains) {
+		map.table.keys[bucket] = identifier;
+		map.table.size++;
+		value = map.table.size;
+	}
+	id = value;
+	return true;
+}
+
+template<typename CharArray>
+inline bool parse_float(const CharArray& token, double& value) {
+	char* buffer = (char*) malloc(sizeof(char) * (token.length + 1));
+	if (buffer == NULL) {
+		fprintf(stderr, "parse_float ERROR: Unable to allocate temporary string buffer.\n");
+		return false;
+	}
+	memcpy(buffer, token.data, sizeof(char) * token.length);
+	buffer[token.length] = '\0';
+
+	char* end_ptr;
+	value = strtod(buffer, &end_ptr);
+	if (*end_ptr != '\0') {
+		free(buffer);
+		return false;
+	}
+	free(buffer);
+	return true;
+}
+
+template<typename CharArray>
+inline bool parse_uint(const CharArray& token, unsigned int& value) {
+	char* buffer = (char*) malloc(sizeof(char) * (token.length + 1));
+	if (buffer == NULL) {
+		fprintf(stderr, "parse_uint ERROR: Unable to allocate temporary string buffer.\n");
+		return false;
+	}
+	memcpy(buffer, token.data, sizeof(char) * token.length);
+	buffer[token.length] = '\0';
+
+	char* end_ptr;
+	value = strtol(buffer, &end_ptr, 0);
+	if (*end_ptr != '\0') {
+		free(buffer);
+		return false;
+	}
+	free(buffer);
+	return true;
+}
+
 struct position {
 	unsigned int line;
 	unsigned int column;
