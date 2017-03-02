@@ -33,7 +33,7 @@ inline bool compare_strings(const string& first, const char* second, unsigned in
 
 bool get_token(const string& identifier, unsigned int& id, hash_map<string, unsigned int>& map) {
 	if (!map.check_size()) {
-		fprintf(stderr, "get_identifier ERROR: Unable to expand identifier map.\n");
+		fprintf(stderr, "get_token ERROR: Unable to expand token map.\n");
 		return false;
 	}
 
@@ -87,6 +87,18 @@ inline bool parse_uint(const CharArray& token, unsigned int& value) {
 	}
 	free(buffer);
 	return true;
+}
+
+template<size_t N>
+inline bool parse_uint(const char (&token)[N], unsigned int& value, unsigned int base = 0) {
+	char buffer[N + 1];
+	for (unsigned int i = 0; i < N; i++)
+		buffer[i] = token[i];
+	buffer[N] = '\0';
+
+	char* end_ptr;
+	value = strtol(buffer, &end_ptr, base);
+	return (*end_ptr == '\0');
 }
 
 struct position {

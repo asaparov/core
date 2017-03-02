@@ -282,15 +282,15 @@ inline bool print(const T* values, unsigned int length, Stream& out) {
 }
 
 template<typename T, size_t N, char LeftBracket = '[',
-	char RightBracket = ']', typename Stream, typename Printer,
+	char RightBracket = ']', typename Stream, typename... Printer,
 	typename std::enable_if<is_printable<Stream>::value>::type* = nullptr>
-bool print(const T (&values)[N], Stream& out, Printer& printer) {
+bool print(const T (&values)[N], Stream& out, Printer&&... printer) {
 	if (!print(LeftBracket, out)) return false;
 	if (N == 0)
 		return print(RightBracket, out);
-	if (!print(values[0], out, printer)) return false;
+	if (!print(values[0], out, std::forward<Printer>(printer)...)) return false;
 	for (unsigned int i = 1; i < N; i++) {
-		if (!print(", ", out) || !print(values[i], out, printer))
+		if (!print(", ", out) || !print(values[i], out, std::forward<Printer>(printer)...))
 			return false;
 	}
 	return print(RightBracket, out);
