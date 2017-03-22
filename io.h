@@ -353,17 +353,17 @@ inline bool print(const array<T>& a, Stream& out, Printer&&... printer) {
 
 template<typename T, typename Stream,
 	typename std::enable_if<is_readable<Stream>::value>::type* = nullptr>
-bool read(hash_set<T>& set, Stream& in) {
+bool read(hash_set<T>& set, Stream& in, alloc_keys_func alloc_keys = calloc) {
 	unsigned int length;
 	if (!read(length, in)) return false;
 
 	set.size = 0;
 	set.capacity = RESIZE_THRESHOLD_INVERSE * (length == 0 ? 1 : length);
-	set.keys = (T*) malloc(sizeof(T) * set.capacity);
+	set.keys = (T*) alloc_keys(set.capacity, sizeof(T));
 	if (set.keys == NULL) return false;
 
 	for (unsigned int i = 0; i < length; i++) {
-		T key;
+		T& key = *((T*) alloca(sizeof(T)));
 		if (!read(key, in)) return false;
 		set.add(key);
 	}
@@ -402,7 +402,7 @@ bool read(hash_map<K, V>& map,
 	}
 
 	for (unsigned int i = 0; i < length; i++) {
-		K key;
+		K& key = *((K*) alloca(sizeof(K)));
 		if (!read(key, in, key_reader)) return false;
 
 		bool contains;
