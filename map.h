@@ -448,12 +448,18 @@ struct hash_set
 		dst.size = src.size;
 	}
 
-	static inline bool copy(const hash_set<T>& src, hash_set<T>& dst) {
+	static inline bool copy(const hash_set<T>& src, hash_set<T>& dst, alloc_keys_func alloc_keys = calloc) {
 		dst.capacity = src.capacity;
 		dst.size = src.size;
-		dst.keys = (T*) malloc(sizeof(T) * src.capacity);
+		dst.keys = (T*) alloc_keys(src.capacity, sizeof(T));
 		if (dst.keys == NULL) return false;
-		memcpy(dst.keys, src.keys, sizeof(T) * src.capacity);
+
+		for (unsigned int i = 0; i < src.capacity; i++) {
+			if (is_empty(src.keys[i])) continue;
+			if (!copy(src.keys[i], dst.keys[i])) {
+				free(dst); return false;
+			}
+		}
 		return true;
 	}
 
@@ -818,14 +824,27 @@ struct hash_map
 		dst.values = src.values;
 	}
 
-	static inline bool copy(const hash_map<K, V>& src, hash_map<K, V>& dst) {
-		if (!hash_set<K>::copy(src.table, dst.table))
-			return false;
-		if (!dst.initialize_values()) {
-			dst.table.free();
+	static inline bool copy(const hash_map<K, V>& src, hash_map<K, V>& dst, alloc_keys_func alloc_keys = calloc) {
+		dst.table.capacity = src.table.capacity;
+		dst.table.size = src.table.size;
+		dst.table.keys = (K*) alloc_keys(src.table.capacity, sizeof(K));
+		if (dst.table.keys == NULL) return false;
+		dst.values = (V*) malloc(sizeof(V) * src.table.capacity);
+		if (dst.values == NULL) {
+			free(dst.table.keys);
 			return false;
 		}
-		memcpy(dst.values, src.values, sizeof(V) * src.table.capacity);
+
+		for (unsigned int i = 0; i < src.table.capacity; i++) {
+			if (is_empty(src.table.keys[i])) continue;
+			if (!core::copy(src.table.keys[i], dst.table.keys[i])) {
+				free(dst); return false;
+			} else if (!core::copy(src.values[i], dst.values[i])) {
+				core::free(dst.table.keys[i]);
+				set_empty(dst.table.keys[i]);
+				free(dst); return false;
+			}
+		}
 		return true;
 	}
 

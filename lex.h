@@ -49,6 +49,37 @@ bool get_token(const string& identifier, unsigned int& id, hash_map<string, unsi
 	return true;
 }
 
+bool tokenize(const char* str, unsigned int length,
+		array<unsigned int>& tokens, hash_map<string, unsigned int>& names)
+{
+	bool whitespace = true;
+	unsigned int token_start = 0;
+	for (unsigned int i = 0; i < length; i++) {
+		if (whitespace) {
+			if (!isspace(str[i])) {
+				token_start = i;
+				whitespace = false;
+			}
+		} else {
+			if (isspace(str[i])) {
+				unsigned int id;
+				if (!get_token(string(str + token_start, i - token_start), id, names)
+				 || !tokens.add(id))
+					return false;
+				whitespace = true;
+			}
+		}
+	}
+
+	if (!whitespace) {
+		unsigned int id;
+		if (!get_token(string(str + token_start, length - token_start), id, names)
+		 || !tokens.add(id))
+			return false;
+	}
+	return true;
+}
+
 template<typename CharArray>
 inline bool parse_float(const CharArray& token, double& value) {
 	char* buffer = (char*) malloc(sizeof(char) * (token.length + 1));
