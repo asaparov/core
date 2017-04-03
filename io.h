@@ -351,9 +351,9 @@ inline bool print(const array<T>& a, Stream& out, Printer&&... printer) {
 	return print(a.data, a.length, out, std::forward<Printer>(printer)...);
 }
 
-template<typename T, typename Stream,
+template<typename T, typename Stream, typename... Reader,
 	typename std::enable_if<is_readable<Stream>::value>::type* = nullptr>
-bool read(hash_set<T>& set, Stream& in, alloc_keys_func alloc_keys = calloc) {
+bool read(hash_set<T>& set, Stream& in, alloc_keys_func alloc_keys, Reader&&... reader) {
 	unsigned int length;
 	if (!read(length, in)) return false;
 
@@ -364,19 +364,25 @@ bool read(hash_set<T>& set, Stream& in, alloc_keys_func alloc_keys = calloc) {
 
 	for (unsigned int i = 0; i < length; i++) {
 		T& key = *((T*) alloca(sizeof(T)));
-		if (!read(key, in)) return false;
+		if (!read(key, in, std::forward<Reader>(reader)...)) return false;
 		set.add(key);
 	}
 	return true;
 }
 
-template<typename T, typename Stream,
+template<typename T, typename Stream, typename... Reader,
+	typename std::enable_if<is_readable<Stream>::value>::type* = nullptr>
+inline bool read(hash_set<T>& set, Stream& in, Reader&&... reader) {
+	return read(set, in, calloc, std::forward<Reader>(reader)...);
+}
+
+template<typename T, typename Stream, typename... Writer,
 	typename std::enable_if<is_writeable<Stream>::value>::type* = nullptr>
-bool write(const hash_set<T>& set, Stream& out) {
+bool write(const hash_set<T>& set, Stream& out, Writer&&... writer) {
 	if (!write(set.size, out)) return false;
 	for (unsigned int i = 0; i < set.capacity; i++) {
 		if (is_empty(set.keys[i])) continue;
-		if (!write(set.keys[i], out)) return false;
+		if (!write(set.keys[i], out, std::forward<Writer>(writer)...)) return false;
 	}
 	return true;
 }

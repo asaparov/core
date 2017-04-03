@@ -10,6 +10,8 @@
 
 #include "utility.h"
 
+#include <ctype.h>
+
 /* TODO: test with benchmarks whether we should inline these functions */
 inline bool compare_strings(const array<char>& first, const char* second) {
 	for (unsigned int i = 0; i < first.length; i++) {
@@ -28,24 +30,6 @@ inline bool compare_strings(const string& first, const char* second, unsigned in
 		if (first[i] != second[i])
 			return false;
 	}
-	return true;
-}
-
-bool get_token(const string& identifier, unsigned int& id, hash_map<string, unsigned int>& map) {
-	if (!map.check_size()) {
-		fprintf(stderr, "get_token ERROR: Unable to expand token map.\n");
-		return false;
-	}
-
-	bool contains;
-	unsigned int bucket;
-	unsigned int& value = map.get(identifier, contains, bucket);
-	if (!contains) {
-		map.table.keys[bucket] = identifier;
-		map.table.size++;
-		value = map.table.size;
-	}
-	id = value;
 	return true;
 }
 

@@ -235,6 +235,24 @@ inline bool operator != (const string& first, const string& second) {
 	return memcmp(first.data, second.data, first.length * sizeof(char)) != 0;
 }
 
+bool get_token(const string& identifier, unsigned int& id, hash_map<string, unsigned int>& map) {
+	if (!map.check_size()) {
+		fprintf(stderr, "get_token ERROR: Unable to expand token map.\n");
+		return false;
+	}
+
+	bool contains;
+	unsigned int bucket;
+	unsigned int& value = map.get(identifier, contains, bucket);
+	if (!contains) {
+		map.table.keys[bucket] = identifier;
+		map.table.size++;
+		value = map.table.size;
+	}
+	id = value;
+	return true;
+}
+
 /* NOTE: this function assumes the argument is non-zero */
 inline unsigned int log2(unsigned int x) {
 	return (unsigned int) sizeof(unsigned int) * 8 - __builtin_clz(x) - 1;
