@@ -365,7 +365,8 @@ bool read(hash_set<T>& set, Stream& in, alloc_keys_func alloc_keys, Reader&&... 
 	for (unsigned int i = 0; i < length; i++) {
 		T& key = *((T*) alloca(sizeof(T)));
 		if (!read(key, in, std::forward<Reader>(reader)...)) return false;
-		set.add(key);
+		move(key, set.keys[set.index_to_insert(key)]);
+		set.size++;
 	}
 	return true;
 }
@@ -414,13 +415,13 @@ bool read(hash_map<K, V>& map,
 		bool contains;
 		unsigned int bucket;
 		map.get(key, contains, bucket);
-		if (!contains) {
-			if (!read(map.values[bucket], in, value_reader))
-				return false;
-			map.table.keys[bucket] = key;
-			map.table.size++;
-		} else if (!read(map.values[bucket], in, value_reader)) {
+		if (!read(map.values[bucket], in, value_reader))
 			return false;
+		if (!contains) {
+			move(key, map.table.keys[bucket]);
+			map.table.size++;
+		} else {
+			fprintf(stderr, "read WARNING: Serialized hash_map contains duplicates.\n");
 		}
 	}
 	return true;

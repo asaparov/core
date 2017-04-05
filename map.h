@@ -23,6 +23,7 @@
 
 typedef void*(alloc_keys_func)(size_t, size_t);
 
+
 namespace core {
 
 /* forward declarations */
@@ -397,6 +398,24 @@ struct hash_set
 		}
 	}
 
+	inline unsigned int index_to_insert(const T& element)
+	{
+#if !defined(NDEBUG)
+		if (size == capacity)
+			fprintf(stderr, "hashtable.index_to_insert WARNING: Hashtable is full!\n");
+#endif
+		unsigned int index = hasher<T>::hash(element) % capacity;
+		while (true) {
+			if (hasher<T>::is_empty(keys[index])) {
+				size++;
+				break;
+			} if (keys[index] == element)
+				break;
+			index = (index + 1) % capacity;
+		}
+		return index;
+	}
+
 	void clear() {
 		hasher<T>::set_empty(keys, capacity);
 		size = 0;
@@ -530,24 +549,6 @@ private:
 		unsigned int index = hasher<T>::hash(element) % capacity;
 		while (!hasher<T>::is_empty(keys[index]))
 			index = (index + 1) % capacity;
-		return index;
-	}
-
-	inline unsigned int index_to_insert(const T& element)
-	{
-#if !defined(NDEBUG)
-		if (size == capacity)
-			fprintf(stderr, "hashtable.index_to_insert WARNING: Hashtable is full!\n");
-#endif
-		unsigned int index = hasher<T>::hash(element) % capacity;
-		while (true) {
-			if (hasher<T>::is_empty(keys[index])) {
-				size++;
-				break;
-			} if (keys[index] == element)
-				break;
-			index = (index + 1) % capacity;
-		}
 		return index;
 	}
 
