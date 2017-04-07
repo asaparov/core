@@ -95,6 +95,26 @@ inline bool parse_uint(const CharArray& token, unsigned int& value) {
 	buffer[token.length] = '\0';
 
 	char* end_ptr;
+	value = strtoul(buffer, &end_ptr, 0);
+	if (*end_ptr != '\0') {
+		free(buffer);
+		return false;
+	}
+	free(buffer);
+	return true;
+}
+
+template<typename CharArray>
+inline bool parse_int(const CharArray& token, int& value) {
+	char* buffer = (char*) malloc(sizeof(char) * (token.length + 1));
+	if (buffer == NULL) {
+		fprintf(stderr, "parse_int ERROR: Unable to allocate temporary string buffer.\n");
+		return false;
+	}
+	memcpy(buffer, token.data, sizeof(char) * token.length);
+	buffer[token.length] = '\0';
+
+	char* end_ptr;
 	value = strtol(buffer, &end_ptr, 0);
 	if (*end_ptr != '\0') {
 		free(buffer);
@@ -112,7 +132,7 @@ inline bool parse_uint(const char (&token)[N], unsigned int& value, unsigned int
 	buffer[N] = '\0';
 
 	char* end_ptr;
-	value = strtol(buffer, &end_ptr, base);
+	value = strtoul(buffer, &end_ptr, base);
 	return (*end_ptr == '\0');
 }
 

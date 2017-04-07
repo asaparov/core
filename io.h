@@ -60,6 +60,10 @@ inline bool print(const char& value, FILE* out) {
 	return (fputc(value, out) != EOF);
 }
 
+inline bool print(const int& value, FILE* out) {
+	return (fprintf(out, "%d", value) > 0);
+}
+
 inline bool print(const unsigned int& value, FILE* out) {
 	return (fprintf(out, "%u", value) > 0);
 }
