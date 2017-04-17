@@ -407,7 +407,6 @@ struct hash_set
 		unsigned int index = hasher<T>::hash(element) % capacity;
 		while (true) {
 			if (hasher<T>::is_empty(keys[index])) {
-				size++;
 				break;
 			} if (keys[index] == element)
 				break;
@@ -555,6 +554,7 @@ private:
 	inline void insert(const T& element)
 	{
 		place(element, index_to_insert(element));
+		size++;
 	}
 
 	template<typename V>
@@ -902,6 +902,7 @@ private:
 	inline void insert(const K& key, const V& value)
 	{
 		place(key, value, table.index_to_insert(key));
+		table.size++;
 	}
 
 	template<typename T, typename U>
