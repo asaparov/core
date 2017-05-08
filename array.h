@@ -33,7 +33,7 @@ template<typename T, typename SizeType,
 inline bool resize(T*& data, const SizeType& new_capacity) {
 	T* new_data = (T*) realloc(data, new_capacity * sizeof(T));
 	if (new_data == NULL) {
-		fprintf(stderr, "array.resize ERROR: Out of memory.\n");
+		fprintf(stderr, "resize ERROR: Out of memory.\n");
 		return false;
 	}
 	data = new_data;
