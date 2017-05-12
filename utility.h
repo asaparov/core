@@ -235,6 +235,11 @@ inline bool operator != (const string& first, const string& second) {
 	return memcmp(first.data, second.data, first.length * sizeof(char)) != 0;
 }
 
+struct string_map_scribe {
+	const string** map;
+	unsigned int length;
+};
+
 bool get_token(const string& identifier, unsigned int& id, hash_map<string, unsigned int>& map) {
 	if (!map.check_size()) {
 		fprintf(stderr, "get_token ERROR: Unable to expand token map.\n");

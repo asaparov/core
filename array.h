@@ -1310,7 +1310,7 @@ inline void set_intersect(array<T>& first, const array<T>& second) {
 }
 
 template<typename T, bool BinarySearch = false>
-bool is_intersection_empty(
+bool has_intersection(
 	const T* first, unsigned int first_length,
 	const T* second, unsigned int second_length)
 {
@@ -1342,8 +1342,8 @@ bool is_intersection_empty(
 }
 
 template<typename T, bool BinarySearch = false>
-inline bool is_intersection_empty(const array<T>& first, const array<T>& second) {
-	return is_intersection_empty<T, BinarySearch>(
+inline bool has_intersection(const array<T>& first, const array<T>& second) {
+	return has_intersection<T, BinarySearch>(
 		first.data, (unsigned int) first.length,
 		second.data, (unsigned int) second.length);
 }
