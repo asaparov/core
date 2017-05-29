@@ -988,6 +988,10 @@ struct pair {
 	static inline bool is_empty(const pair<K, V>& pair) {
 		return hasher<K>::is_empty(pair.key);
 	}
+
+	static inline void set_empty(pair<K, V>& pair) {
+		hasher<K>::set_empty(pair.key);
+	}
 };
 
 template<typename K, typename V>
@@ -1198,6 +1202,38 @@ bool set_union(array<T>& dst, const ArraySetCollection& arrays, unsigned int arr
 		} else { heap_size--; }
 	}
 	free(heap);
+	return true;
+}
+
+template<typename T, typename Intersect, bool BinarySearch = false>
+bool set_intersect(Intersect intersect,
+	const T* first, unsigned int first_length,
+	const T* second, unsigned int second_length)
+{
+	unsigned int i = 0, j = 0;
+	while (i < first_length && j < second_length)
+	{
+		if (first[i] == second[j]) {
+			intersect(i, j);
+			i++; j++;
+		} else if (first[i] < second[j]) {
+			if (BinarySearch) {
+				/* use binary search to find the value of i
+				   such that first.data[i] >= second.data[j] */
+				i = binary_search(first, second[j], i, first_length - 1);
+			} else {
+				i++;
+			}
+		} else {
+			if (BinarySearch) {
+				/* use binary search to find the value of j
+				   such that second.data[j] >= first.data[i] */
+				j = binary_search(second, first[i], j, second_length - 1);
+			} else {
+				j++;
+			}
+		}
+	}
 	return true;
 }
 
