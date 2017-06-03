@@ -1157,6 +1157,7 @@ inline const typename MapType::key_type** invert(const MapType& map) {
 	return inverse;
 }
 
+
 inline bool hash_map_test(void)
 {
 	hash_map<int, const char*> map = hash_map<int, const char*>(4);

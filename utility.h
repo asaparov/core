@@ -240,6 +240,14 @@ struct string_map_scribe {
 	unsigned int length;
 };
 
+template<typename Stream>
+inline bool print(unsigned int item, Stream& out, const string_map_scribe& printer)
+{
+	if (item < printer.length)
+		return print(*printer.map[item], out);
+	else return print_special_string(item, out);
+}
+
 bool get_token(const string& identifier, unsigned int& id, hash_map<string, unsigned int>& map) {
 	if (!map.check_size()) {
 		fprintf(stderr, "get_token ERROR: Unable to expand token map.\n");
