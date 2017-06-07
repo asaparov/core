@@ -28,6 +28,17 @@ static uint32_t __inline __builtin_clz(uint32_t x) {
 }
 #endif
 
+
+/* a useful type trait for detecting whether the function 'print_special_string' is defined */
+namespace detail {
+	template<typename Stream> static auto test_print_special_string(int) ->
+			decltype(bool(print_special_string(0u, std::declval<Stream&>())), std::true_type{});
+	template<typename Stream> static auto test_print_special_string(long) -> std::false_type;
+}
+
+template<typename Stream> struct has_print_special_string : decltype(detail::test_print_special_string<Stream>(0)){};
+
+
 namespace core {
 
 struct string {
@@ -240,12 +251,24 @@ struct string_map_scribe {
 	unsigned int length;
 };
 
+template<typename Stream, typename std::enable_if<has_print_special_string<Stream>::value>::type* = nullptr>
+inline bool print_special_string_helper(unsigned int item, Stream& out) {
+	return print_special_string(item, out);
+}
+
+template<typename Stream, typename std::enable_if<!has_print_special_string<Stream>::value>::type* = nullptr>
+inline bool print_special_string_helper(unsigned int item, Stream& out) {
+	fprintf(stderr, "print ERROR: The unsigned int %u exceeds the bounds of the "
+			"string_map_scribe. Did you forget to implement print_special_string?\n", item);
+	return true;
+}
+
 template<typename Stream>
 inline bool print(unsigned int item, Stream& out, const string_map_scribe& printer)
 {
 	if (item < printer.length)
 		return print(*printer.map[item], out);
-	else return print_special_string(item, out);
+	else return print_special_string_helper(item, out);
 }
 
 bool get_token(const string& identifier, unsigned int& id, hash_map<string, unsigned int>& map) {
