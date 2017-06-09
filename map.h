@@ -1013,6 +1013,10 @@ struct array_map {
 		return values[index_of(key)];
 	}
 
+	inline const V& get(const K& key) const {
+		return values[index_of(key)];
+	}
+
 	inline V& get(const K& key, unsigned int& index) {
 		index = index_of(key);
 		return values[index];

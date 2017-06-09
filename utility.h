@@ -313,7 +313,7 @@ template<bool AppendNull>
 inline char* read_file(const char* filename, size_t& bytes_read)
 {
 	FILE* fin = open_file(filename, "r");
-	if (fseek(fin, 0, SEEK_END) != 0)
+	if (fin == NULL || fseek(fin, 0, SEEK_END) != 0)
 		return NULL;
 
 	long int filesize = ftell(fin);
