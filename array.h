@@ -1354,7 +1354,7 @@ bool has_intersection(
 	while (i < first_length && j < second_length)
 	{
 		if (first[i] == second[j]) {
-			return false;
+			return true;
 			i++; j++;
 		} else if (first[i] < second[j]) {
 			if (BinarySearch) {
@@ -1374,7 +1374,7 @@ bool has_intersection(
 			}
 		}
 	}
-	return true;
+	return false;
 }
 
 template<typename T, bool BinarySearch = false>
