@@ -1,8 +1,17 @@
 /**
- * array.h - Simple structure for an expanding array.
+ * \file array.h
  *
- *  Created on: Mar 3, 2012
- *	  Author: asaparov
+ * This file contains the implementation of the `array` data structure, which
+ * is a resizeable ordered collection of elements with generic type `T`. In
+ * addition, the file contains global helper functions for working with arrays,
+ * such as resizing, linear and binary search, insertion sort, and quicksort.
+ * The `pair` structure is also defined here.
+ *
+ * In addition, this file that perform set operations on ordered native arrays,
+ * such as union, intersection, subtraction, and subset.
+ *
+ * <!-- Created on: Mar 3, 2012
+ *          Author: asaparov -->
  */
 
 #ifndef ARRAY_H_
@@ -15,7 +24,13 @@
 
 #include "core.h"
 
+/**
+ * The multiplicative factor by which array capacity is changed.
+ */
 #define RESIZE_FACTOR 2
+
+
+namespace core {
 
 
 namespace detail {
@@ -24,10 +39,21 @@ namespace detail {
 	template<typename C> static auto test_resizeable(long) -> std::false_type;
 }
 
-namespace core {
+/**
+ * This type trait is [true_type](http://en.cppreference.com/w/cpp/types/integral_constant)
+ * if and only if `T` is class with a public function `void on_resize()`.
+ */
+template<typename T> struct is_resizeable : decltype(core::detail::test_resizeable<T>(0)){};
 
-template<typename T> struct is_resizeable : decltype(detail::test_resizeable<T>(0)){};
-
+/**
+ * Resizes the given native array `data` with the requested capacity `new_capacity`.
+ * \tparam SizeType a type that satisfies [is_integral](http://en.cppreference.com/w/cpp/types/is_integral).
+ * \tparam T the generic type of the elements in `data`.
+ * \param data the array to resize.
+ * \param new_capacity the requested size.
+ * \return `true` on success; `data` may point to a different memory address.
+ * \return `false` on failure; `data` is unchanged.
+ */
 template<typename T, typename SizeType,
 	typename std::enable_if<std::is_integral<SizeType>::value>::type* = nullptr>
 inline bool resize(T*& data, const SizeType& new_capacity) {
@@ -40,6 +66,10 @@ inline bool resize(T*& data, const SizeType& new_capacity) {
 	return true;
 }
 
+/**
+ * This function multiplies `capacity` by #RESIZE_FACTOR. It then repeats this
+ * until `capacity >= new_length`.
+ */
 template<typename SizeType, typename std::enable_if<std::is_integral<SizeType>::value>::type* = nullptr>
 inline void expand_capacity(SizeType& capacity, size_t new_length) {
 	do {
@@ -48,6 +78,12 @@ inline void expand_capacity(SizeType& capacity, size_t new_length) {
 	} while (new_length > capacity);
 }
 
+/**
+ * For a given requested length `new_length`, this function calls
+ * expand_capacity() to determine the new `capacity` of the native array
+ * `data`. The function then attempts to resize the array with this capacity.
+ * Note this function does not check whether `new_length <= capacity`.
+ */
 template<typename T, typename SizeType,
 	typename std::enable_if<std::is_integral<SizeType>::value>::type* = nullptr>
 inline bool expand(T*& data, SizeType& capacity, size_t new_length) {
@@ -55,6 +91,11 @@ inline bool expand(T*& data, SizeType& capacity, size_t new_length) {
 	return resize(data, capacity);
 }
 
+/**
+ * For a given requested length `new_length`, this function expands the native
+ * array `data` by factors of #RESIZE_FACTOR until `capacity >= new_length`.
+ * If initially `new_length <= capacity`, this function does nothing.
+ */
 template<typename T, typename SizeType,
 	typename std::enable_if<std::is_integral<SizeType>::value>::type* = nullptr>
 inline bool ensure_capacity(T*& data, SizeType& capacity, size_t new_length)
@@ -68,6 +109,13 @@ inline bool ensure_capacity(T*& data, SizeType& capacity, size_t new_length)
 	return true;
 }
 
+/**
+ * Performs a linear search through the array `data` to find the smallest index
+ * `i` such that `element == data[i]`.
+ * \tparam T a generic type for which the operator `==` is defined.
+ * \return an index in `start, start + 1, ..., length - 1` if the element was found.
+ * \return `length` if the element was not found.
+ */
 template<typename T, typename SizeType,
 	typename std::enable_if<std::is_integral<SizeType>::value>::type* = nullptr>
 inline unsigned int index_of(const T& element, const T* data,
@@ -79,6 +127,13 @@ inline unsigned int index_of(const T& element, const T* data,
 	return length;
 }
 
+/**
+ * Performs a linear search through the array `data` to find the largest index
+ * `i` such that `element == data[i]`.
+ * \tparam T a generic type for which the operator `==` is defined.
+ * \return an index in `0, 1, ..., length - 1` if the element was found.
+ * \return `static_cast<unsigned int>(-1)` if the element was not found.
+ */
 template<typename T, typename SizeType,
 	typename std::enable_if<std::is_integral<SizeType>::value>::type* = nullptr>
 inline unsigned int last_index_of(const T& element, const T* data, const SizeType& length)
@@ -92,12 +147,123 @@ inline unsigned int last_index_of(const T& element, const T* data, const SizeTyp
 	return static_cast<unsigned int>(-1);
 }
 
+/**
+ * A resizeable sequence of objects, stored contiguously, each with generic
+ * type `T`. This structure does not automatically initialize or free its
+ * elements, and so the user must appropriately free each element before the
+ * array is destroyed.
+ * 
+ * In the following example, we demonstrate a simple use-case of array. Here,
+ * `a` is automatically freed by the destructor since it was initialized on the
+ * stack. The expected output is `-1 -1 0 3 `.
+ * 
+ * ```{.cpp}
+ * #include <core/array.h>
+ * #include <stdio.h>
+ * using namespace core;
+ * 
+ * int main() {
+ * 	array<int> a = array<int>(8);
+ * 	a.add(-1); a.add(-4);
+ * 	a.add(3); a.add(0);
+ * 	a.remove(1);
+ * 
+ * 	printf("%d ", a[0]);
+ * 	for (int element : a)
+ * 		printf("%d ", element);
+ * }
+ * ```
+ * 
+ * 
+ * However, if `a` is not allocated on the stack, the destructor will not be
+ * automatically called, and so it must be freed manually using `core::free` or
+ * `array::free`.
+ * 
+ * ```{.cpp}
+ * #include <core/array.h>
+ * #include <stdio.h>
+ * using namespace core;
+ * 
+ * int main() {
+ * 	array<int>& a = *((array<int>*) alloca(sizeof(array<int>)));
+ * 	array_init(a, 8);
+ * 	a.add(-1); a.add(-4);
+ * 	a.add(3); a.add(0);
+ * 	a.remove(1);
+ * 
+ * 	printf("%d ", a[0]);
+ * 	for (int element : a)
+ * 		printf("%d ", element);
+ * 	free(a);
+ * }
+ * ```
+ * 
+ * 
+ * Also note that a number of member functions require that `T` be
+ * [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable).
+ * In other cases, elements should be added manually to the underlying native
+ * array array::data. This structure also defines array::begin and array::end,
+ * similar to Standard Template Library iterators, which enables the use of the
+ * range-based for loop in the example below. In this example, the expected
+ * output is `first second `.
+ * 
+ * ```{.cpp}
+ * #include <core/array.h>
+ * #include <stdio.h>
+ * #include <string.h>
+ * using namespace core;
+ * 
+ * struct custom_string {
+ * 	char* buffer;
+ * 
+ * 	static void free(custom_string& s) {
+ * 		core::free(s.buffer);
+ * 	}
+ * };
+ * 
+ * bool init(custom_string& s, const char* src) {
+ * 	s.buffer = (char*) malloc(sizeof(char) * (strlen(src) + 1));
+ * 	if (s.buffer == NULL)
+ * 		return false;
+ * 	memcpy(s.buffer, src, sizeof(char) * (strlen(src) + 1));
+ * 	return true;
+ * }
+ * 
+ * int main() {
+ * 	array<custom_string> a = array<custom_string>(8);
+ * 	init(a[0], "first");
+ * 	init(a[1], "second");
+ * 	a.length = 2;
+ * 
+ * 	for (const custom_string& s : a)
+ * 		printf("%s ", s.buffer);
+ * 	for (custom_string& s : a)
+ * 		free(s);
+ * }
+ * ```
+ * Note in the above example that since the array struct does not automatically
+ * free its elements, they must be freed manually.
+ */
 template<typename T>
 struct array {
+	/**
+	 * The underlying native array of elements.
+	 */
 	T* data;
+
+	/**
+	 * The length of the array.
+	 */
 	size_t length;
+
+	/**
+	 * The capacity of array::data.
+	 */
 	size_t capacity;
 
+	/**
+	 * Constructs an array with zero size and the given `initial_capacity`.
+	 */
 	array(size_t initial_capacity)
 	{
 		if (!initialize(initial_capacity))
@@ -106,25 +272,47 @@ struct array {
 
 	~array() { free(); }
 
+	/**
+	 * Returns a reference to the element at the given `index`. No bounds-checking is performed.
+	 */
 	inline T& operator[] (unsigned int index) {
 		return data[index];
 	}
 
+	/**
+	 * Returns a const reference to the element at the given `index`. No bounds-checking is performed.
+	 */
 	inline const T& operator[] (unsigned int index) const {
 		return data[index];
 	}
 
+	/**
+	 * Sets the length of the array to `0`. Any elements are not freed.
+	 */
 	inline void clear()
 	{
 		length = 0;
 	}
 
+	/**
+	 * Moves the last element in the array to the position given by `index` and
+	 * decrements array::length by `1`. The element initially at `index` is not
+	 * freed.
+	 */
 	void remove(unsigned int index)
 	{
 		core::move(data[length - 1], data[index]);
 		length--;
 	}
 
+	/**
+	 * For a given requested length `new_length`, this function expands the
+	 * array by factors of #RESIZE_FACTOR until `array::capacity >= new_length`.
+	 * If initially `new_length <= array::capacity`, this function does
+	 * nothing. If the resize operation moved array::data to a new memory
+	 * address, and `T` satisfies is_resizeable, then `x.on_resize()` is called
+	 * for every element `x` in the array.
+	 */
 	template<typename C = T, typename std::enable_if<is_resizeable<C>::value>::type* = nullptr>
 	bool ensure_capacity(size_t new_length) {
 		const T* old_data = data;
@@ -141,6 +329,14 @@ struct array {
 		return core::ensure_capacity(data, capacity, new_length);
 	}
 
+	/**
+	 * Adds the given native array of elements to this structure. This function
+	 * uses [memcpy](http://en.cppreference.com/w/cpp/string/byte/memcpy),
+	 * and so it should not be used if the elements are not
+	 * [TriviallyCopyable](http://en.cppreference.com/w/cpp/concept/TriviallyCopyable).
+	 * In such a case, addition should be performed manually using the public fields.
+	 * \tparam T is [TriviallyCopyable](http://en.cppreference.com/w/cpp/concept/TriviallyCopyable).
+	 */
 	bool append(const T* elements, size_t size)
 	{
 		if (!ensure_capacity(length + size))
@@ -150,34 +346,63 @@ struct array {
 		return true;
 	}
 
+	/**
+	 * Calls array::index_of to determine whether `element` exists in this array.
+	 */
 	inline bool contains(const T& element) const {
 		return index_of(element) < length;
 	}
 
+	/**
+	 * Performs a linear search of the array to find the smallest index `i`
+	 * such that `element == array::data[i]`.
+	 * \return an index in `0, 1, ..., array::length - 1` if the element was found.
+	 * \return `array::length` if the element was not found.
+	 */
 	inline unsigned int index_of(const T& element) const {
 		return core::index_of(element, data, (unsigned int) length);
 	}
 
+	/**
+	 * Returns a reference to `array::data[0]`, ignoring any bounds.
+	 */
 	T& first()
 	{
 		return data[0];
 	}
 
+	/**
+	 * Returns a const reference to `array::data[0]`, ignoring any bounds.
+	 */
 	const T& first() const
 	{
 		return data[0];
 	}
 
+	/**
+	 * Returns a reference to `array::data[array::length - 1]`, ignoring any bounds.
+	 */
 	T& last()
 	{
 		return data[length - 1];
 	}
 
+	/**
+	 * Returns a const reference to `array::data[array::length - 1]`, ignoring any bounds.
+	 */
 	const T& last() const
 	{
 		return data[length - 1];
 	}
 
+	/**
+	 * Adds the given element to this array, increasing its capacity if
+	 * necessary. The assignment operator performs the addition, and so this
+	 * function should not be used if `T` is not
+	 * [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable).
+	 * In such a case, addition should be performed manually using the public fields.
+	 * \tparam T is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable).
+	 */
 	bool add(const T& element)
 	{
 		if (!ensure_capacity(length + 1))
@@ -187,28 +412,48 @@ struct array {
 		return true;
 	}
 
+	/**
+	 * Returns the element at `array::length - 1` and decrements array::length
+	 * by `1`, ignoring any bounds.
+	 */
 	T pop()
 	{
 		length--;
 		return data[length];
 	}
 
+	/**
+	 * Returns an iterator to the beginning of the array.
+	 */
 	inline T* begin() {
 		return data;
 	}
 
+	/**
+	 * Returns an iterator to the end of the array.
+	 */
 	inline T* end() {
 		return data + length;
 	}
 
+	/**
+	 * Returns a const iterator to the beginning of the array.
+	 */
 	inline const T* begin() const {
 		return data;
 	}
 
+	/**
+	 * Returns a const iterator to the end of the array.
+	 */
 	inline const T* end() const {
 		return data + length;
 	}
 
+	/**
+	 * Copies the underlying fields from `src` into `dst`, effectively moving
+	 * the array from `src` into `dst`.
+	 */
 	static inline void move(const array<T>& src, array<T>& dst) {
 		dst.length = src.length;
 		dst.capacity = src.capacity;
@@ -223,6 +468,11 @@ struct array {
 		return sum + (a.capacity - a.length) * sizeof(T);
 	}
 
+	/**
+	 * Frees array::data. This should not be used if `a` was constructed on the
+	 * stack, as the destructor will automatically free array::data. The
+	 * elements of `a` are not freed.
+	 */
 	static inline void free(array<T>& a) { a.free(); }
 
 private:
@@ -254,11 +504,17 @@ private:
 	friend bool array_init(array<K>& m, unsigned int initial_capacity);
 };
 
+/**
+ * Initializes the array `m` with the given `initial_capacity`.
+ */
 template<typename T>
 bool array_init(array<T>& m, unsigned int initial_capacity) {
 	return m.initialize(initial_capacity);
 }
 
+/**
+ * Returns array::length of `m`.
+ */
 template<typename T>
 inline size_t size(const array<T>& m) {
 	return m.length;
@@ -291,6 +547,10 @@ inline long unsigned int size(const array<T>& a, const Metric& metric) {
 	return sum + (a.capacity - a.length) * sizeof(T);
 }
 
+/**
+ * Compares the two given arrays and returns true if and only if `a.length == b.length`
+ * and there is no index `i` such that `a.data[i] != b.data[i]`.
+ */
 template<typename T>
 inline bool operator == (const array<T>& a, const array<T>& b) {
 	if (a.length != b.length)
@@ -301,6 +561,10 @@ inline bool operator == (const array<T>& a, const array<T>& b) {
 	return true;
 }
 
+/**
+ * Compares the two given arrays and returns true if and only if `a.length != b.length`
+ * or there is some index `i` such that `a.data[i] != b.data[i]`.
+ */
 template<typename T>
 inline bool operator != (const array<T>& a, const array<T>& b) {
 	if (a.length != b.length)
@@ -311,10 +575,16 @@ inline bool operator != (const array<T>& a, const array<T>& b) {
 	return false;
 }
 
+/**
+ * Performs insertion sort on the given native array `keys` with given `length`.
+ * \tparam T is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable),
+ * 		[CopyConstructible](http://en.cppreference.com/w/cpp/concept/CopyConstructible),
+ * 		and [LessThanComparable](http://en.cppreference.com/w/cpp/concept/LessThanComparable).
+ */
 template<typename T>
-void insertion_sort(T* keys, unsigned int count)
+void insertion_sort(T* keys, unsigned int length)
 {
-	for (unsigned int i = 1; i < count; i++) {
+	for (unsigned int i = 1; i < length; i++) {
 		T item = keys[i];
 		unsigned int hole = i;
 
@@ -327,12 +597,18 @@ void insertion_sort(T* keys, unsigned int count)
 	}
 }
 
+/**
+ * Performs insertion sort on the given native array `keys` with given `length`
+ * and `sorter`.
+ * \tparam T satisfies is_moveable, and for which a function
+ * 		`bool less_than(const T&, const T&, const Sorter&)` is defined.
+ */
 template<typename T, typename Sorter,
 	typename std::enable_if<!std::is_integral<Sorter>::value>::type* = nullptr>
-void insertion_sort(T* keys, unsigned int count, const Sorter& sorter)
+void insertion_sort(T* keys, unsigned int length, const Sorter& sorter)
 {
 	T& item = *((T*) malloc(sizeof(T)));
-	for (unsigned int i = 1; i < count; i++) {
+	for (unsigned int i = 1; i < length; i++) {
 		move(keys[i], item);
 		unsigned int hole = i;
 
@@ -346,10 +622,18 @@ void insertion_sort(T* keys, unsigned int count, const Sorter& sorter)
 	free(&item);
 }
 
+/**
+ * Performs insertion sort on the given native arrays `keys` and `values` with given `length`.
+ * \tparam K is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable),
+ * 		[CopyConstructible](http://en.cppreference.com/w/cpp/concept/CopyConstructible),
+ * 		and [LessThanComparable](http://en.cppreference.com/w/cpp/concept/LessThanComparable).
+ * \tparam V is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable),
+ * 		[CopyConstructible](http://en.cppreference.com/w/cpp/concept/CopyConstructible).
+ */
 template<typename K, typename V>
-void insertion_sort(K* keys, V* values, unsigned int count)
+void insertion_sort(K* keys, V* values, unsigned int length)
 {
-	for (unsigned int i = 1; i < count; i++) {
+	for (unsigned int i = 1; i < length; i++) {
 		K item = keys[i];
 		V value = values[i];
 		unsigned int hole = i;
@@ -365,13 +649,20 @@ void insertion_sort(K* keys, V* values, unsigned int count)
 	}
 }
 
+/**
+ * Performs insertion sort on the given native arrays `keys` and `values` with
+ * given `length` and `sorter`.
+ * \tparam K satisfies is_moveable, and for which a function
+ * 		`bool less_than(const K&, const K&, const Sorter&)` is defined.
+ * \tparam V satisfies is_moveable.
+ */
 template<typename K, typename V, typename Sorter,
 	typename std::enable_if<!std::is_integral<Sorter>::value>::type* = nullptr>
-void insertion_sort(K* keys, V* values, unsigned int count, const Sorter& sorter)
+void insertion_sort(K* keys, V* values, unsigned int length, const Sorter& sorter)
 {
 	K& item = *((K*) malloc(sizeof(K)));
 	V& value = *((V*) malloc(sizeof(V)));
-	for (unsigned int i = 1; i < count; i++) {
+	for (unsigned int i = 1; i < length; i++) {
 		move(keys[i], item);
 		move(values[i], value);
 		unsigned int hole = i;
@@ -388,11 +679,22 @@ void insertion_sort(K* keys, V* values, unsigned int count, const Sorter& sorter
 	free(&item); free(&value);
 }
 
+/**
+ * Performs insertion sort on the given array `keys`.
+ * \tparam T is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable),
+ * 		[CopyConstructible](http://en.cppreference.com/w/cpp/concept/CopyConstructible),
+ * 		and [LessThanComparable](http://en.cppreference.com/w/cpp/concept/LessThanComparable).
+ */
 template<typename T>
 inline void insertion_sort(array<T>& keys) {
 	insertion_sort(keys.data, (unsigned int) keys.length);
 }
 
+/**
+ * Performs insertion sort on the given array `keys` with the given `sorter`.
+ * \tparam T satisfies is_moveable, and for which a function
+ * 			`bool less_than(const T&, const T&, const Sorter&)` is defined.
+ */
 template<typename T, typename Sorter,
 	typename std::enable_if<!std::is_integral<Sorter>::value>::type* = nullptr>
 inline void insertion_sort(array<T>& keys, const Sorter& sorter)
@@ -400,11 +702,26 @@ inline void insertion_sort(array<T>& keys, const Sorter& sorter)
 	insertion_sort(keys.data, (unsigned int) keys.length, sorter);
 }
 
+/**
+ * Performs insertion sort on the given arrays `keys` and `values`.
+ * \tparam K is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable),
+ * 		[CopyConstructible](http://en.cppreference.com/w/cpp/concept/CopyConstructible),
+ * 		and [LessThanComparable](http://en.cppreference.com/w/cpp/concept/LessThanComparable).
+ * \tparam V is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable),
+ * 		[CopyConstructible](http://en.cppreference.com/w/cpp/concept/CopyConstructible).
+ */
 template<typename K, typename V>
 inline void insertion_sort(array<K>& keys, array<V>& values) {
 	insertion_sort(keys.data, values.data, (unsigned int) keys.length);
 }
 
+/**
+ * Performs insertion sort on the given arrays `keys` and `values` with the
+ * given `sorter`.
+ * \tparam K satisfies is_moveable, and for which a function
+ * 			`bool less_than(const K&, const K&, const Sorter&)` is defined.
+ * \tparam V satisfies is_moveable.
+ */
 template<typename K, typename V, typename Sorter,
 	typename std::enable_if<!std::is_integral<Sorter>::value>::type* = nullptr>
 inline void insertion_sort(array<K>& keys, array<V>& values, const Sorter& sorter)
@@ -412,6 +729,10 @@ inline void insertion_sort(array<K>& keys, array<V>& values, const Sorter& sorte
 	insertion_sort(keys.data, values.data, (unsigned int) keys.length, sorter);
 }
 
+/**
+ * Reverses the order of the elements in the given native `array` with given `length`.
+ * \tparam T satisfies is_swappable.
+ */
 template<typename T>
 void reverse(T* array, unsigned int length) {
 	for (unsigned int i = 0; i < length / 2; i++) {
@@ -420,6 +741,10 @@ void reverse(T* array, unsigned int length) {
 	}
 }
 
+/**
+ * Reverses the order of the elements in the given `array`.
+ * \tparam T satisfies is_swappable.
+ */
 template<typename T>
 inline void reverse(array<T>& array) {
 	reverse(array.data, (unsigned int) array.length);
@@ -564,6 +889,14 @@ void quick_sort(K* keys, V* values,
 	quick_sort(keys, values, l, end, sorter);
 }
 
+/**
+ * Performs Quicksort on the given native array `keys` with given `length`.
+ * This function assumes `length > 0`. If the preprocessor `NDEBUG` is not
+ * defined, this function outputs a warning when `length == 0`.
+ * \tparam T is [CopyConstructible](http://en.cppreference.com/w/cpp/concept/CopyConstructible),
+ * 			[LessThanComparable](http://en.cppreference.com/w/cpp/concept/LessThanComparable),
+ * 			and is_swappable.
+ */
 template<typename T>
 inline void quick_sort(T* keys, unsigned int length) {
 #if !defined(NDEBUG)
@@ -575,6 +908,14 @@ inline void quick_sort(T* keys, unsigned int length) {
 	quick_sort(keys, 0, length - 1);
 }
 
+/**
+ * Performs Quicksort on the given native array `keys` with given `length` and
+ * `sorter`. This function assumes `length > 0`. If the preprocessor `NDEBUG`
+ * is not defined, this function outputs a warning when `length == 0`.
+ * \tparam T a generic type that satisfies is_swappable, and for which a
+ * 			function `bool less_than(const T&, const T&, const Sorter&)` is
+ * 			defined.
+ */
 template<typename T, typename Sorter,
 	typename std::enable_if<!std::is_integral<Sorter>::value>::type* = nullptr>
 inline void quick_sort(T* keys, unsigned int length, const Sorter& sorter)
@@ -588,6 +929,15 @@ inline void quick_sort(T* keys, unsigned int length, const Sorter& sorter)
 	quick_sort(keys, 0, length - 1, sorter);
 }
 
+/**
+ * Performs Quicksort on the given native arrays `keys` and `values` with given
+ * `length`. This function assumes `length > 0`. If the preprocessor `NDEBUG`
+ * is not defined, this function outputs a warning when `length == 0`.
+ * \tparam K is [CopyConstructible](http://en.cppreference.com/w/cpp/concept/CopyConstructible),
+ * 			[LessThanComparable](http://en.cppreference.com/w/cpp/concept/LessThanComparable),
+ * 			and is_swappable.
+ * \tparam V satisfies is_swappable.
+ */
 template<typename K, typename V>
 inline void quick_sort(K* keys, V* values, unsigned int length) {
 #if !defined(NDEBUG)
@@ -599,6 +949,15 @@ inline void quick_sort(K* keys, V* values, unsigned int length) {
 	quick_sort(keys, values, 0, length - 1);
 }
 
+/**
+ * Performs Quicksort on the given native arrays `keys` and `values` with given
+ * `length` and `sorter`. This function assumes `length > 0`. If the preprocessor
+ * `NDEBUG` is not defined, this function outputs a warning when `length == 0`.
+ * \tparam K a generic type that satisfies is_swappable, and for which a
+ * 			function `bool less_than(const K&, const K&, const Sorter&)` is
+ * 			defined.
+ * \tparam V satisfies is_swappable.
+ */
 template<typename K, typename V, typename Sorter,
 	typename std::enable_if<!std::is_integral<Sorter>::value>::type* = nullptr>
 inline void quick_sort(K* keys, V* values, unsigned int length, const Sorter& sorter)
@@ -612,6 +971,14 @@ inline void quick_sort(K* keys, V* values, unsigned int length, const Sorter& so
 	quick_sort(keys, values, 0, length - 1, sorter);
 }
 
+/**
+ * Performs Quicksort on the given array `keys`. This function assumes
+ * `length > 0`. If the preprocessor `NDEBUG` is not defined, this function
+ * outputs a warning when `length == 0`.
+ * \tparam T is [CopyConstructible](http://en.cppreference.com/w/cpp/concept/CopyConstructible),
+ * 			[LessThanComparable](http://en.cppreference.com/w/cpp/concept/LessThanComparable),
+ * 			and is_swappable.
+ */
 template<typename T>
 inline void quick_sort(array<T>& keys) {
 #if !defined(NDEBUG)
@@ -623,6 +990,14 @@ inline void quick_sort(array<T>& keys) {
 	quick_sort(keys.data, 0, (unsigned int) keys.length - 1);
 }
 
+/**
+ * Performs Quicksort on the given native array `keys` with the given `sorter`.
+ * This function assumes `length > 0`. If the preprocessor `NDEBUG` is not
+ * defined, this function outputs a warning when `length == 0`.
+ * \tparam T a generic type that satisfies is_swappable, and for which a
+ * 			function `bool less_than(const T&, const T&, const Sorter&)` is
+ * 			defined.
+ */
 template<typename T, typename Sorter,
 	typename std::enable_if<!std::is_integral<Sorter>::value>::type* = nullptr>
 inline void quick_sort(array<T>& keys, const Sorter& sorter)
@@ -636,6 +1011,15 @@ inline void quick_sort(array<T>& keys, const Sorter& sorter)
 	quick_sort(keys.data, 0, (unsigned int) keys.length - 1, sorter);
 }
 
+/**
+ * Performs Quicksort on the given arrays `keys` and `values`. This function
+ * assumes `length > 0`. If the preprocessor `NDEBUG` is not defined, this
+ * function outputs a warning when `length == 0`.
+ * \tparam K is [CopyConstructible](http://en.cppreference.com/w/cpp/concept/CopyConstructible),
+ * 			[LessThanComparable](http://en.cppreference.com/w/cpp/concept/LessThanComparable),
+ * 			and is_swappable.
+ * \tparam V satisfies is_swappable.
+ */
 template<typename K, typename V>
 inline void quick_sort(array<K>& keys, array<V>& values) {
 #if !defined(NDEBUG)
@@ -647,6 +1031,15 @@ inline void quick_sort(array<K>& keys, array<V>& values) {
 	quick_sort(keys.data, values.data, 0, (unsigned int) keys.length - 1);
 }
 
+/**
+ * Performs Quicksort on the given arrays `keys` and `values` with the given
+ * `sorter`. This function assumes `length > 0`. If the preprocessor `NDEBUG`
+ * is not defined, this function outputs a warning when `length == 0`.
+ * \tparam K a generic type that satisfies is_swappable, and for which a
+ * 			function `bool less_than(const K&, const K&, const Sorter&)` is
+ * 			defined.
+ * \tparam V satisfies is_swappable.
+ */
 template<typename K, typename V, typename Sorter,
 	typename std::enable_if<!std::is_integral<Sorter>::value>::type* = nullptr>
 inline void quick_sort(array<K>& keys, array<V>& values, const Sorter& sorter)
@@ -662,7 +1055,7 @@ inline void quick_sort(array<K>& keys, array<V>& values, const Sorter& sorter)
 
 
 /**
- * Hybrid quicksort-insertion sort.
+ * <!-- Hybrid quicksort-insertion sort. -->
  */
 
 template<typename T>
@@ -727,6 +1120,17 @@ void sort(K* keys, V* values, unsigned int start, unsigned int end, const Sorter
 	sort(keys, values, l, end, sorter);
 }
 
+/**
+ * Performs hybrid Quicksort-insertion sort on the given native array `keys`
+ * with given `length`. To improve performance, the Quicksort switches to
+ * insertion sort for small partitions. This function assumes `length > 0`. If
+ * the preprocessor `NDEBUG` is not defined, this function outputs a warning
+ * when `length == 0`.
+ * \tparam T is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable),
+ * 			[CopyConstructible](http://en.cppreference.com/w/cpp/concept/CopyConstructible)
+ * 			[LessThanComparable](http://en.cppreference.com/w/cpp/concept/LessThanComparable),
+ * 			and is_swappable.
+ */
 template<typename T>
 inline void sort(T* keys, unsigned int length) {
 #if !defined(NDEBUG)
@@ -738,6 +1142,16 @@ inline void sort(T* keys, unsigned int length) {
 	sort(keys, 0, length - 1);
 }
 
+/**
+ * Performs hybrid Quicksort-insertion sort on the given native array `keys`
+ * with given `length` and `sorter`. To improve performance, the Quicksort
+ * switches to insertion sort for small partitions. This function assumes
+ * `length > 0`. If the preprocessor `NDEBUG` is not defined, this function
+ * outputs a warning when `length == 0`.
+ * \tparam T a generic type that satisfies is_swappable and is_moveable, and
+ * 			for which a function `bool less_than(const T&, const T&, const Sorter&)`
+ * 			is defined.
+ */
 template<typename T, typename Sorter,
 	typename std::enable_if<!std::is_integral<Sorter>::value>::type* = nullptr>
 inline void sort(T* keys, unsigned int length, const Sorter& sorter)
@@ -751,6 +1165,18 @@ inline void sort(T* keys, unsigned int length, const Sorter& sorter)
 	sort(keys, 0, length - 1, sorter);
 }
 
+/**
+ * Performs hybrid Quicksort-insertion sort on the given native arrays `keys`
+ * and `values` with given `length`. To improve performance, the Quicksort
+ * switches to insertion sort for small partitions. This function assumes
+ * `length > 0`. If the preprocessor `NDEBUG` is not defined, this function
+ * outputs a warning when `length == 0`.
+ * \tparam K is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable),
+ * 			[CopyConstructible](http://en.cppreference.com/w/cpp/concept/CopyConstructible)
+ * 			[LessThanComparable](http://en.cppreference.com/w/cpp/concept/LessThanComparable),
+ * 			and is_swappable.
+ * \tparam V satisfies is_swappable and is_moveable.
+ */
 template<typename K, typename V>
 inline void sort(K* keys, V* values, unsigned int length) {
 #if !defined(NDEBUG)
@@ -762,6 +1188,17 @@ inline void sort(K* keys, V* values, unsigned int length) {
 	sort(keys, values, 0, length - 1);
 }
 
+/**
+ * Performs hybrid Quicksort-insertion sort on the given native arrays `keys`
+ * and `values` with given `length` and `sorter`. To improve performance, the
+ * Quicksort switches to insertion sort for small partitions. This function
+ * assumes `length > 0`. If the preprocessor `NDEBUG` is not defined, this
+ * function outputs a warning when `length == 0`.
+ * \tparam K a generic type that satisfies is_swappable and is_moveable, and
+ * 			for which a function `bool less_than(const K&, const K&, const Sorter&)`
+ * 			is defined.
+ * \tparam V satisfies is_swappable and is_moveable.
+ */
 template<typename K, typename V, typename Sorter,
 	typename std::enable_if<!std::is_integral<Sorter>::value>::type* = nullptr>
 inline void sort(K* keys, V* values, unsigned int length, const Sorter& sorter)
@@ -775,6 +1212,16 @@ inline void sort(K* keys, V* values, unsigned int length, const Sorter& sorter)
 	sort(keys, values, 0, length - 1, sorter);
 }
 
+/**
+ * Performs hybrid Quicksort-insertion sort on the given array `keys`. To
+ * improve performance, the Quicksort switches to insertion sort for small
+ * partitions. This function assumes `length > 0`. If the preprocessor `NDEBUG`
+ * is not defined, this function outputs a warning when `length == 0`.
+ * \tparam T is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable),
+ * 			[CopyConstructible](http://en.cppreference.com/w/cpp/concept/CopyConstructible)
+ * 			[LessThanComparable](http://en.cppreference.com/w/cpp/concept/LessThanComparable),
+ * 			and is_swappable.
+ */
 template<typename T>
 inline void sort(array<T>& keys) {
 #if !defined(NDEBUG)
@@ -786,6 +1233,16 @@ inline void sort(array<T>& keys) {
 	sort(keys.data, 0, (unsigned int) keys.length - 1);
 }
 
+/**
+ * Performs hybrid Quicksort-insertion sort on the given array `keys` with the
+ * given `sorter`. To improve performance, the Quicksort switches to insertion
+ * sort for small partitions. This function assumes `length > 0`. If the
+ * preprocessor `NDEBUG` is not defined, this function outputs a warning when
+ * `length == 0`.
+ * \tparam T a generic type that satisfies is_swappable and is_moveable, and
+ * 			for which a function `bool less_than(const T&, const T&, const Sorter&)`
+ * 			is defined.
+ */
 template<typename T, typename Sorter,
 	typename std::enable_if<!std::is_integral<Sorter>::value>::type* = nullptr>
 inline void sort(array<T>& keys, const Sorter& sorter)
@@ -799,6 +1256,18 @@ inline void sort(array<T>& keys, const Sorter& sorter)
 	sort(keys.data, 0, (unsigned int) keys.length - 1, sorter);
 }
 
+/**
+ * Performs hybrid Quicksort-insertion sort on the given arrays `keys` and
+ * `values`. To improve performance, the Quicksort switches to insertion sort
+ * for small partitions. This function assumes `length > 0`. If the
+ * preprocessor `NDEBUG` is not defined, this function outputs a warning when
+ * `length == 0`.
+ * \tparam K is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable),
+ * 			[CopyConstructible](http://en.cppreference.com/w/cpp/concept/CopyConstructible)
+ * 			[LessThanComparable](http://en.cppreference.com/w/cpp/concept/LessThanComparable),
+ * 			and is_swappable.
+ * \tparam V satisfies is_swappable and is_moveable.
+ */
 template<typename K, typename V>
 inline void sort(array<K>& keys, array<V>& values) {
 #if !defined(NDEBUG)
@@ -810,6 +1279,17 @@ inline void sort(array<K>& keys, array<V>& values) {
 	sort(keys.data, values.data, 0, (unsigned int) keys.length - 1);
 }
 
+/**
+ * Performs hybrid Quicksort-insertion sort on the given arrays `keys` and
+ * `values` with the given `sorter`. To improve performance, the Quicksort
+ * switches to insertion sort for small partitions. This function assumes
+ * `length > 0`. If the preprocessor `NDEBUG` is not defined, this function
+ * outputs a warning when `length == 0`.
+ * \tparam K a generic type that satisfies is_swappable and is_moveable, and
+ * 			for which a function `bool less_than(const K&, const K&, const Sorter&)`
+ * 			is defined.
+ * \tparam V satisfies is_swappable and is_moveable.
+ */
 template<typename K, typename V, typename Sorter,
 	typename std::enable_if<!std::is_integral<Sorter>::value>::type* = nullptr>
 inline void sort(array<K>& keys, array<V>& values, const Sorter& sorter)
@@ -823,16 +1303,22 @@ inline void sort(array<K>& keys, array<V>& values, const Sorter& sorter)
 	sort(keys.data, values.data, 0, (unsigned int) keys.length - 1, sorter);
 }
 
-struct dummy_sorter { };
+/**
+ * The default_sorter provides a default implementation of
+ * `bool less_than(const T&, const T&, const default_sorter&)`
+ * where the comparison is done using the operator `<`.
+ */
+struct default_sorter { };
 
 template<typename T>
-inline bool less_than(const T& first, const T& second, const dummy_sorter& sorter) {
+inline bool less_than(const T& first, const T& second, const default_sorter& sorter) {
 	return (first < second);
 }
 
 /**
- * Deletes consecutive duplicates in the given array and
- * returns the new length.
+ * Deletes consecutive duplicates in the given native `array` with given
+ * `length` and returns the new length. Note the deleted elements are not freed.
+ * \tparam T is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable).
  */
 template<typename T>
 unsigned int unique(T* array, size_t length)
@@ -845,6 +1331,11 @@ unsigned int unique(T* array, size_t length)
 	return result + 1;
 }
 
+/**
+ * Deletes consecutive duplicates in the given `array` with given and returns
+ * the new length. Note the deleted elements are not freed.
+ * \tparam T is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable).
+ */
 template<typename T>
 inline void unique(array<T>& a) {
 	a.length = unique(a.data, a.length);
@@ -854,6 +1345,10 @@ inline void unique(array<T>& a) {
 
 unsigned int sample_uniform(unsigned int);
 
+/**
+ * Performs a Knuth shuffle on the given native `array` with given `length`.
+ * \tparam T satisfies is_swappable.
+ */
 template<typename T>
 void shuffle(T* array, unsigned int length) {
 #if !defined(NDEBUG)
@@ -869,6 +1364,10 @@ void shuffle(T* array, unsigned int length) {
 	}
 }
 
+/**
+ * Performs a Knuth shuffle on the given native arrays `keys` and `values` with given `length`.
+ * \tparam T satisfies is_swappable.
+ */
 template<typename K, typename V>
 void shuffle(K* keys, V* values, unsigned int length) {
 #if !defined(NDEBUG)
@@ -886,14 +1385,18 @@ void shuffle(K* keys, V* values, unsigned int length) {
 	}
 }
 
+/**
+ * Performs a Knuth shuffle on the given `array`.
+ * \tparam T satisfies is_swappable.
+ */
 template<typename T>
 inline void shuffle(array<T>& items) {
 	shuffle(items.data, items.length);
 }
 
 /**
- * Given sorted array a, this function finds the smallest
- * index i such that a[i] >= b and i >= start and i < end.
+ * Given sorted array `a`, this function finds the smallest index `i` such that
+ * `a[i] >= b` and `i >= start` and `i < end`.
  */
 template<typename T>
 unsigned int linear_search(
@@ -907,8 +1410,8 @@ unsigned int linear_search(
 }
 
 /**
- * Given sorted array a, this function finds the smallest
- * index i such that a[i] > b and i >= start and i < end.
+ * Given sorted array `a`, this function finds the smallest index `i` such that
+ * `a[i] > b` and `i >= start` and `i < end`.
  */
 template<typename T>
 unsigned int strict_linear_search(
@@ -922,8 +1425,8 @@ unsigned int strict_linear_search(
 }
 
 /**
- * Given sorted array a, this function finds the smallest
- * index i such that a[i] > b and i >= start and i < end.
+ * Given sorted array `a`, this function finds the smallest index `i` such that
+ * `a[i] > b` and `i >= start` and `i < end`.
  */
 template<typename T>
 unsigned int reverse_strict_linear_search(
@@ -937,8 +1440,8 @@ unsigned int reverse_strict_linear_search(
 }
 
 /**
- * Given sorted array a, this function finds the smallest
- * index i such that a[i] >= b and i >= min and i <= max.
+ * Given sorted array `a`, this function finds the smallest index `i` such that
+ * `a[i] >= b` and `i >= min` and `i <= max`.
  */
 /* TODO: implement a strict variant */
 template<typename T>
@@ -967,7 +1470,14 @@ unsigned int binary_search(
 
 template<typename K, typename V>
 struct pair {
+	/**
+	 * The key object in the field.
+	 */
 	K key;
+
+	/**
+	 * The value object in the field.
+	 */
 	V value;
 
 	pair(const K& key, const V& value) : key(key), value(value) { }
@@ -1027,13 +1537,17 @@ inline void swap(pair<K, V>& first, pair<K, V>& second) {
 
 
 /**
- * Functions for performing set operations with sorted arrays.
- * These functions assume the input arrays are sorted and
- * their elements are *distinct*.
+ * <!-- Functions for performing set operations with sorted arrays. These
+ * functions assume the input arrays are sorted and their elements are
+ * *distinct*.
  *
- * TODO: Extend these functions to non copy-assignable types.
+ * TODO: Extend these functions to non copy-assignable types. -->
  */
 
+/**
+ * For every index `i >= index`, this function moves each element at `i` to index `i + 1`.
+ * \tparam T satisfies is_moveable.
+ */
 template<typename T>
 void shift_right(T* list, unsigned int length, unsigned int index)
 {
@@ -1055,6 +1569,24 @@ inline void set_union_helper(UnionFunc do_union, const T& item,
 	}
 }
 
+/**
+ * Given ordered native arrays `first` and `second`, this function visits their
+ * elements sequentially, and:
+ *   1. For every element `x` that appears in both arrays, `union_both(x, i, j)`
+ * 		is called where `first[i] == x` and `second[j] == x`.
+ *   2. For every element `x` that appears in `first` but not `second`,
+ * 		`union_first(x, i, j)` is called where `first[i] == x`, and `j` is the
+ * 		smallest such index where `second[j] > x`.
+ *   3. For every element `x` that appears in `second` but not `first`,
+ * 		`union_second(x, i, j)` is called where `second[j] == x`, and `i` is
+ * 		the smallest such index where `first[i] > x`.
+ *
+ * The visited elements are also ordered.
+ *
+ * \tparam T a generic type for which the operators `==`, `!=` and `<` are implemented.
+ * \tparam RemoveDuplicates if `true`, this function will avoid calling the
+ * 		union functions more than once for each element.
+ */
 template<typename T, typename UnionBoth,
 	typename UnionFirst, typename UnionSecond, bool RemoveDuplicates = true>
 void set_union(UnionBoth union_both,
@@ -1096,6 +1628,14 @@ inline void set_union_helper(T* dst, SizeType& dst_length, const T& item) {
 	}
 }
 
+/**
+ * Given ordered native arrays `first` and `second`, compute their union and
+ * appends the result to `dst`. The union is also ordered. This function
+ * assumes `dst` has sufficient capacity to store the union.
+ * \tparam T satisfies [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable)
+ * 		and implements the operators `==` and `<`.
+ * \tparam RemoveDuplicates if `true`, this function ignore duplicate elements.
+ */
 template<typename T, typename SizeType, bool RemoveDuplicates = true,
 	typename std::enable_if<std::is_integral<SizeType>::value>::type* = nullptr>
 void set_union(T* dst, SizeType& dst_length,
@@ -1126,6 +1666,13 @@ void set_union(T* dst, SizeType& dst_length,
 	}
 }
 
+/**
+ * Given ordered native arrays `first` and `second`, compute their union and
+ * appends the result to `dst`. The union is also ordered.
+ * \tparam T satisfies [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable)
+ * 		and implements the operators `==` and `<`.
+ * \tparam RemoveDuplicates if `true`, this function ignore duplicate elements.
+ */
 template<typename T, bool RemoveDuplicates = true>
 inline bool set_union(array<T>& dst,
 	const T* first, unsigned int first_length,
@@ -1137,6 +1684,13 @@ inline bool set_union(array<T>& dst,
 	return true;
 }
 
+/**
+ * Given ordered arrays `first` and `second`, compute their union and appends
+ * the result to `dst`. The union is also ordered.
+ * \tparam T satisfies [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable)
+ * 		and implements the operators `==` and `<`.
+ * \tparam RemoveDuplicates if `true`, this function ignore duplicate elements.
+ */
 template<typename T, bool RemoveDuplicates = true>
 inline bool set_union(array<T>& dst, const array<T>& first, const array<T>& second) {
 	return set_union<T, RemoveDuplicates>(dst,
@@ -1151,7 +1705,17 @@ struct array_position {
 	T* element;
 };
 
-/* NOTE: this function assumes the given arrays are all non-empty */
+/**
+ * Given a collection of ordered arrays `arrays`, compute their union and
+ * appends the result to `dst`. The union is also ordered.
+ * NOTE: this function assumes the given arrays are all non-empty.
+ * \tparam T satisfies [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable)
+ * 		and implements the operators `==` and `<`.
+ * \tparam ArraySetCollection a collection type where each element is accessed
+ * 		using `arrays[i]` and the size of each array can be obtained using
+ * 		`size(arrays[i])`. The element at index `j` for array `i` is accessed
+ * 		using `arrays[i][j]`.
+ */
 template<typename T, typename ArraySetCollection>
 bool set_union(array<T>& dst, const ArraySetCollection& arrays, unsigned int array_count)
 {
@@ -1205,6 +1769,15 @@ bool set_union(array<T>& dst, const ArraySetCollection& arrays, unsigned int arr
 	return true;
 }
 
+/**
+ * Given ordered native arrays `first` and `second`, this function visits their
+ * elements sequentially, and for every element `x` that exists in both arrays,
+ * `intersect(i, j)` is called where `first[i] == x` and `second[j] == x`. The
+ * visited elements are also ordered.
+ * \tparam T a generic type for which the operators `==` and `<` are implemented.
+ * \tparam BinarySearch if `true`, binary search is used to find indices of
+ * 		identical elements rather than linear search.
+ */
 template<typename T, typename Intersect, bool BinarySearch = false>
 bool set_intersect(Intersect intersect,
 	const T* first, unsigned int first_length,
@@ -1237,6 +1810,15 @@ bool set_intersect(Intersect intersect,
 	return true;
 }
 
+/**
+ * Given ordered native arrays `first` and `second`, compute the intersection
+ * and append it to the native array `intersection`. The computed intersection
+ * is also ordered. This function assumes `intersection` has sufficient capacity.
+ * \tparam T satisfies [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable)
+ * 		and implements the operators `==` and `<`.
+ * \tparam BinarySearch if `true`, binary search is used to find indices of
+ * 		identical elements rather than linear search.
+ */
 template<typename T, typename SizeType, bool BinarySearch = false,
 	typename std::enable_if<std::is_integral<SizeType>::value>::type* = nullptr>
 bool set_intersect(
@@ -1272,6 +1854,15 @@ bool set_intersect(
 	return true;
 }
 
+/**
+ * Given ordered native arrays `first` and `second`, compute the intersection
+ * and append it to the array `intersection`. The computed intersection is also
+ * ordered.
+ * \tparam T satisfies [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable)
+ * 		and implements the operators `==` and `<`.
+ * \tparam BinarySearch if `true`, binary search is used to find indices of
+ * 		identical elements rather than linear search.
+ */
 template<typename T, bool BinarySearch = false>
 inline bool set_intersect(
 	array<T>& intersection,
@@ -1286,6 +1877,15 @@ inline bool set_intersect(
 		first, first_length, second, second_length);
 }
 
+/**
+ * Given ordered arrays `first` and `second`, compute the intersection and
+ * append it to the array `intersection`. The computed intersection is also
+ * ordered.
+ * \tparam T satisfies [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable)
+ * 		and implements the operators `==` and `<`.
+ * \tparam BinarySearch if `true`, binary search is used to find indices of
+ * 		identical elements rather than linear search.
+ */
 template<typename T, bool BinarySearch = false>
 inline bool set_intersect(
 	array<T>& intersection,
@@ -1297,7 +1897,14 @@ inline bool set_intersect(
 		second.data, (unsigned int) second.length);
 }
 
-/* in-place variant of set_intersect */
+/**
+ * Given ordered native arrays `first` and `second`, compute the intersection
+ * in-place and store it in `first`. The computed intersection is also ordered.
+ * \tparam T satisfies [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable)
+ * 		and implements the operators `==` and `<`.
+ * \tparam BinarySearch if `true`, binary search is used to find indices of
+ * 		identical elements rather than linear search.
+ */
 template<typename T, typename SizeType, bool BinarySearch = false,
 	typename std::enable_if<std::is_integral<SizeType>::value>::type* = nullptr>
 void set_intersect(
@@ -1332,6 +1939,15 @@ void set_intersect(
 	first_length = index;
 }
 
+/**
+ * Given ordered array `first` and ordered native array `second`, compute the
+ * intersection in-place and store it in `first`. The computed intersection is
+ * also ordered.
+ * \tparam T satisfies [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable)
+ * 		and implements the operators `==` and `<`.
+ * \tparam BinarySearch if `true`, binary search is used to find indices of
+ * 		identical elements rather than linear search.
+ */
 template<typename T, bool BinarySearch = false>
 inline void set_intersect(array<T>& first,
 	const T* second, unsigned int second_length)
@@ -1340,11 +1956,26 @@ inline void set_intersect(array<T>& first,
 			first.data, first.length, second, second_length);
 }
 
+/**
+ * Given ordered arrays `first` and `second`, compute the intersection in-place
+ * and store it in `first`. The computed intersection is also ordered.
+ * \tparam T satisfies [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable)
+ * 		and implements the operators `==` and `<`.
+ * \tparam BinarySearch if `true`, binary search is used to find indices of
+ * 		identical elements rather than linear search.
+ */
 template<typename T, bool BinarySearch = false>
 inline void set_intersect(array<T>& first, const array<T>& second) {
 	return set_intersect<T, BinarySearch>(first, second.data, second.length);
 }
 
+/**
+ * Returns true if the intersection of `first` and `second` is non-empty,
+ * where `first` and `second` are ordered native arrays.
+ * \tparam T a generic type that implements the operators `==` and `<`.
+ * \tparam BinarySearch if `true`, binary search is used to find indices of
+ * 		identical elements rather than linear search.
+ */
 template<typename T, bool BinarySearch = false>
 bool has_intersection(
 	const T* first, unsigned int first_length,
@@ -1377,6 +2008,13 @@ bool has_intersection(
 	return false;
 }
 
+/**
+ * Returns true if the intersection of `first` and `second` is non-empty,
+ * where `first` and `second` are ordered arrays.
+ * \tparam T a generic type that implements the operators `==` and `<`.
+ * \tparam BinarySearch if `true`, binary search is used to find indices of
+ * 		identical elements rather than linear search.
+ */
 template<typename T, bool BinarySearch = false>
 inline bool has_intersection(const array<T>& first, const array<T>& second) {
 	return has_intersection<T, BinarySearch>(
@@ -1384,6 +2022,13 @@ inline bool has_intersection(const array<T>& first, const array<T>& second) {
 		second.data, (unsigned int) second.length);
 }
 
+/**
+ * Returns true if `first` is a subset of `second`, where `first` and `second`
+ * are ordered native arrays.
+ * \tparam T a generic type that implements the operators `==` and `<`.
+ * \tparam BinarySearch if `true`, binary search is used to find indices of
+ * 		identical elements rather than linear search.
+ */
 template<typename T, bool BinarySearch = false>
 bool is_subset(
 	const T* first, unsigned int first_length,
@@ -1409,6 +2054,15 @@ bool is_subset(
 	return (i == first_length);
 }
 
+/**
+ * Given ordered native arrays `first` and `second`, this function visits their
+ * elements sequentially, and for every element `x` that exists in `first` but
+ * not in `second`, `emit(i)` is called where `first[i] == x`. The visited
+ * elements are also ordered.
+ * \tparam T a generic type that implements the operators `==` and `<`.
+ * \tparam BinarySearch if `true`, binary search is used to find indices of
+ * 		identical elements rather than linear search.
+ */
 template<typename T, typename EmitFunction, bool BinarySearch = false>
 void set_subtract(EmitFunction emit,
 	const T* first, unsigned int first_length,
@@ -1448,6 +2102,16 @@ void set_subtract(EmitFunction emit,
 	}
 }
 
+/**
+ * Given ordered native arrays `first` and `second`, this function computes the
+ * set difference between `first` and `second` and stores the result in `dst`.
+ * This function assumes `dst` has sufficient capacity. The set difference is
+ * also ordered.
+ * \tparam T satisfies [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable)
+ * 		and implements the operators `==` and `<`.
+ * \tparam BinarySearch if `true`, binary search is used to find indices of
+ * 		identical elements rather than linear search.
+ */
 template<typename T, typename SizeType, bool BinarySearch = false,
 	typename std::enable_if<std::is_integral<SizeType>::value>::type* = nullptr>
 void set_subtract(T* dst, SizeType& dst_length,
@@ -1489,6 +2153,15 @@ void set_subtract(T* dst, SizeType& dst_length,
 	dst_length += first_length - i;
 }
 
+/**
+ * Given ordered native arrays `first` and `second`, this function computes the
+ * set difference between `first` and `second` and stores the result in `dst`.
+ * The set difference is also ordered.
+ * \tparam T satisfies [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable)
+ * 		and implements the operators `==` and `<`.
+ * \tparam BinarySearch if `true`, binary search is used to find indices of
+ * 		identical elements rather than linear search.
+ */
 template<typename T, bool BinarySearch = false>
 bool set_subtract(array<T>& dst,
 	const T* first, unsigned int first_length,
@@ -1500,6 +2173,15 @@ bool set_subtract(array<T>& dst,
 	return true;
 }
 
+/**
+ * Given ordered arrays `first` and `second`, this function computes the set
+ * difference between `first` and `second` and stores the result in `dst`. The
+ * set difference is also ordered.
+ * \tparam T satisfies [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable)
+ * 		and implements the operators `==` and `<`.
+ * \tparam BinarySearch if `true`, binary search is used to find indices of
+ * 		identical elements rather than linear search.
+ */
 template<typename T, bool BinarySearch = false>
 inline bool set_subtract(array<T>& dst,
 	const array<T>& first,
@@ -1510,7 +2192,15 @@ inline bool set_subtract(array<T>& dst,
 		second.data, (unsigned int) second.length);
 }
 
-/* in-place variant of set_subtract */
+/**
+ * Given ordered native arrays `first` and `second`, this function computes the
+ * set difference in-place between `first` and `second` and stores the result
+ * in `first`. The set difference is also ordered.
+ * \tparam T satisfies [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable)
+ * 		and implements the operators `==` and `<`.
+ * \tparam BinarySearch if `true`, binary search is used to find indices of
+ * 		identical elements rather than linear search.
+ */
 template<typename T, typename SizeType, bool BinarySearch = false,
 	typename std::enable_if<std::is_integral<SizeType>::value>::type* = nullptr>
 void set_subtract(

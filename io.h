@@ -1,8 +1,72 @@
 /**
- * io.h
+ * \file io.h
  *
- *  Created on: Aug 29, 2014
- *      Author: asaparov
+ * This file defines serialization and deserialization functions `read` and
+ * `write`, as well as the `print` function for all fundamental types and core
+ * data structures.
+ * 
+ * The file also contains the definition and implementation of the
+ * `core::memory_stream` class, which may be used to read/write to an in-memory
+ * buffer.
+ * 
+ * Scribes
+ * -------
+ * 
+ * The `read`, `write`, and `print` functions in this library follow a very
+ * regular argument structure: The first argument is the object to
+ * read/write/print. The second argument is the stream to read from/write
+ * to/print to. Most functions also require a third (optional) argument called
+ * the `scribe`, which controls how the subobjects are read/written/printed.
+ * The scribe is typically passed to the read/write/print functions when
+ * operating on subobjects of the given object.
+ *
+ * Calling read/write/print with core::default_scribe will call the same
+ * function without the third argument. This largely corresponds to the
+ * "default" behavior of those functions.
+ *
+ * For example, `write(const core::array<T>& a, Stream& out, Writer&&... writer)`
+ * will call the function `write(a[i], out, writer)` for every element `a[i]`
+ * in `a`. This enables users to define their own scribes, and define new ways
+ * to read/write/print objects without having to re-implement the
+ * read/write/print functions for container structures such as core::array. The
+ * following example demonstrates how the behavior of the `print` function for
+ * an array of integers can be altered using a custom scribe.
+ * 
+ * ```{.cpp}
+ * #include <core/io.h>
+ * using namespace core;
+
+ * struct my_string_scribe {
+ * 	const char* strings[3];
+ * };
+ *
+ * template<typename Stream>
+ * bool print(int i, Stream& out, const my_string_scribe& printer) {
+ *     return print(printer.strings[i], out);
+ * }
+ *
+ * int main() {
+ * 	array<int> a = array<int>(8);
+ * 	a.add(1); a.add(2); a.add(0);
+ *
+ * 	print(a, stdout); print(' ', stdout);
+ *
+ * 	default_scribe def;
+ * 	print(a, stdout, def); print(' ', stdout);
+ *
+ * 	my_string_scribe printer;
+ * 	printer.strings[0] = "vici";
+ * 	printer.strings[1] = "veni";
+ * 	printer.strings[2] = "vidi";
+ *
+ * 	print(a, stdout, printer);
+ * }
+ * ```
+ * 
+ * This example has expected output `[1, 2, 0] [1, 2, 0] [veni, vidi, vici]`.
+ *
+ * <!-- Created on: Aug 29, 2014
+ *          Author: asaparov -->
  */
 
 #ifndef IO_H_
@@ -12,11 +76,11 @@
 #include "map.h"
 
 #include <stdarg.h>
-#include <stdint.h>
+#include <cstdint>
 #include <cwchar>
 #include <errno.h>
 
-using namespace core;
+namespace core {
 
 namespace detail {
 	template<typename C> static auto test_readable(int) ->
@@ -32,71 +96,165 @@ namespace detail {
 	template<typename C> static auto test_printable(long) -> std::false_type;
 }
 
-template<typename T> struct is_readable : decltype(detail::test_readable<T>(0)){};
-template<typename T> struct is_writeable : decltype(detail::test_writeable<T>(0)){};
-template<typename T> struct is_printable : decltype(detail::test_printable<T>(0)){};
+/**
+ * This type trait is [true_type](http://en.cppreference.com/w/cpp/types/integral_constant)
+ * if and only if the function `size_t fread(void*, integral, integral, T)` is
+ * defined where `integral` is any integral type.
+ */
+template<typename T> struct is_readable : decltype(core::detail::test_readable<T>(0)){};
 
+/**
+ * This type trait is [true_type](http://en.cppreference.com/w/cpp/types/integral_constant)
+ * if and only if the function `size_t fwrite(void*, integral, integral, T)` is
+ * defined where `integral` is any integral type.
+ */
+template<typename T> struct is_writeable : decltype(core::detail::test_writeable<T>(0)){};
+
+/**
+ * This type trait is [true_type](http://en.cppreference.com/w/cpp/types/integral_constant)
+ * if and only if the function `int fprintf(T, const char*)` is defined.
+ */
+template<typename T> struct is_printable : decltype(core::detail::test_printable<T>(0)){};
+
+/**
+ * Reads `sizeof(T)` bytes from `in` and writes them to the memory referenced
+ * by `value`. This function does not perform endianness transformations.
+ * \param in the stream given by a [FILE](http://en.cppreference.com/w/c/io) pointer.
+ * \tparam T satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental).
+ */
 template<typename T, typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
 inline bool read(T& value, FILE* in) {
 	return (fread(&value, sizeof(T), 1, in) == 1);
 }
 
+/**
+ * Reads `length` elements from `in` and writes them to the native array
+ * `values`. This function does not perform endianness transformations.
+ * \param in the stream given by a [FILE](http://en.cppreference.com/w/c/io) pointer.
+ * \tparam T satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental).
+ */
 template<typename T, typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
 inline bool read(T* values, FILE* in, unsigned int length) {
 	return (fread(values, sizeof(T), length, in) == length);
 }
 
+/**
+ * Writes `sizeof(T)` bytes to `out` from the memory referenced by `value`.
+ * This function does not perform endianness transformations.
+ * \param out the stream given by a [FILE](http://en.cppreference.com/w/c/io) pointer.
+ * \tparam T satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental).
+ */
 template<typename T, typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
 inline bool write(const T& value, FILE* out) {
 	return (fwrite(&value, sizeof(T), 1, out) == 1);
 }
 
+/**
+ * Writes `length` elements to `out` from the native array `values`. This
+ * function does not perform endianness transformations.
+ * \param out the stream given by a [FILE](http://en.cppreference.com/w/c/io) pointer.
+ * \tparam T satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental).
+ */
 template<typename T, typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
 inline bool write(const T* values, FILE* out, unsigned int length) {
 	return (fwrite(values, sizeof(T), length, out) == length);
 }
 
+/**
+ * Prints the character `value` to the stream given by the
+ * [FILE](http://en.cppreference.com/w/c/io) pointer `out`.
+ */
 inline bool print(const char& value, FILE* out) {
 	return (fputc(value, out) != EOF);
 }
 
+/**
+ * Prints the int `value` to the stream given by the
+ * [FILE](http://en.cppreference.com/w/c/io) pointer `out`.
+ */
 inline bool print(const int& value, FILE* out) {
 	return (fprintf(out, "%d", value) > 0);
 }
 
+/**
+ * Prints the unsigned int `value` to the stream given by the
+ * [FILE](http://en.cppreference.com/w/c/io) pointer `out`.
+ */
 inline bool print(const unsigned int& value, FILE* out) {
 	return (fprintf(out, "%u", value) > 0);
 }
 
+/**
+ * Prints the unsigned long `value` to the stream given by the
+ * [FILE](http://en.cppreference.com/w/c/io) pointer `out`.
+ */
 inline bool print(const unsigned long& value, FILE* out) {
 	return (fprintf(out, "%lu", value) > 0);
 }
 
+/**
+ * Prints the unsigned long long `value` to the stream given by the
+ * [FILE](http://en.cppreference.com/w/c/io) pointer `out`.
+ */
 inline bool print(const unsigned long long& value, FILE* out) {
 	return (fprintf(out, "%llu", value) > 0);
 }
 
+/**
+ * Prints the float `value` to the stream given by the
+ * [FILE](http://en.cppreference.com/w/c/io) pointer `out`.
+ */
 inline bool print(const float& value, FILE* out) {
 	return (fprintf(out, "%f", (double) value) > 0);
 }
 
+/**
+ * Prints the double `value` to the stream given by the
+ * [FILE](http://en.cppreference.com/w/c/io) pointer `out`.
+ */
 inline bool print(const double& value, FILE* out) {
 	return (fprintf(out, "%lf", value) > 0);
 }
 
+/**
+ * Prints the null-terminated C string `value` to the stream given by the
+ * [FILE](http://en.cppreference.com/w/c/io) pointer `out`.
+ */
 inline bool print(const char* values, FILE* out) {
 	return (fprintf(out, "%s", values) > 0);
 }
 
+/**
+ * Represents a stream to read/write from an in-memory buffer.
+ */
 struct memory_stream {
+	/**
+	 * The size of the stream.
+	 */
 	unsigned int length;
+
+	/**
+	 * The current position of the stream in the buffer.
+	 */
 	unsigned int position;
+
+	/**
+	 * The underlying buffer.
+	 */
 	char* buffer;
 
 	std::mbstate_t shift; /* for wide character operations (such as reading UTF8 symbols using fgetwc) */
 
+	/**
+	 * The default constructor does not initialize any fields.
+	 */
 	memory_stream() { }
 
+	/**
+	 * Initializes the stream with memory_stream::length given by
+	 * `initial_capacity` and memory_stream::position set to `0`.
+	 * memory_stream::buffer is allocated but not initialized to any value.
+	 */
 	memory_stream(unsigned int initial_capacity) : length(initial_capacity), position(0) {
 		buffer = (char*) malloc(sizeof(char) * length);
 		if (buffer == NULL) {
@@ -105,6 +263,11 @@ struct memory_stream {
 		}
 	}
 
+	/**
+	 * Initializes the stream with the memory_stream::buffer given by `buf`,
+	 * memory_stream::length given by `length`, and memory_stream::position set
+	 * to `0`.
+	 */
 	memory_stream(const char* buf, unsigned int length) : length(length), position(0) {
 		buffer = (char*) malloc(sizeof(char) * length);
 		if (buffer == NULL) {
@@ -118,6 +281,10 @@ struct memory_stream {
 		free(buffer);
 	}
 
+	/**
+	 * Reads a number of bytes given by `bytes` from the memory_stream and
+	 * writes them to `dst`. This function assumes `dst` has sufficient capacity.
+	 */
 	inline bool read(void* dst, unsigned int bytes) {
 		if (position + bytes >= length)
 			return false;
@@ -126,6 +293,12 @@ struct memory_stream {
 		return true;
 	}
 
+	/**
+	 * Checks whether the stream has sufficient size for an additional number
+	 * of bytes given by `bytes` at its current memory_stream::position. If
+	 * not, this function attempts to expand the buffer to a new size computed
+	 * as `memory_stream::position + bytes`.
+	 */
 	inline bool ensure_capacity(unsigned int bytes) {
 		if (position + bytes <= length)
 			return true;
@@ -137,6 +310,11 @@ struct memory_stream {
 		return true;
 	}
 
+	/**
+	 * Writes a number of bytes given by `bytes` from the given native array
+	 * `src` to the current position in this stream. memory_stream::ensure_capacity
+	 * is called to ensure the underlying buffer has sufficient size.
+	 */
 	inline bool write(const void* src, unsigned int bytes) {
 		if (!ensure_capacity(bytes))
 			return false;
@@ -146,32 +324,72 @@ struct memory_stream {
 	}
 };
 
+/**
+ * Reads `sizeof(T)` bytes from `in` and writes them to the memory referenced
+ * by `value`. This function does not perform endianness transformations.
+ * \param in a memory_stream.
+ * \tparam T satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental).
+ */
 template<typename T, typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
 inline bool read(T& value, memory_stream& in) {
 	return in.read(&value, sizeof(T));
 }
 
+/**
+ * Reads `length` elements from `in` and writes them to the native array
+ * `values`. This function does not perform endianness transformations.
+ * \param in a memory_stream.
+ * \tparam T satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental).
+ */
 template<typename T, typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
 inline bool read(T* values, memory_stream& in, unsigned int length) {
 	return in.read(values, (unsigned int) sizeof(T) * length);
 }
 
+/**
+ * Writes `sizeof(T)` bytes to `out` from the memory referenced by `value`.
+ * This function does not perform endianness transformations.
+ * \param out a memory_stream.
+ * \tparam T satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental).
+ */
 template<typename T, typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
 inline bool write(const T& value, memory_stream& out) {
 	return out.write(&value, sizeof(T));
 }
 
+/**
+ * Writes `length` elements to `out` from the native array `values`. This
+ * function does not perform endianness transformations.
+ * \param out a memory_stream.
+ * \tparam T satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental).
+ */
 template<typename T, typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
 inline bool write(const T* values, memory_stream& out, unsigned int length) {
 	return out.write(values, (unsigned int) sizeof(T) * length);
 }
 
+/**
+ * Writes the array of `n` elements, each with a size of `size` bytes, from the
+ * memory address referenced by `src` to the memory_stream `out`.
+ * \see This function mirrors the equivalent [fwrite](http://en.cppreference.com/w/cpp/io/c/fwrite)
+ * 			for [FILE](http://en.cppreference.com/w/c/io) pointer streams.
+ * \returns either `n` if the write is successful, or `0` upon failure.
+ */
 inline size_t fwrite(const void* src, size_t size, size_t n, memory_stream& out) {
 	if (out.write(src, (unsigned int) (size * n)))
 		return n;
 	else return 0;
 }
 
+/**
+ * Reads and returns a wide character from the given memory_stream.
+ * \see This function mirrors the equivalent [fgetwc](http://en.cppreference.com/w/cpp/io/c/fgetwc)
+ * 		for [FILE](http://en.cppreference.com/w/c/io) pointer streams.
+ * \returns on success, the next wide character from the stream.
+ * \returns `WEOF` on failure. If the next bytes in the stream cannot be
+ * 		interpreted as a wide character, [errno](http://en.cppreference.com/w/c/error/errno)
+ * 		is set to [EILSEQ](http://en.cppreference.com/w/c/error/errno_macros).
+ */
 inline wint_t fgetwc(memory_stream& out) {
 	wchar_t c;
 	size_t length = mbrtowc(&c, out.buffer + out.position, out.length - out.position, &out.shift);
@@ -186,6 +404,11 @@ inline wint_t fgetwc(memory_stream& out) {
 	return c;
 }
 
+/**
+ * Writes the given character `c` to the memory_stream `out`.
+ * \see This function mirrors the equivalent [fputc](http://en.cppreference.com/w/cpp/io/c/fputc)
+ * 		for [FILE](http://en.cppreference.com/w/c/io) pointer streams.
+ */
 inline int fputc(int c, memory_stream& out) {
 	char ch = (char) c;
 	if (out.write(&ch, sizeof(char)))
@@ -193,12 +416,24 @@ inline int fputc(int c, memory_stream& out) {
 	else return EOF;
 }
 
+/**
+ * Writes the given null-terminated C string `s` to the memory_stream `out`.
+ * \see This function mirrors the equivalent [fputs](http://en.cppreference.com/w/cpp/io/c/fputs)
+ * 		for [FILE](http://en.cppreference.com/w/c/io) pointer streams.
+ */
 inline int fputs(const char* s, memory_stream& out) {
 	if (out.write(s, (unsigned int) strlen(s)))
 		return 1;
 	else return EOF;
 }
 
+/**
+ * Writes the given arguments according to the format string `format` to the
+ * memory_stream `out`.
+ * \see This function mirrors the equivalent [fprintf](http://en.cppreference.com/w/cpp/io/c/fprintf)
+ * 		for [FILE](http://en.cppreference.com/w/c/io) pointer streams.
+ * \returns the number of bytes written to the stream, or `-1` upon error.
+ */
 inline int fprintf(memory_stream& out, const char* format, ...) {
 	va_list argptr;
 	va_start(argptr, format);
@@ -237,32 +472,59 @@ inline int fprintf(memory_stream& out, const char* format, ...) {
 	return written;
 }
 
+/**
+ * Writes the given null-terminated C string `values` to the stream `out`.
+ * \tparam Stream satisfies is_writeable.
+ */
 template<typename Stream,
 	typename std::enable_if<is_writeable<Stream>::value>::type* = nullptr>
 inline bool write(const char* values, Stream& out) {
 	return write(values, out, strlen(values));
 }
 
-struct dummy_scribe { };
+/**
+ * The default scribe implementation that provides the default behavior for
+ * read/write/print functions.
+ * \see [Section on scribes](#scribes).
+ */
+struct default_scribe { };
 
+/**
+ * Calls and returns `read(value, in)`, dropping the default_scribe argument.
+ * \tparam Stream satisfies is_readable.
+ */
 template<typename T, typename Stream,
 	typename std::enable_if<is_readable<Stream>::value>::type* = nullptr>
-inline bool read(T& value, Stream& in, dummy_scribe& scribe) {
+inline bool read(T& value, Stream& in, default_scribe& scribe) {
 	return read(value, in);
 }
 
+/**
+ * Calls and returns `write(value, out)`, dropping the default_scribe argument.
+ * \tparam Stream satisfies is_writeable.
+ */
 template<typename T, typename Stream,
 	typename std::enable_if<is_writeable<Stream>::value>::type* = nullptr>
-inline bool write(const T& value, Stream& out, dummy_scribe& scribe) {
+inline bool write(const T& value, Stream& out, default_scribe& scribe) {
 	return write(value, out);
 }
 
+/**
+ * Calls and returns `print(value, out)`, dropping the default_scribe argument.
+ * \tparam Stream satisfies is_printable.
+ */
 template<typename T, typename Stream,
 	typename std::enable_if<is_printable<Stream>::value>::type* = nullptr>
-inline auto print(const T& value, Stream& out, dummy_scribe& scribe) -> decltype(print(value, out)) {
+inline auto print(const T& value, Stream& out, default_scribe& scribe) -> decltype(print(value, out)) {
 	return print(value, out);
 }
 
+/**
+ * Prints the given native array of `values` each of type `T`, where `length`
+ * is the number of elements in the array. The output stream is `out`.
+ * \param printer a scribe for which the function `bool print(const T&, Stream&, Printer&)` is defined.
+ * \tparam Stream satisfies is_printable.
+ */
 template<typename T, char LeftBracket = '[', char RightBracket = ']',
 	typename SizeType, typename Stream, typename Printer,
 	typename std::enable_if<is_printable<Stream>::value>::type* = nullptr>
@@ -278,13 +540,25 @@ bool print(const T* values, SizeType length, Stream& out, Printer& printer) {
 	return print(RightBracket, out);
 }
 
+/**
+ * Prints the given native array of `values` each of type `T`, where `length`
+ * is the number of elements in the array. The output stream is `out`.
+ * \tparam Stream satisfies is_printable.
+ */
 template<typename T, char LeftBracket = '[', char RightBracket = ']', typename Stream,
 	typename std::enable_if<is_printable<Stream>::value>::type* = nullptr>
 inline bool print(const T* values, unsigned int length, Stream& out) {
-	dummy_scribe printer;
+	default_scribe printer;
 	return print<T, LeftBracket, RightBracket>(values, length, out, printer);
 }
 
+/**
+ * Prints the given native static array of `values` each of type `T`, where `N`
+ * is the number of elements in the array. The output stream is `out`.
+ * \param printer a scribe for which the function `bool print(const T&, Stream&, Printer&)`
+ * 		is defined. Note that since this is a variadic argument, it may be empty.
+ * \tparam Stream satisfies is_printable.
+ */
 template<typename T, size_t N, char LeftBracket = '[',
 	char RightBracket = ']', typename Stream, typename... Printer,
 	typename std::enable_if<is_printable<Stream>::value>::type* = nullptr>
@@ -300,14 +574,26 @@ bool print(const T (&values)[N], Stream& out, Printer&&... printer) {
 	return print(RightBracket, out);
 }
 
+/**
+ * Prints the given native static array of `values` each of type `T`, where `N`
+ * is the number of elements in the array. The output stream is `out`.
+ * \tparam Stream satisfies is_printable.
+ */
 template<typename T, size_t N, char LeftBracket = '[',
 	char RightBracket = ']', typename Stream,
 	typename std::enable_if<is_printable<Stream>::value>::type* = nullptr>
 inline bool print(const T (&values)[N], Stream& out) {
-	dummy_scribe printer;
+	default_scribe printer;
 	return print<T, N, LeftBracket, RightBracket>(values, out, printer);
 }
 
+/**
+ * Reads an array of `length` elements from `in` and stores the result in the
+ * given native array `a`. This function assumes `a` has sufficient capacity.
+ * \param reader a scribe for which the function `bool read(T&, Stream&, Reader&&...)`
+ * 		is defined. Note that since this is a variadic argument, it may be empty.
+ * \tparam Stream satisfies is_readable.
+ */
 template<typename T, typename Stream, typename... Reader,
 	typename std::enable_if<is_readable<Stream>::value>::type* = nullptr>
 inline bool read(T* a, Stream& in, unsigned int length, Reader&&... reader) {
@@ -316,6 +602,15 @@ inline bool read(T* a, Stream& in, unsigned int length, Reader&&... reader) {
 	return true;
 }
 
+/**
+ * Reads a core::array structure from `in` and stores the result in `a`.
+ * \param a an uninitialized core::array structure. This function initializes
+ * 		`a`, and the caller is responsible for its memory and must call free
+ * 		to release its memory resources.
+ * \param reader a scribe for which the function `bool read(T&, Stream&, Reader&&...)`
+ * 		is defined. Note that since this is a variadic argument, it may be empty.
+ * \tparam Stream satisfies is_readable.
+ */
 template<typename T, typename Stream, typename... Reader,
 	typename std::enable_if<is_readable<Stream>::value>::type* = nullptr>
 bool read(array<T>& a, Stream& in, Reader&&... reader) {
@@ -334,6 +629,13 @@ bool read(array<T>& a, Stream& in, Reader&&... reader) {
 	return true;
 }
 
+/**
+ * Writes the given native array `a` of elements to `out`, each of type `T`,
+ * where the number of elements is given by `length`.
+ * \param writer a scribe for which the function `bool write(const T&, Stream&, Writer&&...)`
+ * 		is defined. Note that since this is a variadic argument, it may be empty.
+ * \tparam Stream satisfies is_writeable.
+ */
 template<typename T, typename Stream, typename... Writer,
 	typename std::enable_if<is_writeable<Stream>::value>::type* = nullptr>
 inline bool write(const T* a, Stream& out, unsigned int length, Writer&&... writer) {
@@ -342,6 +644,12 @@ inline bool write(const T* a, Stream& out, unsigned int length, Writer&&... writ
 	return true;
 }
 
+/**
+ * Writes the given core::array structure `a` of elements to `out`, each of type `T`.
+ * \param writer a scribe for which the function `bool write(const T&, Stream&, Writer&&...)`
+ * 		is defined. Note that since this is a variadic argument, it may be empty.
+ * \tparam Stream satisfies is_writeable.
+ */
 template<typename T, typename Stream, typename... Writer,
 	typename std::enable_if<is_writeable<Stream>::value>::type* = nullptr>
 bool write(const array<T>& a, Stream& out, Writer&&... writer) {
@@ -349,12 +657,31 @@ bool write(const array<T>& a, Stream& out, Writer&&... writer) {
 		&& write(a.data, out, (unsigned int) a.length, std::forward<Writer>(writer)...);
 }
 
+/**
+ * Prints the given core::array structure `a` of elements to `out`, each of type `T`.
+ * \param printer a scribe for which the function `bool print(const T&, Stream&, Printer&&...)`
+ * 		is defined. Note that since this is a variadic argument, it may be empty.
+ * \tparam Stream satisfies is_printable.
+ */
 template<typename T, typename Stream, typename... Printer,
 	typename std::enable_if<is_printable<Stream>::value>::type* = nullptr>
 inline bool print(const array<T>& a, Stream& out, Printer&&... printer) {
 	return print(a.data, a.length, out, std::forward<Printer>(printer)...);
 }
 
+/**
+ * Reads a core::hash_set structure `set` from `in`.
+ * \param set an uninitialized core::hash_set structure. This function
+ * 		initializes `set`, and the caller is responsible for its memory and
+ * 		must call free to release its memory resources.
+ * \param alloc_keys a memory allocation function with prototype
+ * 		`void* alloc_keys(size_t count, size_t size)` that allocates space for
+ * 		`count` items, each with size `size`, and initializes them such that
+ * 		core::is_empty() returns `true` for each element.
+ * \param reader a scribe for which the function `bool read(T&, Stream&, Reader&&...)`
+ * 		is defined. Note that since this is a variadic argument, it may be empty.
+ * \tparam Stream satisfies is_readable.
+ */
 template<typename T, typename Stream, typename... Reader,
 	typename std::enable_if<is_readable<Stream>::value>::type* = nullptr>
 bool read(hash_set<T>& set, Stream& in, alloc_keys_func alloc_keys, Reader&&... reader) {
@@ -375,12 +702,28 @@ bool read(hash_set<T>& set, Stream& in, alloc_keys_func alloc_keys, Reader&&... 
 	return true;
 }
 
+/**
+ * Reads a core::hash_set structure `set` from `in`. The keys in the hash_set
+ * are allocated using [calloc](http://en.cppreference.com/w/c/memory/calloc).
+ * \param set an uninitialized core::hash_set structure. This function
+ * 		initializes `set`, and the caller is responsible for its memory and
+ * 		must call free to release its memory resources.
+ * \param reader a scribe for which the function `bool read(T&, Stream&, Reader&&...)`
+ * 		is defined. Note that since this is a variadic argument, it may be empty.
+ * \tparam Stream satisfies is_readable.
+ */
 template<typename T, typename Stream, typename... Reader,
 	typename std::enable_if<is_readable<Stream>::value>::type* = nullptr>
 inline bool read(hash_set<T>& set, Stream& in, Reader&&... reader) {
 	return read(set, in, calloc, std::forward<Reader>(reader)...);
 }
 
+/**
+ * Writes the given core::hash_set structure `set` to `out`.
+ * \param writer a scribe for which the function `bool write(const T&, Stream&, Writer&&...)`
+ * 		is defined. Note that since this is a variadic argument, it may be empty.
+ * \tparam Stream satisfies is_writeable.
+ */
 template<typename T, typename Stream, typename... Writer,
 	typename std::enable_if<is_writeable<Stream>::value>::type* = nullptr>
 bool write(const hash_set<T>& set, Stream& out, Writer&&... writer) {
@@ -392,6 +735,19 @@ bool write(const hash_set<T>& set, Stream& out, Writer&&... writer) {
 	return true;
 }
 
+/**
+ * Reads a core::hash_map structure `map` from `in`.
+ * \param map an uninitialized core::hash_map structure. This function
+ * 		initializes `map`, and the caller is responsible for its memory and
+ * 		must call free to release its memory resources.
+ * \param alloc_keys a memory allocation function with prototype
+ * 		`void* alloc_keys(size_t count, size_t size)` that allocates space for
+ * 		`count` items, each with size `size`, and initializes them such that
+ * 		core::is_empty() returns `true` for each element of type `K`.
+ * \param key_reader a scribe for which the function `bool read(K&, Stream&, KeyReader&)` is defined.
+ * \param value_reader a scribe for which the function `bool read(V&, Stream&, ValueReader&)` is defined.
+ * \tparam Stream satisfies is_readable.
+ */
 template<typename K, typename V, typename Stream,
 	typename KeyReader, typename ValueReader,
 	typename std::enable_if<is_readable<Stream>::value>::type* = nullptr>
@@ -431,25 +787,54 @@ bool read(hash_map<K, V>& map,
 	return true;
 }
 
+/**
+ * Reads a core::hash_map structure `map` from `in`.
+ * \param map an uninitialized core::hash_map structure. This function
+ * 		initializes `map`, and the caller is responsible for its memory and
+ * 		must call free to release its memory resources.
+ * \param alloc_keys a memory allocation function with prototype
+ * 		`void* alloc_keys(size_t count, size_t size)` that allocates space for
+ * 		`count` items, each with size `size`, and initializes them such that
+ * 		core::is_empty() returns `true` for each element of type `K`.
+ * \param key_reader a scribe for which the function `bool read(K&, Stream&, KeyReader&)` is defined.
+ * \tparam Stream satisfies is_readable.
+ */
 template<typename K, typename V, typename Stream, typename KeyReader,
 	typename std::enable_if<is_readable<Stream>::value>::type* = nullptr>
 inline bool read(hash_map<K, V>& map, Stream& in,
 		KeyReader& key_reader,
 		alloc_keys_func alloc_keys = calloc)
 {
-	dummy_scribe scribe;
+	default_scribe scribe;
 	return read(map, in, alloc_keys, key_reader, scribe);
 }
 
+/**
+ * Reads a core::hash_map structure `map` from `in`.
+ * \param map an uninitialized core::hash_map structure. This function
+ * 		initializes `map`, and the caller is responsible for its memory and
+ * 		must call free to release its memory resources.
+ * \param alloc_keys a memory allocation function with prototype
+ * 		`void* alloc_keys(size_t count, size_t size)` that allocates space for
+ * 		`count` items, each with size `size`, and initializes them such that
+ * 		core::is_empty() returns `true` for each element of type `K`.
+ * \tparam Stream satisfies is_readable.
+ */
 template<typename K, typename V, typename Stream,
 	typename std::enable_if<is_readable<Stream>::value>::type* = nullptr>
 inline bool read(hash_map<K, V>& map, Stream& in,
 		alloc_keys_func alloc_keys = calloc)
 {
-	dummy_scribe scribe;
+	default_scribe scribe;
 	return read(map, in, alloc_keys, scribe, scribe);
 }
 
+/**
+ * Writes the core::hash_map structure `map` to `out`.
+ * \param key_writer a scribe for which the function `bool write(const K&, Stream&, KeyWriter&)` is defined.
+ * \param value_writer a scribe for which the function `bool write(const V&, Stream&, ValueWriter&)` is defined.
+ * \tparam Stream satisfies is_writeable.
+ */
 template<typename K, typename V, typename Stream,
 	typename KeyWriter, typename ValueWriter,
 	typename std::enable_if<is_writeable<Stream>::value>::type* = nullptr>
@@ -466,20 +851,38 @@ bool write(const hash_map<K, V>& map, Stream& out,
 	return true;
 }
 
+/**
+ * Writes the core::hash_map structure `map` to `out`.
+ * \param key_writer a scribe for which the function `bool write(const K&, Stream&, KeyWriter&)` is defined.
+ * \tparam Stream satisfies is_writeable.
+ */
 template<typename K, typename V, typename Stream, typename KeyWriter,
 	typename std::enable_if<is_writeable<Stream>::value>::type* = nullptr>
 inline bool write(const hash_map<K, V>& map, Stream& out, KeyWriter& key_writer) {
-	dummy_scribe scribe;
+	default_scribe scribe;
 	return write(map, out, key_writer, scribe);
 }
 
+/**
+ * Writes the core::hash_map structure `map` to `out`.
+ * \tparam Stream satisfies is_writeable.
+ */
 template<typename K, typename V, typename Stream,
 	typename std::enable_if<is_writeable<Stream>::value>::type* = nullptr>
 inline bool write(const hash_map<K, V>& map, Stream& out) {
-	dummy_scribe scribe;
+	default_scribe scribe;
 	return write(map, out, scribe, scribe);
 }
 
+/**
+ * Reads a core::array_map structure `map` from `in`.
+ * \param map an uninitialized core::array_map structure. This function
+ * 		initializes `map`, and the caller is responsible for its memory and
+ * 		must call free to release its memory resources.
+ * \param key_reader a scribe for which the function `bool read(K&, Stream&, KeyReader&)` is defined.
+ * \param value_reader a scribe for which the function `bool read(V&, Stream&, ValueReader&)` is defined.
+ * \tparam Stream satisfies is_readable.
+ */
 template<typename K, typename V, typename Stream,
 	typename KeyReader, typename ValueReader,
 	typename std::enable_if<is_readable<Stream>::value>::type* = nullptr>
@@ -507,20 +910,41 @@ bool read(array_map<K, V>& map, Stream& in,
 	return true;
 }
 
+/**
+ * Reads a core::array_map structure `map` from `in`.
+ * \param map an uninitialized core::array_map structure. This function
+ * 		initializes `map`, and the caller is responsible for its memory and
+ * 		must call free to release its memory resources.
+ * \param key_reader a scribe for which the function `bool read(K&, Stream&, KeyReader&)` is defined.
+ * \tparam Stream satisfies is_readable.
+ */
 template<typename K, typename V, typename Stream, typename KeyReader,
 	typename std::enable_if<is_readable<Stream>::value>::type* = nullptr>
 inline bool read(array_map<K, V>& map, Stream& in, KeyReader& key_reader) {
-	dummy_scribe scribe;
+	default_scribe scribe;
 	return read(map, in, key_reader, scribe);
 }
 
+/**
+ * Reads a core::array_map structure `map` from `in`.
+ * \param map an uninitialized core::array_map structure. This function
+ * 		initializes `map`, and the caller is responsible for its memory and
+ * 		must call free to release its memory resources.
+ * \tparam Stream satisfies is_readable.
+ */
 template<typename K, typename V, typename Stream,
 	typename std::enable_if<is_readable<Stream>::value>::type* = nullptr>
 inline bool read(array_map<K, V>& map, Stream& in) {
-	dummy_scribe scribe;
+	default_scribe scribe;
 	return read(map, in, scribe, scribe);
 }
 
+/**
+ * Writes the given core::array_map structure `map` to `out`.
+ * \param key_writer a scribe for which the function `bool write(const K&, Stream&, KeyWriter&)` is defined.
+ * \param value_writer a scribe for which the function `bool write(const V&, Stream&, ValueWriter&)` is defined.
+ * \tparam Stream satisfies is_writeable.
+ */
 template<typename K, typename V, typename Stream,
 	typename KeyWriter, typename ValueWriter,
 	typename std::enable_if<is_writeable<Stream>::value>::type* = nullptr>
@@ -535,20 +959,33 @@ bool write(const array_map<K, V>& map, Stream& out,
 	return true;
 }
 
+/**
+ * Writes the given core::array_map structure `map` to `out`.
+ * \param key_writer a scribe for which the function `bool write(const K&, Stream&, KeyWriter&)` is defined.
+ * \tparam Stream satisfies is_writeable.
+ */
 template<typename K, typename V, typename Stream, typename KeyWriter,
 	typename std::enable_if<is_writeable<Stream>::value>::type* = nullptr>
 inline bool write(const array_map<K, V>& map, Stream& out, KeyWriter& key_writer) {
-	dummy_scribe scribe;
+	default_scribe scribe;
 	return write(map, out, key_writer, scribe);
 }
 
+/**
+ * Writes the given core::array_map structure `map` to `out`.
+ * \tparam Stream satisfies is_writeable.
+ */
 template<typename K, typename V, typename Stream,
 	typename std::enable_if<is_writeable<Stream>::value>::type* = nullptr>
 inline bool write(const array_map<K, V>& map, Stream& out) {
-	dummy_scribe scribe;
+	default_scribe scribe;
 	return write(map, out, scribe, scribe);
 }
 
+/**
+ * Reads a core::pair structure `p` from `stream` by calling `read(p.key, stream)` and `read(p.value, stream)`.
+ * \tparam Stream satisfies is_readable.
+ */
 template<typename K, typename V, typename Stream,
 	typename std::enable_if<is_readable<Stream>::value>::type* = nullptr>
 inline bool read(pair<K, V>& p, Stream& stream)
@@ -556,11 +993,18 @@ inline bool read(pair<K, V>& p, Stream& stream)
 	return read(p.key, stream) && read(p.value, stream);
 }
 
+/**
+ * Writes the given core::pair structure `p` to `stream` by calling
+ * `write(p.key, stream)` and `write(p.value, stream)`.
+ * \tparam Stream satisfies is_writeable.
+ */
 template<typename K, typename V, typename Stream,
 	typename std::enable_if<is_writeable<Stream>::value>::type* = nullptr>
 inline bool write(const pair<K, V>& p, Stream& stream)
 {
 	return write(p.key, stream) && write(p.value, stream);
 }
+
+} /* namespace core */
 
 #endif /* IO_H_ */

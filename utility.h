@@ -1,8 +1,13 @@
 /**
- * utility.h
+ * \file utility.h
  *
- *  Created on: Jan 8, 2014
- *      Author: asaparov
+ * This file contains a number of useful miscellaneous definitions and
+ * implementations, such as a core::string structure, a binary logarithm
+ * function, and a function to access the directory structure in the
+ * filesystem.
+ *
+ * <!-- Created on: Jan 8, 2014
+ *          Author: asaparov -->
  */
 
 #ifndef UTILITY_H_
@@ -29,6 +34,8 @@ static uint32_t __inline __builtin_clz(uint32_t x) {
 #endif
 
 
+namespace core {
+
 /* a useful type trait for detecting whether the function 'print_special_string' is defined */
 namespace detail {
 	template<typename Stream> static auto test_print_special_string(int) ->
@@ -36,27 +43,49 @@ namespace detail {
 	template<typename Stream> static auto test_print_special_string(long) -> std::false_type;
 }
 
-template<typename Stream> struct has_print_special_string : decltype(detail::test_print_special_string<Stream>(0)){};
+template<typename Stream> struct has_print_special_string : decltype(core::detail::test_print_special_string<Stream>(0)){};
 
 
-namespace core {
-
+/**
+ * A basic string structure, containing a native array of `char` elements and an `unsigned int length`.
+ */
 struct string {
+	/**
+	 * The length of the string in characters.
+	 */
 	unsigned int length;
+
+	/**
+	 * The native `char` array containing the string data.
+	 */
 	char* data;
 
+	/**
+	 * A constructor that does not initialize any fields.
+	 */
 	string() { }
 
+	/**
+	 * Constructs the string by copying from the given null-terminated C string `src`.
+	 */
 	string(const char* src) {
 		if (!initialize(src, (unsigned int) strlen(src)))
 			exit(EXIT_FAILURE);
 	}
 
+	/**
+	 * Constructs the string by copying from the given native char array `src`
+	 * with given `length`.
+	 */
 	string(const char* src, unsigned int length) {
 		if (!initialize(src, length))
 			exit(EXIT_FAILURE);
 	}
 
+	/**
+	 * Constructs the string by initializing string::data with size `length`
+	 * but without settings its contents.
+	 */
 	explicit string(unsigned int length) {
 		if (!initialize(length))
 			exit(EXIT_FAILURE);
@@ -66,18 +95,31 @@ struct string {
 		core::free(data);
 	}
 
+	/**
+	 * Accesses the character at the given `index`.
+	 */
 	inline char& operator [] (unsigned int index) {
 		return data[index];
 	}
 
+	/**
+	 * Accesses the character at the given `index`.
+	 */
 	inline const char& operator [] (unsigned int index) const {
 		return data[index];
 	}
 
+	/**
+	 * Initializes this string by copying from `s`. Note that if this string
+	 * was previously initialized, it is not freed.
+	 */
 	inline void operator = (const string& s) {
 		initialize(s.data, s.length);
 	}
 
+	/**
+	 * Appends the given null-terminated C string to this string.
+	 */
 	inline void operator += (const char* src) {
 		unsigned int src_length = (unsigned int) strlen(src);
 		char* new_data = (char*) realloc(data, sizeof(char) * (length + src_length));
@@ -91,6 +133,9 @@ struct string {
 		length += src_length;
 	}
 
+	/**
+	 * Returns whether the current string precedes `other` in lexicographical order.
+	 */
 	inline bool operator < (const string& other) const {
 		for (unsigned int i = 0; ; i++) {
 			if (i == length) {
@@ -107,6 +152,9 @@ struct string {
 		}
 	}
 
+	/**
+	 * Returns the smallest index `i` such that `string::data[i] == c`.
+	 */
 	inline unsigned int index_of(char c) const {
 		for (unsigned int i = 0; i < length; i++) {
 			if (data[i] == c)
@@ -115,31 +163,56 @@ struct string {
 		return length;
 	}
 
+	/**
+	 * Returns whether string::data is NULL. This enables strings to be used as keys in hashtables.
+	 */
 	static inline bool is_empty(const string& key) {
 		return key.data == NULL;
 	}
 
+	/**
+	 * Sets string::data to NULL. This enables strings to be used as keys in hashtables.
+	 */
 	static inline void set_empty(string& key) {
 		key.data = NULL;
 	}
 
+	/**
+	 * Sets string::data to NULL for every element in `keys`. This enables
+	 * strings to be used as keys in hashtables.
+	 */
 	static inline void set_empty(string* keys, unsigned int length) {
 		memset(keys, 0, sizeof(string) * length);
 	}
 
+	/**
+	 * Returns the hash of the given `key`.
+	 */
 	static inline unsigned int hash(const string& key) {
 		return default_hash(key.data, key.length);
 	}
 
+	/**
+	 * Copies the string::length and string::data pointer from `src` to `dst`.
+	 * Note this function does not create a new pointer and copy the character
+	 * contents, it simply copies the `char*` pointer.
+	 */
 	static inline void move(const string& src, string& dst) {
 		dst.length = src.length;
 		dst.data = src.data;
 	}
 
+	/**
+	 * Copies the string in `src` to `dst`. This function initializes a new
+	 * string::data array in `dst` and copies the contents from `src.data`.
+	 */
 	static inline bool copy(const string& src, string& dst) {
 		return dst.initialize(src.data, src.length);
 	}
 
+	/**
+	 * Swaps the contents and lengths of `first` and `second`.
+	 */
 	static inline void swap(string& first, string& second) {
 		core::swap(first.length, second.length);
 		core::swap(first.data, second.data);
@@ -150,6 +223,9 @@ struct string {
 		return core::size_of(str.length) + sizeof(char) * str.length;
 	}
 
+	/**
+	 * Frees the underlying `char` array in `str`.
+	 */
 	static inline void free(string& str) {
 		core::free(str.data);
 	}
@@ -176,18 +252,34 @@ private:
 	friend bool init(string&, unsigned int);
 };
 
-inline bool init(string& dest, const char* src, unsigned int length) {
-	return dest.initialize(src, length);
+/**
+ * Initializes the string `dst` with the given native `char` array `src` and the given `length`.
+ */
+inline bool init(string& dst, const char* src, unsigned int length) {
+	return dst.initialize(src, length);
 }
 
-inline bool init(string& dest, const string& src) {
-	return init(dest, src.data, src.length);
+/**
+ * Initializes the string `dst` with the given string `src`.
+ */
+inline bool init(string& dst, const string& src) {
+	return init(dst, src.data, src.length);
 }
 
-inline bool init(string& dest, unsigned int length) {
-	return dest.initialize(length);
+/**
+ * Initializes the string `dst` by allocating string::data with size `length`,
+ * but this function does not set its contents.
+ */
+inline bool init(string& dst, unsigned int length) {
+	return dst.initialize(length);
 }
 
+/**
+ * Reads a string `s` from `in`.
+ * \param s an uninitialized string structure. This function initializes `s`,
+ * 		and the caller is responsible for its memory and must call free to
+ * 		release its memory resources.
+ */
 inline bool read(string& s, FILE* in) {
 	if (!read(s.length, in)) return false;
 	s.data = (char*) malloc(sizeof(char) * s.length);
@@ -196,16 +288,26 @@ inline bool read(string& s, FILE* in) {
 	return read(s.data, in, s.length);
 }
 
+/**
+ * Writes the string `s` to `out`.
+ */
 inline bool write(const string& s, FILE* out) {
 	if (!write(s.length, out)) return false;
 	return write(s.data, out, s.length);
 }
 
+/**
+ * Prints the string `s` to `stream`.
+ */
 template<typename Stream>
 inline bool print(const string& s, Stream& stream) {
 	return fwrite(s.data, sizeof(char), s.length, stream) == s.length;
 }
 
+/**
+ * Compares the string `first` to the null-terminated C string `second` and
+ * returns `true` if they are equivalent, and `false` otherwise.
+ */
 inline bool operator == (const string& first, const char* second) {
 	for (unsigned int i = 0; i < first.length; i++) {
 		if (first[i] != second[i])
@@ -216,10 +318,18 @@ inline bool operator == (const string& first, const char* second) {
 	return true;
 }
 
+/**
+ * Compares the null-terminated C string `first` to the string `second` and
+ * returns `true` if they are equivalent, and `false` otherwise.
+ */
 inline bool operator == (const char* first, const string& second) {
 	return (second == first);
 }
 
+/**
+ * Compares the string `first` to the string `second` and returns `true` if
+ * they are equivalent, and `false` otherwise.
+ */
 inline bool operator == (const string& first, const string& second) {
 	if (first.length != second.length) return false;
 	/* we are guaranteed that only the first may be uninitialized */
@@ -228,14 +338,26 @@ inline bool operator == (const string& first, const string& second) {
 	return memcmp(first.data, second.data, first.length * sizeof(char)) == 0;
 }
 
+/**
+ * Compares the string `first` to the null-terminated C string `second` and
+ * returns `false` if they are equivalent, and `true` otherwise.
+ */
 inline bool operator != (const string& first, const char* second) {
 	return !(first == second);
 }
 
+/**
+ * Compares the null-terminated C string `first` to the string `second` and
+ * returns `false` if they are equivalent, and `true` otherwise.
+ */
 inline bool operator != (const char* first, const string& second) {
 	return !(second == first);
 }
 
+/**
+ * Compares the string `first` to the string `second` and returns `false` if
+ * they are equivalent, and `true` otherwise.
+ */
 inline bool operator != (const string& first, const string& second) {
 	if (first.length != second.length) return true;
 	if (first.data == NULL) {
@@ -246,8 +368,69 @@ inline bool operator != (const string& first, const string& second) {
 	return memcmp(first.data, second.data, first.length * sizeof(char)) != 0;
 }
 
+/**
+ * A scribe that maps unsigned integer indices to core::string pointers.
+ * 
+ * ```{.cpp}
+ * #include <core/utility.h>
+ * using namespace core;
+ * 
+ * int main() {
+ * 	string first = "first";
+ * 	string second = "second";
+ * 
+ * 	string_map_scribe scribe;
+ * 	scribe.map = (const string**) malloc(sizeof(const string*) * 2);
+ * 	scribe.map[0] = &first; scribe.map[1] = &second;
+ * 	scribe.length = 2;
+ * 
+ * 	print(0, stdout, scribe); print(' ', stdout);
+ * 	print(1, stdout, scribe);
+ * 
+ * 	free(scribe.map);
+ * }
+ * ```
+ * The expected output of this program is `first second`.
+ * 
+ * Another way to construct this structure is to convert a
+ * hash_map<string, unsigned int> into a core::string** array using the
+ * core::invert() function.
+ * 
+ * ```{.cpp}
+ * #include <core/utility.h>
+ * using namespace core;
+ * 
+ * int main() {
+ * 	hash_map<string, unsigned int> token_map(16);
+ * 	token_map.put("first", 0);
+ * 	token_map.put("second", 1);
+ * 
+ * 	string_map_scribe scribe;
+ * 	scribe.map = invert(token_map);
+ * 	scribe.length = 2;
+ * 
+ * 	print(0, stdout, scribe); print(' ', stdout);
+ * 	print(1, stdout, scribe);
+ * 
+ * 	free(scribe.map);
+ * 	for (auto entry : token_map)
+ * 		free(entry.key);
+ * }
+ * ```
+ * The expected output of this program is `first second`. Notice that since
+ * hash_map does not automatically free its elements, we do it manually using a
+ * range-based for loop.
+ */
 struct string_map_scribe {
+	/**
+	 * The native array of `const string*` elements that represents the
+	 * effective map from unsigned integers to strings.
+	 */
 	const string** map;
+
+	/**
+	 * The length of the native array string_map_scribe::map.
+	 */
 	unsigned int length;
 };
 
@@ -263,6 +446,16 @@ inline bool print_special_string_helper(unsigned int item, Stream& out) {
 	return true;
 }
 
+/**
+ * Prints `item` to `out` using the string_map_scribe `printer`. If
+ * `item < printer.length`, the string at index `item` is accessed from
+ * string_map_scribe::map and printed to `out`. Otherwise, there are two cases:
+ * 	1. If the function `bool print_special_string(unsigned int, Stream&)` is
+ * 		defined, this function calls it with arguments `item` and `out`.
+ * 	2. If such a function is not defined, an error message is printed to
+ * 		[stderr](http://en.cppreference.com/w/cpp/io/c) and the function
+ * 		returns `true`.
+ */
 template<typename Stream>
 inline bool print(unsigned int item, Stream& out, const string_map_scribe& printer)
 {
@@ -271,6 +464,14 @@ inline bool print(unsigned int item, Stream& out, const string_map_scribe& print
 	else return print_special_string_helper(item, out);
 }
 
+/**
+ * Looks for the token `identifier` in the given hash_map `map`. If such a key
+ * exists in the map, `id` is set to its corresponding value and `true` is
+ * returned. If not, a new entry is added to the map with `identifier` as the
+ * key and `map.table.size + 1` as its value, and `id` is set to this new value.
+ * \returns `true` upon success, or `false` if the hash_map `map` could not be
+ * 		resized to accommodate the new entry.
+ */
 bool get_token(const string& identifier, unsigned int& id, hash_map<string, unsigned int>& map) {
 	if (!map.check_size()) {
 		fprintf(stderr, "get_token ERROR: Unable to expand token map.\n");
@@ -289,15 +490,32 @@ bool get_token(const string& identifier, unsigned int& id, hash_map<string, unsi
 	return true;
 }
 
-/* NOTE: this function assumes the argument is non-zero */
+/**
+ * Returns the base-2 logarithm of the given `unsigned int` argument. This
+ * function assumes the argument is not `0`.
+ */
 inline unsigned int log2(unsigned int x) {
 	return (unsigned int) sizeof(unsigned int) * 8 - __builtin_clz(x) - 1;
 }
 
+/**
+ * Returns the base-2 logarithm of the given `unsigned int` argument. This
+ * function assumes the argument is not `0`.
+ */
 constexpr unsigned int static_log2(unsigned int x) {
 	return (x < 2) ? 1 : (1 + static_log2(x));
 }
 
+/**
+ * Opens the file with the given `filename` with the given `mode` and returns
+ * either a [FILE](http://en.cppreference.com/w/c/io) pointer on success, or
+ * `NULL` on failure. [fclose](http://en.cppreference.com/w/c/io/fclose) should
+ * be used to close the stream once reading is complete.
+ * 
+ * On Windows, this function uses
+ * [fopen_s](https://msdn.microsoft.com/en-us/library/z5hh6ee9.aspx) to open
+ * the stream.
+ */
 inline FILE* open_file(const char* filename, const char* mode) {
 #if defined(_WIN32)
 	FILE* file;
@@ -309,6 +527,15 @@ inline FILE* open_file(const char* filename, const char* mode) {
 #endif
 }
 
+/**
+ * Reads the contents of the file whose path is given by `filename`. If the
+ * file cannot be opened for reading, or if there is insufficient memory to
+ * allocate a buffer, `NULL` is returned. `bytes_read` is set to the number of
+ * bytes read, and the file contents are returned. The caller is responsible
+ * for the memory of the returned buffer and must call free to release its
+ * memory resources.
+ * \tparam AppendNull if `true`, a null terminating character is appended.
+ */
 template<bool AppendNull>
 inline char* read_file(const char* filename, size_t& bytes_read)
 {
@@ -332,7 +559,11 @@ inline char* read_file(const char* filename, size_t& bytes_read)
 	return data;
 }
 
-/* see: http://stackoverflow.com/questions/306533/how-do-i-get-a-list-of-files-in-a-directory-in-c */
+/**
+ * This function inspects the directory given by the path `directory` and adds
+ * the list of filenames in that directory to the string array `out`.
+ * \see http://stackoverflow.com/questions/306533/how-do-i-get-a-list-of-files-in-a-directory-in-c
+ */
 inline bool get_files_in_directory(array<string>& out, const char* directory)
 {
 #if defined(_WIN32)
