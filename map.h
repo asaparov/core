@@ -55,6 +55,7 @@ typedef void*(alloc_keys_func)(size_t, size_t);
 
 
 /* forward declarations */
+#if !defined(DOXYGEN_IGNORE)
 
 template<typename T>
 struct hash_set;
@@ -64,6 +65,9 @@ struct hash_map;
 
 template<typename K, typename V>
 struct array_map;
+
+#endif /* DOXYGEN_IGNORE */
+
 
 #if defined(__LP64__) || defined(_WIN64) || defined(__x86_64__) || defined(__ppc64__)
 template<typename K>
@@ -985,9 +989,9 @@ struct hash_set
 	}
 
 	/**
-	 * Frees hash_set::keys. This should not be used if a was constructed on
-	 * the stack, as the destructor will automatically free hash_set::data. The
-	 * elements of `set` are not freed.
+	 * Frees hash_set::keys. This should not be used if `set` was constructed
+	 * on the stack, as the destructor will automatically free hash_set::data.
+	 * The elements of `set` are not freed.
 	 */
 	static inline void free(hash_set<T>& set) { set.free(); }
 
@@ -1728,10 +1732,10 @@ struct hash_map
 	}
 
 	/**
-	 * Frees hash_map::table and hash_map::values. This should not be used if a
-	 * was constructed on the stack, as the destructor will automatically free
-	 * hash_map::table and hash_map::values. The existing entries of `map` are
-	 * not freed.
+	 * Frees hash_map::table and hash_map::values. This should not be used if
+	 * `map` was constructed on the stack, as the destructor will automatically
+	 * free hash_map::table and hash_map::values. The existing entries of `map`
+	 * are not freed.
 	 */
 	static inline void free(hash_map<K, V>& map) {
 		core::free(map.table);
@@ -2235,7 +2239,7 @@ struct array_map {
 
 	/**
 	 * Frees array_map::keys and array_map::values. This should not be used if
-	 * a was constructed on the stack, as the destructor will automatically
+	 * `map` was constructed on the stack, as the destructor will automatically
 	 * free array_map::keys and array_map::values. The existing entries of
 	 * `map` are not freed.
 	 */
