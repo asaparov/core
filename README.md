@@ -1,8 +1,10 @@
 Documentation and code examples are available at <http://asaparov.org/docs/core>.
 
-The *core* library is a small collection of general-purpose data structures and algorithms. Originally, I developed this library to explore and tinker with different programming paradigms and design patterns. Since then, the code has evolved into a collection of generic data structures, with polymorphism achieved through [templates](http://en.cppreference.com/w/cpp/language/templates), and the API largely following a procedural programming paradigm.
+This repository is a small collection of general-purpose data structures and algorithms. Originally, I developed this library to explore and tinker with different programming paradigms and design patterns. Since then, the code has evolved into a collection of generic data structures, using [templates](http://en.cppreference.com/w/cpp/language/templates) for polymorphism.
 
 ### Usage and Dependencies
+
+To use the code, simply download the files into a folder named "core". Add this folder to the include path for the compiler, for example by using the `-I` flag.
 
 The code makes use of the [xxhash](https://github.com/Cyan4973/xxHash) library as its default hash function implementation, but the required files are included in the repository. Otherwise, there are no dependencies on external libraries. The code makes use of `C++11` and is regularly tested with `gcc 6` but I have previously compiled it with `gcc 4.8`, `clang 4.0`, and `Microsoft Visual C++ 14.0 (2015)`. The code is intended to be platform-independent, so please create an issue if there are any compilation bugs.
 

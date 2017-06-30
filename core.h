@@ -107,6 +107,19 @@ inline T max(const T& first, const T& second) {
 }
 
 /**
+ * If `T` satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental),
+ * [is_enum](http://en.cppreference.com/w/cpp/types/is_enum), or
+ * [is_pointer](http://en.cppreference.com/w/cpp/types/is_pointer), this
+ * function assigns `a = b`.
+ */
+template<typename T,
+	typename std::enable_if<std::is_fundamental<T>::value || std::is_enum<T>::value || std::is_pointer<T>::value>::type* = nullptr>
+inline bool init(T& a, const T& b) {
+	a = b;
+	return true;
+}
+
+/**
  * If `T` satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental)
  * or [is_enum](http://en.cppreference.com/w/cpp/types/is_enum),
  * `dst` is assigned to `src`. Otherwise, this function calls

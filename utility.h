@@ -61,7 +61,10 @@ struct string {
 	char* data;
 
 	/**
-	 * A constructor that does not initialize any fields.
+	 * A constructor that does not initialize any fields. **WARNING:** The
+	 * destructor will free string::data, which this constructor does not
+	 * initialize. The user must initialize string::data using `init` or
+	 * manually before the string is destroyed.
 	 */
 	string() { }
 
