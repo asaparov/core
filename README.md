@@ -1,4 +1,4 @@
-Documentation and code examples are available at <http://asaparov.org/docs/core>.
+Documentation and code examples are available at <http://asaparov.org/docs/core>. The repository is located at <https://github.com/asaparov/core>.
 
 This repository is a small collection of general-purpose data structures and algorithms. Originally, I developed this library to explore and tinker with different programming paradigms and design patterns. Since then, the code has evolved into a collection of generic data structures, using [templates](http://en.cppreference.com/w/cpp/language/templates) for polymorphism.
 
