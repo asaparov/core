@@ -7,8 +7,9 @@
  * such as resizing, linear and binary search, insertion sort, and quicksort.
  * The `pair` structure is also defined here.
  *
- * In addition, this file that perform set operations on ordered native arrays,
- * such as union, intersection, subtraction, and subset.
+ * This file also contains functions that perform set operations on sorted
+ * arrays and native arrays, such as union, intersection, subtraction, and
+ * subset.
  *
  * <!-- Created on: Mar 3, 2012
  *          Author: asaparov -->
@@ -1553,6 +1554,17 @@ void shift_right(T* list, unsigned int length, unsigned int index)
 {
 	for (unsigned int i = length; i > index; i--)
 		move(list[i - 1], list[i]);
+}
+
+/**
+ * For every index `i < index`, this function moves each element at `i + 1` to index `i`.
+ * \tparam T satisfies is_moveable.
+ */
+template<typename T>
+void shift_left(T* list, unsigned int index)
+{
+	for (unsigned int i = 0; i < index; i++)
+		move(list[i + 1], list[i]);
 }
 
 template<bool RemoveDuplicates, typename T, typename UnionFunc>

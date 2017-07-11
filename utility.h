@@ -38,12 +38,12 @@ namespace core {
 
 /* a useful type trait for detecting whether the function 'print_special_string' is defined */
 namespace detail {
-	template<typename Stream> static auto test_print_special_string(int) ->
-			decltype(bool(print_special_string(0u, std::declval<Stream&>())), std::true_type{});
-	template<typename Stream> static auto test_print_special_string(long) -> std::false_type;
+	template<typename Stream, typename... Printer> static auto test_print_special_string(int) ->
+			decltype(bool(print_special_string(0u, std::declval<Stream&>(), std::declval<Printer&&>()...)), std::true_type{});
+	template<typename Stream, typename... Printer> static auto test_print_special_string(long) -> std::false_type;
 }
 
-template<typename Stream> struct has_print_special_string : decltype(core::detail::test_print_special_string<Stream>(0)){};
+template<typename Stream, typename... Printer> struct has_print_special_string : decltype(core::detail::test_print_special_string<Stream, Printer...>(0)){};
 
 
 /**
@@ -437,13 +437,13 @@ struct string_map_scribe {
 	unsigned int length;
 };
 
-template<typename Stream, typename std::enable_if<has_print_special_string<Stream>::value>::type* = nullptr>
-inline bool print_special_string_helper(unsigned int item, Stream& out) {
-	return print_special_string(item, out);
+template<typename Stream, typename... Printer, typename std::enable_if<has_print_special_string<Stream, Printer...>::value>::type* = nullptr>
+inline bool print_special_string_helper(unsigned int item, Stream& out, Printer&&... printer) {
+	return print_special_string(item, out, std::forward<Printer>(printer)...);
 }
 
-template<typename Stream, typename std::enable_if<!has_print_special_string<Stream>::value>::type* = nullptr>
-inline bool print_special_string_helper(unsigned int item, Stream& out) {
+template<typename Stream, typename... Printer, typename std::enable_if<!has_print_special_string<Stream, Printer...>::value>::type* = nullptr>
+inline bool print_special_string_helper(unsigned int item, Stream& out, Printer&&... printer) {
 	fprintf(stderr, "print ERROR: The unsigned int %u exceeds the bounds of the "
 			"string_map_scribe. Did you forget to implement print_special_string?\n", item);
 	return true;
@@ -458,13 +458,18 @@ inline bool print_special_string_helper(unsigned int item, Stream& out) {
  * 	2. If such a function is not defined, an error message is printed to
  * 		[stderr](http://en.cppreference.com/w/cpp/io/c) and the function
  * 		returns `true`.
+ *
+ * \param string_printer a scribe for which the function
+ * 		`bool print(const string&, Stream&, Printer&&...)` is defined, which is
+ * 		used to print the string itself. Note that since this is a variadic
+ * 		argument, it may be empty.
  */
-template<typename Stream>
-inline bool print(unsigned int item, Stream& out, const string_map_scribe& printer)
+template<typename Stream, typename... Printer>
+inline bool print(unsigned int item, Stream& out, const string_map_scribe& printer, Printer&&... string_printer)
 {
 	if (item < printer.length)
-		return print(*printer.map[item], out);
-	else return print_special_string_helper(item, out);
+		return print(*printer.map[item], out, std::forward<Printer>(string_printer)...);
+	else return print_special_string_helper(item, out, std::forward<Printer>(string_printer)...);
 }
 
 /**
