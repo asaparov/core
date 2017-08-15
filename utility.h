@@ -371,6 +371,132 @@ inline bool operator != (const string& first, const string& second) {
 	return memcmp(first.data, second.data, first.length * sizeof(char)) != 0;
 }
 
+struct sequence {
+	unsigned int* tokens;
+	unsigned int length;
+
+	sequence(unsigned int* src, unsigned int length) : tokens(src), length(length) { }
+
+	inline bool operator = (const sequence& src) {
+		return initialize(src);
+	}
+
+	inline unsigned int& operator [] (unsigned int index) {
+		return tokens[index];
+	}
+
+	inline unsigned int operator [] (unsigned int index) const {
+		return tokens[index];
+	}
+
+	static inline unsigned int hash(const sequence& key) {
+		return default_hash(key.tokens, key.length);
+	}
+
+	static inline bool is_empty(const sequence& key) {
+		return key.tokens == NULL;
+	}
+
+	static inline void set_empty(sequence& key) {
+		key.tokens = NULL;
+	}
+
+	static inline void move(const sequence& src, sequence& dst) {
+		dst.tokens = src.tokens;
+		dst.length = src.length;
+	}
+
+	static inline bool copy(const sequence& src, sequence& dst) {
+		return dst.initialize(src);
+	}
+
+	static inline void swap(sequence& first, sequence& second) {
+		core::swap(first.tokens, second.tokens);
+		core::swap(first.length, second.length);
+	}
+
+	static inline void free(sequence& seq) {
+		core::free(seq.tokens);
+	}
+
+private:
+	inline bool initialize(const sequence& src) {
+		length = src.length;
+		tokens = (unsigned int*) malloc(sizeof(unsigned int) * length);
+		if (tokens == NULL) {
+			fprintf(stderr, "sequence.initialize ERROR: Out of memory.\n");
+			return false;
+		}
+		memcpy(tokens, src.tokens, sizeof(unsigned int) * length);
+		return true;
+	}
+};
+
+inline bool init(sequence& seq, unsigned int length) {
+	seq.length = length;
+	seq.tokens = (unsigned int*) malloc(sizeof(unsigned int) * length);
+	if (seq.tokens == NULL) {
+		fprintf(stderr, "init ERROR: Insufficient memory for token array in sequence.\n");
+		return false;
+	}
+	return true;
+}
+
+inline bool init(sequence& seq, const sequence& src) {
+	return sequence::copy(src, seq);
+}
+
+inline bool operator == (const sequence& first, const sequence& second) {
+	/* only the first argument can be uninitialized */
+	if (first.tokens == NULL) return false;
+	if (first.length != second.length) return false;
+	for (unsigned int i = 0; i < first.length; i++)
+		if (first.tokens[i] != second.tokens[i]) return false;
+	return true;
+}
+
+inline bool operator != (const sequence& first, const sequence& second) {
+	return !(first == second);
+}
+
+inline bool operator < (const sequence& first, const sequence& second) {
+	if (first.length < second.length) return true;
+	else if (first.length > second.length) return false;
+	for (unsigned int i = 0; i < first.length; i++) {
+		if (first[i] < second[i]) return true;
+		else if (first[i] > second[i]) return false;
+	}
+	return false;
+}
+
+template<typename Stream>
+inline bool read(sequence& item, Stream& in) {
+	if (!read(item.length, in)) return false;
+	item.tokens = (unsigned int*) malloc(sizeof(unsigned int) * item.length);
+	if (item.tokens == NULL) return false;
+	if (!read(item.tokens, in, item.length)) {
+		free(item.tokens);
+		return false;
+	}
+	return true;
+}
+
+template<typename Stream>
+inline bool write(const sequence& item, Stream& out) {
+	return write(item.length, out) && write(item.tokens, out, item.length);
+}
+
+template<typename Stream, typename... Printer>
+inline bool print(const sequence& item,
+	Stream& out, Printer&&... printer)
+{
+	if (item.length == 0) return true;
+	bool success = print(item[0], out, std::forward<Printer>(printer)...);
+	for (unsigned int i = 1; i < item.length; i++)
+		success &= print(' ', out) && print(item[i], out, std::forward<Printer>(printer)...);
+	return success;
+}
+
 /**
  * A scribe that maps unsigned integer indices to core::string pointers.
  * 

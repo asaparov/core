@@ -1503,6 +1503,11 @@ struct pair {
 	static inline void set_empty(pair<K, V>& pair) {
 		hasher<K>::set_empty(pair.key);
 	}
+
+	static inline void free(pair<K, V>& pair) {
+		core::free(pair.key);
+		core::free(pair.value);
+	}
 };
 
 template<typename K, typename V>

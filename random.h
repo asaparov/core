@@ -238,6 +238,15 @@ inline unsigned int sample_geometric(const V& p) {
 }
 
 /**
+ * Returns a sample from the negative binomial distribution with number of
+ * failures `r` and success probability `p`.
+ */
+template<typename V>
+inline double log_probability_negative_binomial(unsigned int x, const V& r, const V& p) {
+	return lgamma(x + r) - lgamma(x + 1) - lgamma(r) + r*log(1 - p) + x*log(p);
+}
+
+/**
  * Returns a sample from the beta distribution with shape parameter `alpha` and
  * scale parameter 1. This function assumes `alpha > 0`.
  */
