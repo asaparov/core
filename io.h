@@ -217,6 +217,24 @@ inline bool print(const double& value, FILE* out) {
 }
 
 /**
+ * Prints the float `value` to the stream given by the
+ * [FILE](http://en.cppreference.com/w/c/io) pointer `out`
+ * with the given `precision`.
+ */
+inline bool print(const float& value, FILE* out, unsigned int precision) {
+	return (fprintf(out, "%.*f", precision, (double) value) > 0);
+}
+
+/**
+ * Prints the double `value` to the stream given by the
+ * [FILE](http://en.cppreference.com/w/c/io) pointer `out`
+ * with the given `precision`.
+ */
+inline bool print(const double& value, FILE* out, unsigned int precision) {
+	return (fprintf(out, "%.*lf", precision, value) > 0);
+}
+
+/**
  * Prints the null-terminated C string `value` to the stream given by the
  * [FILE](http://en.cppreference.com/w/c/io) pointer `out`.
  */
