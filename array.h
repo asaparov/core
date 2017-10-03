@@ -2262,6 +2262,21 @@ void set_subtract(
 	first_length = index;
 }
 
+/**
+ * Given ordered arrays `first` and `second`, this function computes the set
+ * difference in-place between `first` and `second` and stores the result in
+ * `first`. The set difference is also ordered.
+ * \tparam T satisfies [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable)
+ * 		and implements the operators `==` and `<`.
+ * \tparam BinarySearch if `true`, binary search is used to find indices of
+ * 		identical elements rather than linear search.
+ */
+template<typename T, bool BinarySearch = false>
+inline void set_subtract(array<T>& first, const array<T>& second)
+{
+	return set_subtract(first.data, first.length, second.data, second.length);
+}
+
 inline void array_test(void)
 {
 	array<char> buf(1);
