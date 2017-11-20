@@ -507,6 +507,15 @@ inline bool write(const char* values, Stream& out) {
  */
 struct default_scribe { };
 
+/* a type trait for detecting whether the function 'print' is defined with a default_scribe argument */
+namespace detail {
+	template<typename T, typename Stream> static auto test_default_print(int) ->
+			decltype(bool(print(std::declval<const T&>(), std::declval<Stream&>(), std::declval<default_scribe&>())), std::true_type{});
+	template<typename T, typename Stream> static auto test_default_print(long) -> std::false_type;
+}
+
+template<typename T, typename Stream> struct has_default_print : decltype(core::detail::test_default_print<T, Stream>(0)){};
+
 /**
  * Calls and returns `read(value, in)`, dropping the default_scribe argument.
  * \tparam Stream satisfies is_readable.
@@ -532,7 +541,7 @@ inline bool write(const T& value, Stream& out, default_scribe& scribe) {
  * \tparam Stream satisfies is_printable.
  */
 template<typename T, typename Stream,
-	typename std::enable_if<is_printable<Stream>::value>::type* = nullptr>
+	typename std::enable_if<is_printable<Stream>::value && !has_default_print<T, Stream>::value>::type* = nullptr>
 inline auto print(const T& value, Stream& out, default_scribe& scribe) -> decltype(print(value, out)) {
 	return print(value, out);
 }
