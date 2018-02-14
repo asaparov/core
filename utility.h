@@ -283,7 +283,8 @@ inline bool init(string& dst, unsigned int length) {
  * 		and the caller is responsible for its memory and must call free to
  * 		release its memory resources.
  */
-inline bool read(string& s, FILE* in) {
+template<typename Stream>
+inline bool read(string& s, Stream& in) {
 	if (!read(s.length, in)) return false;
 	s.data = (char*) malloc(sizeof(char) * s.length);
 	if (s.data == NULL)
@@ -294,7 +295,8 @@ inline bool read(string& s, FILE* in) {
 /**
  * Writes the string `s` to `out`.
  */
-inline bool write(const string& s, FILE* out) {
+template<typename Stream>
+inline bool write(const string& s, Stream& out) {
 	if (!write(s.length, out)) return false;
 	return write(s.data, out, s.length);
 }
