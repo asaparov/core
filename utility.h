@@ -17,6 +17,9 @@
 #include "io.h"
 
 #if defined(_WIN32)
+#if !defined(UNICODE)
+#error "Unicode support required. Please compile with UNICODE preprocessor definition."
+#endif
 #include <windows.h>
 #include <intrin.h>
 #undef max

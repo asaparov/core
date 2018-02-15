@@ -121,7 +121,7 @@ inline unsigned int select_categorical(
 		fprintf(stderr, "select_categorical WARNING: Specified length is zero.\n");
 #endif
 
-	V aggregator = 0.0;
+	V aggregator = (V) 0;
 	unsigned int selected_table = length - 1;
 	for (unsigned int j = 0; j < length; j++) {
 		aggregator += probability[j];

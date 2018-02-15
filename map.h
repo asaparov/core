@@ -685,8 +685,7 @@ struct hash_set
 			fprintf(stderr, "hash_set.remove WARNING: Specified key is empty.\n");
 #endif
 
-		unsigned int hash_value = hasher<T>::hash(element) % capacity;
-		unsigned int index = hash_value;
+		unsigned int index = hasher<T>::hash(element) % capacity;
 		while (true) {
 			if (keys[index] == element) {
 				break;
@@ -695,7 +694,7 @@ struct hash_set
 			index = (index + 1) % capacity;
 		}
 
-		remove_at(index, hash_value);
+		remove_at(index);
 		return true;
 	}
 
@@ -707,8 +706,7 @@ struct hash_set
 			fprintf(stderr, "hash_set.remove WARNING: Specified key is empty.\n");
 #endif
 
-		unsigned int hash_value = hasher<T>::hash(element) % capacity;
-		unsigned int index = hash_value;
+		unsigned int index = hasher<T>::hash(element) % capacity;
 		while (true) {
 			if (keys[index] == element) {
 				break;
@@ -717,17 +715,17 @@ struct hash_set
 			index = (index + 1) % capacity;
 		}
 
-		remove_at(values, index, hash_value);
+		remove_at(values, index);
 		return true;
 	}
 
 	/**
-	 * This function removes the element at the bucket given by `index` whose
-	 * hash value is `hash_value`. This function assumes that an element is
-	 * located at the given bucket with the correct provided hash value. This
-	 * function does not free the removed element.
+	 * This function removes the element at the bucket given by `index`. This
+	 * function assumes that an element is located at the given bucket with the
+	 * correct provided hash value. This function does not free the removed
+	 * element.
 	 */
-	void remove_at(unsigned int index, unsigned int hash_value)
+	void remove_at(unsigned int index)
 	{
 		unsigned int last = index;
 		unsigned int search = (index + 1) % capacity;
@@ -1058,9 +1056,7 @@ private:
 	}
 
 	template<typename V>
-	void remove_at(
-			V* values, unsigned int index,
-			unsigned int hash_value)
+	void remove_at(V* values, unsigned int index)
 	{
 		unsigned int last = index;
 		unsigned int search = (index + 1) % capacity;
@@ -1550,14 +1546,14 @@ struct hash_map
 	}
 
 	/**
-	 * This function removes the entry at the bucket given by `index` whose
-	 * hash value is `hash_value`. This function assumes that an entry is
-	 * located at the given bucket with the correct provided hash value. This
-	 * function does not free the removed key or value.
+	 * This function removes the entry at the bucket given by `index`. This
+	 * function assumes that an entry is located at the given bucket with the
+	 * correct provided hash value. This function does not free the removed key or
+	 * value.
 	 */
-	inline void remove_at(unsigned int index, unsigned int hash_value)
+	inline void remove_at(unsigned int index)
 	{
-		table.remove_at(values, index, hash_value);
+		table.remove_at(values, index);
 	}
 
 	/**
@@ -2012,11 +2008,11 @@ struct array_map {
 	 * attempts to increase its capacity by factors of RESIZE_FACTOR.
 	 * \returns `true` if the resize was successful, and `false` if there is insufficient memory.
 	 */
-	bool ensure_capacity(unsigned int new_length) {
+	bool ensure_capacity(size_t new_length) {
 		if (new_length <= capacity)
 			return true;
 
-		unsigned int new_capacity = (unsigned int) capacity;
+		size_t new_capacity = capacity;
 		if (!expand(keys, new_capacity, new_length))
 			return false;
 		if (!resize(values, new_capacity))
@@ -2036,13 +2032,13 @@ struct array_map {
 	 * \tparam V is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable).
 	 */
 	bool put(const K& key, const V& value) {
-		unsigned int index = index_of(key);
+		size_t index = index_of(key);
 		if (index < size) {
 			values[index] = value;
 			return true;
 		}
 
-		if (!ensure_capacity((unsigned int) size + 1))
+		if (!ensure_capacity(size + 1))
 			return false;
 		keys[size] = key;
 		values[size] = value;
@@ -2054,7 +2050,7 @@ struct array_map {
 	 * Performs a linear search to find the index of the given `key`. If the
 	 * `key` is not in this map, array_map::size is returned.
 	 */
-	inline unsigned int index_of(const K& key) const {
+	inline size_t index_of(const K& key) const {
 		return core::index_of(key, keys, size);
 	}
 
@@ -2119,7 +2115,7 @@ struct array_map {
 	 * not exist in the map, `contains` is set to `false`.
 	 */
 	inline V& get(const K& key, bool& contains) {
-		unsigned int index = index_of(key);
+		size_t index = index_of(key);
 		contains = (index != size);
 		return values[index];
 	}
@@ -2141,7 +2137,7 @@ struct array_map {
 	 * \returns `true` if the element is removed, and `false` if the set does not contain `element`.
 	 */
 	bool remove(const K& key) {
-		unsigned int index = index_of(key);
+		size_t index = index_of(key);
 		if (index == size)
 			return false;
 		remove_at(index);
@@ -2155,7 +2151,7 @@ struct array_map {
 	 * \tparam K satisfies is_moveable.
 	 * \tparam V satisfies is_moveable.
 	 */
-	inline void remove_at(unsigned int index) {
+	inline void remove_at(size_t index) {
 		size--;
 		if (index == size)
 			return;

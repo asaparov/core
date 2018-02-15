@@ -119,10 +119,10 @@ inline bool ensure_capacity(T*& data, SizeType& capacity, size_t new_length)
  */
 template<typename T, typename SizeType,
 	typename std::enable_if<std::is_integral<SizeType>::value>::type* = nullptr>
-inline unsigned int index_of(const T& element, const T* data,
+inline SizeType index_of(const T& element, const T* data,
 		const SizeType& length, const SizeType& start = 0)
 {
-	for (unsigned int i = start; i < length; i++)
+	for (SizeType i = start; i < length; i++)
 		if (element == data[i])
 			return i;
 	return length;

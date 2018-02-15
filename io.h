@@ -458,13 +458,13 @@ inline int fprintf(memory_stream& out, const char* format, ...) {
 
 #if defined(_WIN32)
 	int required = _vscprintf(format, argptr);
-	if (!out.ensure_capacity(required + 1)) {
+	if (!out.ensure_capacity((unsigned int) required + 1)) {
 		fprintf(stderr, "fprintf ERROR: Unable to expand memory stream buffer.\n");
 		va_end(argptr);
 		return -1;
 	}
 
-	int written = vsnprintf_s(out.buffer + out.position, out.length - out.position, required, format, argptr);
+	int written = vsnprintf_s(out.buffer + out.position, out.length - out.position, (size_t) required, format, argptr);
 #else
 	int written = vsnprintf(out.buffer + out.position, out.length - out.position, format, argptr);
 	if (written < 0) {
