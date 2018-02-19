@@ -276,14 +276,14 @@ struct array {
 	/**
 	 * Returns a reference to the element at the given `index`. No bounds-checking is performed.
 	 */
-	inline T& operator[] (unsigned int index) {
+	inline T& operator[] (size_t index) {
 		return data[index];
 	}
 
 	/**
 	 * Returns a const reference to the element at the given `index`. No bounds-checking is performed.
 	 */
-	inline const T& operator[] (unsigned int index) const {
+	inline const T& operator[] (size_t index) const {
 		return data[index];
 	}
 
@@ -502,14 +502,14 @@ private:
 	}
 
 	template<typename K>
-	friend bool array_init(array<K>& m, unsigned int initial_capacity);
+	friend bool array_init(array<K>& m, size_t initial_capacity);
 };
 
 /**
  * Initializes the array `m` with the given `initial_capacity`.
  */
 template<typename T>
-bool array_init(array<T>& m, unsigned int initial_capacity) {
+bool array_init(array<T>& m, size_t initial_capacity) {
 	return m.initialize(initial_capacity);
 }
 
