@@ -209,13 +209,6 @@ inline bool print(const char* values, FILE* out) {
 }
 
 namespace detail {
-	template<class Source>
-	struct any_t
-	{
-		template<class Dest, class = typename std::enable_if< std::is_same<typename std::decay<Source>::type, Dest>::value >::type>
-		operator Dest&();
-	};
-
 	template<typename A, typename C> static auto test_readable(int32_t) ->
 			decltype(bool(read(std::declval<A&>(), std::declval<C&>())), std::true_type{});
 	template<typename A, typename C> static auto test_readable(int64_t) -> std::false_type;
