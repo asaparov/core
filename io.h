@@ -82,40 +82,6 @@
 
 namespace core {
 
-namespace detail {
-	template<typename C> static auto test_readable(int) ->
-			decltype(size_t(fread(std::declval<void*>(), 1, 1, std::declval<C>())), std::true_type{});
-	template<typename C> static auto test_readable(long) -> std::false_type;
-
-	template<typename C> static auto test_writeable(int) ->
-			decltype(size_t(fwrite(std::declval<const void*>(), 1, 1, std::declval<C>())), std::true_type{});
-	template<typename C> static auto test_writeable(long) -> std::false_type;
-
-	template<typename C> static auto test_printable(int) ->
-			decltype(int(fprintf(std::declval<C>(), " ")), std::true_type{});
-	template<typename C> static auto test_printable(long) -> std::false_type;
-}
-
-/**
- * This type trait is [true_type](http://en.cppreference.com/w/cpp/types/integral_constant)
- * if and only if the function `size_t fread(void*, integral, integral, T)` is
- * defined where `integral` is any integral type.
- */
-template<typename T> struct is_readable : decltype(core::detail::test_readable<T>(0)){};
-
-/**
- * This type trait is [true_type](http://en.cppreference.com/w/cpp/types/integral_constant)
- * if and only if the function `size_t fwrite(void*, integral, integral, T)` is
- * defined where `integral` is any integral type.
- */
-template<typename T> struct is_writeable : decltype(core::detail::test_writeable<T>(0)){};
-
-/**
- * This type trait is [true_type](http://en.cppreference.com/w/cpp/types/integral_constant)
- * if and only if the function `int fprintf(T, const char*)` is defined.
- */
-template<typename T> struct is_printable : decltype(core::detail::test_printable<T>(0)){};
-
 /**
  * Reads `sizeof(T)` bytes from `in` and writes them to the memory referenced
  * by `value`. This function does not perform endianness transformations.
@@ -241,6 +207,82 @@ inline bool print(const double& value, FILE* out, unsigned int precision) {
 inline bool print(const char* values, FILE* out) {
 	return (fprintf(out, "%s", values) > 0);
 }
+
+namespace detail {
+	template<class Source>
+	struct any_t
+	{
+		template<class Dest, class = typename std::enable_if< std::is_same<typename std::decay<Source>::type, Dest>::value >::type>
+		operator Dest&();
+	};
+
+	template<typename A, typename C> static auto test_readable(int32_t) ->
+			decltype(bool(read(std::declval<A&>(), std::declval<C&>())), std::true_type{});
+	template<typename A, typename C> static auto test_readable(int64_t) -> std::false_type;
+
+	template<typename A, typename C> static auto test_writeable(int32_t) ->
+			decltype(bool(write(std::declval<const A&>(), std::declval<C&>())), std::true_type{});
+	template<typename A, typename C> static auto test_writeable(int64_t) -> std::false_type;
+
+	template<typename A, typename C> static auto test_printable(int32_t) ->
+			decltype(bool(print(std::declval<const A&>(), std::declval<C&>())), std::true_type{});
+	template<typename A, typename C> static auto test_printable(int64_t) -> std::false_type;
+}
+
+/**
+ * This type trait is [true_type](http://en.cppreference.com/w/cpp/types/integral_constant)
+ * if and only if the function `bool read(integral&, T&)` is defined where
+ * `integral` is any integral type.
+ */
+template<typename T> struct is_readable : and_type<
+	decltype(core::detail::test_readable<bool, T>(0)),
+	decltype(core::detail::test_readable<char, T>(0)),
+	decltype(core::detail::test_readable<char16_t, T>(0)),
+	decltype(core::detail::test_readable<char32_t, T>(0)),
+	decltype(core::detail::test_readable<wchar_t, T>(0)),
+	decltype(core::detail::test_readable<short, T>(0)),
+	decltype(core::detail::test_readable<int, T>(0)),
+	decltype(core::detail::test_readable<long, T>(0)),
+	decltype(core::detail::test_readable<long long, T>(0)),
+	decltype(core::detail::test_readable<unsigned char, T>(0)),
+	decltype(core::detail::test_readable<unsigned short, T>(0)),
+	decltype(core::detail::test_readable<unsigned int, T>(0)),
+	decltype(core::detail::test_readable<unsigned long, T>(0)),
+	decltype(core::detail::test_readable<unsigned long long, T>(0))>::type {};
+
+/**
+ * This type trait is [true_type](http://en.cppreference.com/w/cpp/types/integral_constant)
+ * if and only if the function `bool fwrite(const integral&, T&)` is defined where
+ * `integral` is any integral type.
+ */
+template<typename T> struct is_writeable : and_type<
+	decltype(core::detail::test_writeable<bool, T>(0)),
+	decltype(core::detail::test_writeable<char, T>(0)),
+	decltype(core::detail::test_writeable<char16_t, T>(0)),
+	decltype(core::detail::test_writeable<char32_t, T>(0)),
+	decltype(core::detail::test_writeable<wchar_t, T>(0)),
+	decltype(core::detail::test_writeable<short, T>(0)),
+	decltype(core::detail::test_writeable<int, T>(0)),
+	decltype(core::detail::test_writeable<long, T>(0)),
+	decltype(core::detail::test_writeable<long long, T>(0)),
+	decltype(core::detail::test_writeable<unsigned char, T>(0)),
+	decltype(core::detail::test_writeable<unsigned short, T>(0)),
+	decltype(core::detail::test_writeable<unsigned int, T>(0)),
+	decltype(core::detail::test_writeable<unsigned long, T>(0)),
+	decltype(core::detail::test_writeable<unsigned long long, T>(0))>::type {};
+
+/**
+ * This type trait is [true_type](http://en.cppreference.com/w/cpp/types/integral_constant)
+ * if and only if the function `bool print(value, T&)` is defined.
+ */
+template<typename T> struct is_printable : and_type<
+	decltype(core::detail::test_printable<char, T>(0)),
+	decltype(core::detail::test_printable<int, T>(0)),
+	decltype(core::detail::test_printable<unsigned int, T>(0)),
+	decltype(core::detail::test_printable<unsigned long, T>(0)),
+	decltype(core::detail::test_printable<unsigned long long, T>(0)),
+	decltype(core::detail::test_printable<float, T>(0)),
+	decltype(core::detail::test_printable<double, T>(0))>::type {};
 
 /**
  * Represents a stream to read/write from an in-memory buffer.
@@ -491,6 +533,97 @@ inline int fprintf(memory_stream& out, const char* format, ...) {
 }
 
 /**
+ * A stream wrapper for reading/writing integral types as fixed-width integral
+ * values. This is useful for cross-platform readability and writeability.
+ */
+template<typename Stream, typename BoolType = uint8_t,
+	typename CharType = int8_t, typename UCharType = uint8_t,
+	typename ShortType = int16_t, typename UShortType = uint16_t,
+	typename IntType = int32_t, typename UIntType = uint32_t,
+	typename LongType = uint64_t, typename ULongType = uint64_t,
+	typename LongLongType = uint64_t, typename ULongLongType = uint64_t,
+	typename FloatType = float, typename DoubleType = double>
+struct fixed_width_stream {
+	Stream& stream;
+
+	fixed_width_stream(Stream& stream) : stream(stream) { }
+
+	template<typename T, class Enable = void> struct type;
+	template<class Enable> struct type<bool, Enable> { typedef BoolType value; };
+	template<class Enable> struct type<char, Enable> { typedef CharType value; };
+	template<class Enable> struct type<unsigned char, Enable> { typedef UCharType value; };
+	template<class Enable> struct type<short, Enable> { typedef ShortType value; };
+	template<class Enable> struct type<unsigned short, Enable> { typedef UShortType value; };
+	template<class Enable> struct type<int, Enable> { typedef IntType value; };
+	template<class Enable> struct type<unsigned int, Enable> { typedef UIntType value; };
+	template<class Enable> struct type<long, Enable> { typedef LongType value; };
+	template<class Enable> struct type<unsigned long, Enable> { typedef ULongType value; };
+	template<class Enable> struct type<long long, Enable> { typedef LongLongType value; };
+	template<class Enable> struct type<unsigned long long, Enable> { typedef ULongLongType value; };
+	template<class Enable> struct type<float, Enable> { typedef FloatType value; };
+	template<class Enable> struct type<double, Enable> { typedef DoubleType value; };
+};
+
+/**
+ * Reads `size(K)` bytes from `in` where `K` is the appropriate template
+ * argument in the fixed_width_stream and writes them to the memory referenced
+ * by `value`. This function does not perform endianness transformations.
+ * \param in a fixed_width_stream.
+ * \tparam T satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental).
+ */
+template<typename T, typename Stream, typename... Args,
+	typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
+inline bool read(T& value, fixed_width_stream<Stream, Args...>& in) {
+	typedef typename fixed_width_stream<Stream, Args...>::template type<T>::value value_type;
+	value_type c;
+	if (!read(c, in.stream)) return false;
+	value = c;
+	return true;
+}
+
+/**
+ * Reads `length` elements from `in` and writes them to the native array
+ * `values`. This function does not perform endianness transformations.
+ * \param in a fixed_width_stream.
+ * \tparam T satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental).
+ */
+template<typename T, typename Stream, typename... Args,
+	typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
+inline bool read(T* values, fixed_width_stream<Stream, Args...>& in, unsigned int length) {
+	for (unsigned int i = 0; i < length; i++)
+		if (!read(values[i], in)) return false;
+	return true;
+}
+
+/**
+ * Writes `sizeof(K)` bytes to `out` from the memory referenced by `value`
+ * where `K` is the appropriate template argument in the fixed_width_stream.
+ * This function does not perform endianness transformations.
+ * \param out a fixed_width_stream.
+ * \tparam T satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental).
+ */
+template<typename T, typename Stream, typename... Args,
+	typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
+inline bool write(const T& value, fixed_width_stream<Stream, Args...>& out) {
+	typedef typename fixed_width_stream<Stream, Args...>::template type<T>::value value_type;
+	return write((value_type) value, out.stream);
+}
+
+/**
+ * Writes `length` elements to `out` from the native array `values`. This
+ * function does not perform endianness transformations.
+ * \param out a fixed_width_stream.
+ * \tparam T satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental).
+ */
+template<typename T, typename Stream, typename... Args,
+	typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
+inline bool write(const T* values, fixed_width_stream<Stream, Args...>& out, unsigned int length) {
+	for (unsigned int i = 0; i < length; i++)
+		if (!write(values[i], out)) return false;
+	return true;
+}
+
+/**
  * Writes the given null-terminated C string `values` to the stream `out`.
  * \tparam Stream satisfies is_writeable.
  */
@@ -644,7 +777,7 @@ bool read(array<T>& a, Stream& in, Reader&&... reader) {
 	size_t length;
 	if (!read(length, in))
 		return false;
-	size_t capacity = (length == 0) ? 1 : length;
+	size_t capacity = 1 << (core::log2(length == 0 ? 1 : length) + 1);
 	a.data = (T*) malloc(sizeof(T) * capacity);
 	if (a.data == NULL) return false;
 	if (!read(a.data, in, (unsigned int) length, std::forward<Reader>(reader)...)) {
@@ -716,7 +849,7 @@ bool read(hash_set<T>& set, Stream& in, alloc_keys_func alloc_keys, Reader&&... 
 	if (!read(length, in)) return false;
 
 	set.size = 0;
-	set.capacity = RESIZE_THRESHOLD_INVERSE * (length == 0 ? 1 : length);
+	set.capacity = 1 << (core::log2(RESIZE_THRESHOLD_INVERSE * (length == 0 ? 1 : length)) + 1);
 	set.keys = (T*) alloc_keys(set.capacity, sizeof(T));
 	if (set.keys == NULL) return false;
 
@@ -786,7 +919,7 @@ bool read(hash_map<K, V>& map,
 	if (!read(length, in)) return false;
 
 	map.table.size = 0;
-	map.table.capacity = RESIZE_THRESHOLD_INVERSE * (length == 0 ? 1 : length);
+	map.table.capacity = 1 << (core::log2(RESIZE_THRESHOLD_INVERSE * (length == 0 ? 1 : length)) + 1);
 	map.table.keys = (K*) alloc_keys(map.table.capacity, sizeof(K));
 	if (map.table.keys == NULL) return false;
 	map.values = (V*) malloc(sizeof(V) * map.table.capacity);
@@ -920,7 +1053,7 @@ bool read(array_map<K, V>& map, Stream& in,
 	if (!read(length, in)) return false;
 
 	map.size = 0;
-	map.capacity = (length == 0 ? 1 : length);
+	map.capacity = 1 << (core::log2(length == 0 ? 1 : length) + 1);
 	map.keys = (K*) malloc(sizeof(K) * map.capacity);
 	if (map.keys == NULL) return false;
 	map.values = (V*) malloc(sizeof(V) * map.capacity);

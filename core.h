@@ -268,17 +268,17 @@ inline void free(T* a) {
  */
 
 namespace detail {
-	template<typename C> static auto test_swappable(int) ->
+	template<typename C> static auto test_swappable(int32_t) ->
 			decltype(void(core::swap(std::declval<C&>(), std::declval<C&>())), std::true_type{});
-	template<typename C> static auto test_swappable(long) -> std::false_type;
+	template<typename C> static auto test_swappable(int64_t) -> std::false_type;
 
-	template<typename C> static auto test_moveable(int) ->
+	template<typename C> static auto test_moveable(int32_t) ->
 			decltype(void(core::move(std::declval<C&>(), std::declval<C&>())), std::true_type{});
-	template<typename C> static auto test_moveable(long) -> std::false_type;
+	template<typename C> static auto test_moveable(int64_t) -> std::false_type;
 
-	template<typename C> static auto test_copyable(int) ->
+	template<typename C> static auto test_copyable(int32_t) ->
 			decltype(void(core::copy(std::declval<C&>(), std::declval<C&>())), std::true_type{});
-	template<typename C> static auto test_copyable(long) -> std::false_type;
+	template<typename C> static auto test_copyable(int64_t) -> std::false_type;
 }
 
 /**
@@ -307,6 +307,24 @@ template<typename T> struct is_swappable : decltype(core::detail::test_swappable
  * 	3. or implements the public static method `bool T::copy(const T&, T&)`.
  */
 template<typename T> struct is_copyable : decltype(core::detail::test_copyable<T>(0)){};
+
+/**
+ * This type trait is [true_type](http://en.cppreference.com/w/cpp/types/integral_constant)
+ * if and only if every template argument is also `true_type`.
+ */
+template<typename... T> struct and_type;
+template<> struct and_type<> {
+	typedef std::true_type type;
+	static constexpr bool value = true;
+};
+template<typename... T> struct and_type<std::true_type, T...> {
+	typedef typename and_type<T...>::type type;
+	static constexpr bool value = and_type<T...>::value;
+};
+template<typename... T> struct and_type<std::false_type, T...> {
+	typedef std::false_type type;
+	static constexpr bool value = false;
+};
 
 
 /**
@@ -421,6 +439,23 @@ inline bool is_empty(const K& key) {
 template<typename K>
 inline void set_empty(K& key) {
 	hasher<K>::set_empty(key);
+}
+
+
+/**
+ * Returns the base-2 logarithm of the given `unsigned int` argument. This
+ * function assumes the argument is not `0`.
+ */
+inline unsigned int log2(unsigned int x) {
+	return (unsigned int) sizeof(unsigned int) * 8 - __builtin_clz(x) - 1;
+}
+
+/**
+ * Returns the base-2 logarithm of the given `unsigned int` argument. This
+ * function assumes the argument is not `0`.
+ */
+constexpr unsigned int static_log2(unsigned int x) {
+	return (x < 2) ? 1 : (1 + static_log2(x));
 }
 
 

@@ -41,9 +41,9 @@ namespace core {
 
 /* a useful type trait for detecting whether the function 'print_special_string' is defined */
 namespace detail {
-	template<typename Stream, typename... Printer> static auto test_print_special_string(int) ->
+	template<typename Stream, typename... Printer> static auto test_print_special_string(int32_t) ->
 			decltype(bool(print_special_string(0u, std::declval<Stream&>(), std::declval<Printer&&>()...)), std::true_type{});
-	template<typename Stream, typename... Printer> static auto test_print_special_string(long) -> std::false_type;
+	template<typename Stream, typename... Printer> static auto test_print_special_string(int64_t) -> std::false_type;
 }
 
 template<typename Stream, typename... Printer> struct has_print_special_string : decltype(core::detail::test_print_special_string<Stream, Printer...>(0)){};
@@ -627,22 +627,6 @@ bool get_token(const string& identifier, unsigned int& id, hash_map<string, unsi
 	}
 	id = value;
 	return true;
-}
-
-/**
- * Returns the base-2 logarithm of the given `unsigned int` argument. This
- * function assumes the argument is not `0`.
- */
-inline unsigned int log2(unsigned int x) {
-	return (unsigned int) sizeof(unsigned int) * 8 - __builtin_clz(x) - 1;
-}
-
-/**
- * Returns the base-2 logarithm of the given `unsigned int` argument. This
- * function assumes the argument is not `0`.
- */
-constexpr unsigned int static_log2(unsigned int x) {
-	return (x < 2) ? 1 : (1 + static_log2(x));
 }
 
 /**

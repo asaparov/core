@@ -35,9 +35,9 @@ namespace core {
 
 
 namespace detail {
-	template<typename C> static auto test_resizeable(int) ->
+	template<typename C> static auto test_resizeable(int32_t) ->
 			decltype(void(std::declval<C>().on_resize()), std::true_type{});
-	template<typename C> static auto test_resizeable(long) -> std::false_type;
+	template<typename C> static auto test_resizeable(int64_t) -> std::false_type;
 }
 
 /**
