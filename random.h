@@ -29,7 +29,7 @@ static unsigned int seed = (unsigned int) milliseconds();
 static unsigned int seed = 0;
 #endif
 
-static std::minstd_rand engine = std::minstd_rand(seed);
+static thread_local std::minstd_rand engine = std::minstd_rand(seed);
 
 /**
  * Returns the initial random seed used by all core functions that require pseudorandom number generation.
