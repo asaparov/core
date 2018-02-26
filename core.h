@@ -475,7 +475,7 @@ inline unsigned int log2(uint64_t x) {
 	if (left == 0) return log2((uint32_t) x);
 	else return 32 + log2(left);
 #else
-	return (unsigned int) sizeof(uint64_t) * CHAR_BIT - __builtin_clz(x) - 1;
+	return (unsigned int) sizeof(uint64_t) * CHAR_BIT - __builtin_clzll(x) - 1;
 #endif
 }
 
