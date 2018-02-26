@@ -76,7 +76,12 @@
 #include <type_traits>
 #include <cstdlib>
 #include <cstdint>
+#include <climits>
 #include <utility>
+
+#if defined(_WIN32)
+#include <intrin.h>
+#endif
 
 
 namespace core {
@@ -219,7 +224,7 @@ inline constexpr long unsigned int size_of(const T* const& a) {
 template<typename T, std::size_t N>
 inline long unsigned int size_of(const T (&array)[N]) {
 	long unsigned int size = 0;
-	for (unsigned int i = 0; i < N; i++)
+	for (size_t i = 0; i < N; i++)
 		size += size_of(array[i]);
 	return size;
 }
@@ -443,18 +448,50 @@ inline void set_empty(K& key) {
 
 
 /**
- * Returns the base-2 logarithm of the given `unsigned int` argument. This
- * function assumes the argument is not `0`.
+ * Returns the base-2 logarithm of the given 32-bit unsigned integer argument.
+ * This function assumes the argument is not `0`.
  */
-inline unsigned int log2(unsigned int x) {
-	return (unsigned int) sizeof(unsigned int) * 8 - __builtin_clz(x) - 1;
+inline unsigned int log2(uint32_t x) {
+#if defined(_WIN32)
+	unsigned long index;
+	_BitScanReverse(&index, x);
+	return index;
+#else
+	return (unsigned int) sizeof(uint32_t) * CHAR_BIT - __builtin_clz(x) - 1;
+#endif
 }
 
 /**
- * Returns the base-2 logarithm of the given `unsigned int` argument. This
- * function assumes the argument is not `0`.
+ * Returns the base-2 logarithm of the given 64-bit unsigned integer argument.
+ * This function assumes the argument is not `0`.
  */
-constexpr unsigned int static_log2(unsigned int x) {
+inline unsigned int log2(uint64_t x) {
+#if defined(_WIN64)
+	unsigned long index;
+	_BitScanReverse64(&index, x);
+	return index;
+#elif defined(_WIN32)
+	uint32_t left = (x >> 32);
+	if (left == 0) return log2((uint32_t) x);
+	else return 32 + log2(left);
+#else
+	return (unsigned int) sizeof(uint64_t) * CHAR_BIT - __builtin_clz(x) - 1;
+#endif
+}
+
+/**
+ * Returns the base-2 logarithm of the given 32-bit unsigned integer argument.
+ * This function assumes the argument is not `0`.
+ */
+constexpr unsigned int static_log2(uint32_t x) {
+	return (x < 2) ? 1 : (1 + static_log2(x));
+}
+
+/**
+ * Returns the base-2 logarithm of the given 64-bit unsigned integer argument.
+ * This function assumes the argument is not `0`.
+ */
+constexpr unsigned int static_log2(uint64_t x) {
 	return (x < 2) ? 1 : (1 + static_log2(x));
 }
 

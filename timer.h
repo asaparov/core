@@ -8,8 +8,10 @@
 #define TIMER_H_
 
 #if defined(_WIN32)
+#define _WINSOCKAPI_
 #include <Windows.h>
 #undef max
+#undef min
 #else
 #include <time.h>
 #endif

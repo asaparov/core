@@ -20,9 +20,11 @@
 #if !defined(UNICODE)
 #error "Unicode support required. Please compile with UNICODE preprocessor definition."
 #endif
+#define _WINSOCKAPI_
 #include <windows.h>
 #include <intrin.h>
 #undef max
+#undef min
 #else
 #include <dirent.h>
 #include <sys/stat.h>

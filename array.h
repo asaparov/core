@@ -300,7 +300,7 @@ struct array {
 	 * decrements array::length by `1`. The element initially at `index` is not
 	 * freed.
 	 */
-	void remove(unsigned int index)
+	void remove(size_t index)
 	{
 		core::move(data[length - 1], data[index]);
 		length--;

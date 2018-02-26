@@ -541,7 +541,7 @@ struct fixed_width_stream {
 
 	fixed_width_stream(Stream& stream) : stream(stream) { }
 
-	template<typename T, class Enable = void> struct type;
+	template<typename T, class Enable = void> struct type { };
 	template<class Enable> struct type<bool, Enable> { typedef BoolType value; };
 	template<class Enable> struct type<char, Enable> { typedef CharType value; };
 	template<class Enable> struct type<unsigned char, Enable> { typedef UCharType value; };
@@ -770,7 +770,7 @@ bool read(array<T>& a, Stream& in, Reader&&... reader) {
 	size_t length;
 	if (!read(length, in))
 		return false;
-	size_t capacity = 1 << (core::log2(length == 0 ? 1 : length) + 1);
+	size_t capacity = ((size_t) 1) << (core::log2(length == 0 ? 1 : length) + 1);
 	a.data = (T*) malloc(sizeof(T) * capacity);
 	if (a.data == NULL) return false;
 	if (!read(a.data, in, (unsigned int) length, std::forward<Reader>(reader)...)) {
