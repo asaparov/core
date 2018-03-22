@@ -451,7 +451,9 @@ inline void set_empty(K& key) {
  * Returns the base-2 logarithm of the given 32-bit unsigned integer argument.
  * This function assumes the argument is not `0`.
  */
-inline unsigned int log2(uint32_t x) {
+template<typename T, typename std::enable_if<
+	std::is_unsigned<T>::value && std::is_integral<T>::value && sizeof(T) == sizeof(uint32_t)>::type* = nullptr>
+inline unsigned int log2(T x) {
 #if defined(_WIN32)
 	unsigned long index;
 	_BitScanReverse(&index, x);
@@ -465,7 +467,9 @@ inline unsigned int log2(uint32_t x) {
  * Returns the base-2 logarithm of the given 64-bit unsigned integer argument.
  * This function assumes the argument is not `0`.
  */
-inline unsigned int log2(uint64_t x) {
+template<typename T, typename std::enable_if<
+	std::is_unsigned<T>::value && std::is_integral<T>::value && sizeof(T) == sizeof(uint64_t)>::type* = nullptr>
+inline unsigned int log2(T x) {
 #if defined(_WIN64)
 	unsigned long index;
 	_BitScanReverse64(&index, x);
@@ -480,18 +484,11 @@ inline unsigned int log2(uint64_t x) {
 }
 
 /**
- * Returns the base-2 logarithm of the given 32-bit unsigned integer argument.
- * This function assumes the argument is not `0`.
+ * Returns the base-2 logarithm of the given unsigned integer argument. This
+ * function assumes the argument is not `0`.
  */
-constexpr unsigned int static_log2(uint32_t x) {
-	return (x < 2) ? 1 : (1 + static_log2(x));
-}
-
-/**
- * Returns the base-2 logarithm of the given 64-bit unsigned integer argument.
- * This function assumes the argument is not `0`.
- */
-constexpr unsigned int static_log2(uint64_t x) {
+template<typename T, typename std::enable_if<std::is_unsigned<T>::value && std::is_integral<T>::value>::type* = nullptr>
+constexpr unsigned int static_log2(T x) {
 	return (x < 2) ? 1 : (1 + static_log2(x));
 }
 
