@@ -94,7 +94,7 @@ struct timer
 	 */
 	inline double nanoseconds() {
 #if defined(_WIN32) /* on Windows */
-		end_time = GetTickCount64();
+		ULONGLONG end_time = GetTickCount64();
 		return (end_time - start_time) * 1.0e6;
 #elif defined(__APPLE__) /* on Mac */
 		uint64_t end_time = mach_absolute_time();
