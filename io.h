@@ -99,8 +99,8 @@ inline bool read(T& value, FILE* in) {
  * \param in the stream given by a [FILE](http://en.cppreference.com/w/c/io) pointer.
  * \tparam T satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental).
  */
-template<typename T, typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
-inline bool read(T* values, FILE* in, unsigned int length) {
+template<typename T, typename SizeType, typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
+inline bool read(T* values, FILE* in, SizeType length) {
 	return (fread(values, sizeof(T), length, in) == length);
 }
 
@@ -121,8 +121,8 @@ inline bool write(const T& value, FILE* out) {
  * \param out the stream given by a [FILE](http://en.cppreference.com/w/c/io) pointer.
  * \tparam T satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental).
  */
-template<typename T, typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
-inline bool write(const T* values, FILE* out, unsigned int length) {
+template<typename T, typename SizeType, typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
+inline bool write(const T* values, FILE* out, SizeType length) {
 	return (fwrite(values, sizeof(T), length, out) == length);
 }
 
@@ -570,7 +570,7 @@ inline bool read(T& value, fixed_width_stream<Stream, Args...>& in) {
 	typedef typename fixed_width_stream<Stream, Args...>::template type<T>::value value_type;
 	value_type c;
 	if (!read(c, in.stream)) return false;
-	value = c;
+	value = (T) c;
 	return true;
 }
 
@@ -580,10 +580,10 @@ inline bool read(T& value, fixed_width_stream<Stream, Args...>& in) {
  * \param in a fixed_width_stream.
  * \tparam T satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental).
  */
-template<typename T, typename Stream, typename... Args,
+template<typename T, typename Stream, typename SizeType, typename... Args,
 	typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
-inline bool read(T* values, fixed_width_stream<Stream, Args...>& in, unsigned int length) {
-	for (unsigned int i = 0; i < length; i++)
+inline bool read(T* values, fixed_width_stream<Stream, Args...>& in, SizeType length) {
+	for (SizeType i = 0; i < length; i++)
 		if (!read(values[i], in)) return false;
 	return true;
 }
@@ -608,10 +608,10 @@ inline bool write(const T& value, fixed_width_stream<Stream, Args...>& out) {
  * \param out a fixed_width_stream.
  * \tparam T satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental).
  */
-template<typename T, typename Stream, typename... Args,
+template<typename T, typename Stream, typename SizeType, typename... Args,
 	typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
-inline bool write(const T* values, fixed_width_stream<Stream, Args...>& out, unsigned int length) {
-	for (unsigned int i = 0; i < length; i++)
+inline bool write(const T* values, fixed_width_stream<Stream, Args...>& out, SizeType length) {
+	for (SizeType i = 0; i < length; i++)
 		if (!write(values[i], out)) return false;
 	return true;
 }
@@ -686,7 +686,7 @@ bool print(const T* values, SizeType length, Stream& out, Printer& printer) {
 	if (length == 0)
 		return print(RightBracket, out);
 	if (!print(values[0], out, printer)) return false;
-	for (unsigned int i = 1; i < length; i++) {
+	for (SizeType i = 1; i < length; i++) {
 		if (!print(", ", out) || !print(values[i], out, printer))
 			return false;
 	}
@@ -698,9 +698,10 @@ bool print(const T* values, SizeType length, Stream& out, Printer& printer) {
  * is the number of elements in the array. The output stream is `out`.
  * \tparam Stream satisfies is_printable.
  */
-template<typename T, char LeftBracket = '[', char RightBracket = ']', typename Stream,
+template<typename T, char LeftBracket = '[', char RightBracket = ']',
+	typename Stream, typename SizeType,
 	typename std::enable_if<is_printable<Stream>::value>::type* = nullptr>
-inline bool print(const T* values, unsigned int length, Stream& out) {
+inline bool print(const T* values, SizeType length, Stream& out) {
 	default_scribe printer;
 	return print<T, LeftBracket, RightBracket>(values, length, out, printer);
 }
@@ -720,7 +721,7 @@ bool print(const T (&values)[N], Stream& out, Printer&&... printer) {
 	if (N == 0)
 		return print(RightBracket, out);
 	if (!print(values[0], out, std::forward<Printer>(printer)...)) return false;
-	for (unsigned int i = 1; i < N; i++) {
+	for (size_t i = 1; i < N; i++) {
 		if (!print(", ", out) || !print(values[i], out, std::forward<Printer>(printer)...))
 			return false;
 	}
@@ -747,10 +748,10 @@ inline bool print(const T (&values)[N], Stream& out) {
  * 		is defined. Note that since this is a variadic argument, it may be empty.
  * \tparam Stream satisfies is_readable.
  */
-template<typename T, typename Stream, typename... Reader,
+template<typename T, typename Stream, typename SizeType, typename... Reader,
 	typename std::enable_if<is_readable<Stream>::value>::type* = nullptr>
-inline bool read(T* a, Stream& in, unsigned int length, Reader&&... reader) {
-	for (unsigned int i = 0; i < length; i++)
+inline bool read(T* a, Stream& in, SizeType length, Reader&&... reader) {
+	for (SizeType i = 0; i < length; i++)
 		if (!read(a[i], in, std::forward<Reader>(reader)...)) return false;
 	return true;
 }
@@ -773,7 +774,7 @@ bool read(array<T>& a, Stream& in, Reader&&... reader) {
 	size_t capacity = ((size_t) 1) << (core::log2(length == 0 ? 1 : length) + 1);
 	a.data = (T*) malloc(sizeof(T) * capacity);
 	if (a.data == NULL) return false;
-	if (!read(a.data, in, (unsigned int) length, std::forward<Reader>(reader)...)) {
+	if (!read(a.data, in, length, std::forward<Reader>(reader)...)) {
 		free(a.data);
 		return false;
 	}
@@ -789,10 +790,10 @@ bool read(array<T>& a, Stream& in, Reader&&... reader) {
  * 		is defined. Note that since this is a variadic argument, it may be empty.
  * \tparam Stream satisfies is_writeable.
  */
-template<typename T, typename Stream, typename... Writer,
+template<typename T, typename Stream, typename SizeType, typename... Writer,
 	typename std::enable_if<is_writeable<Stream>::value>::type* = nullptr>
-inline bool write(const T* a, Stream& out, unsigned int length, Writer&&... writer) {
-	for (unsigned int i = 0; i < length; i++)
+inline bool write(const T* a, Stream& out, SizeType length, Writer&&... writer) {
+	for (SizeType i = 0; i < length; i++)
 		if (!write(a[i], out, std::forward<Writer>(writer)...)) return false;
 	return true;
 }
@@ -807,7 +808,7 @@ template<typename T, typename Stream, typename... Writer,
 	typename std::enable_if<is_writeable<Stream>::value>::type* = nullptr>
 bool write(const array<T>& a, Stream& out, Writer&&... writer) {
 	return write(a.length, out)
-		&& write(a.data, out, (unsigned int) a.length, std::forward<Writer>(writer)...);
+		&& write(a.data, out, a.length, std::forward<Writer>(writer)...);
 }
 
 /**
