@@ -4,14 +4,14 @@
  * This file defines serialization and deserialization functions `read` and
  * `write`, as well as the `print` function for all fundamental types and core
  * data structures.
- * 
+ *
  * The file also contains the definition and implementation of the
  * `core::memory_stream` class, which may be used to read/write to an in-memory
  * buffer.
- * 
+ *
  * Scribes
  * -------
- * 
+ *
  * The `read`, `write`, and `print` functions in this library follow a very
  * regular argument structure: The first argument is the object to
  * read/write/print. The second argument is the stream to read from/write
@@ -31,11 +31,11 @@
  * read/write/print functions for container structures such as core::array. The
  * following example demonstrates how the behavior of the `print` function for
  * an array of integers can be altered using a custom scribe.
- * 
+ *
  * ```{.cpp}
  * #include <core/io.h>
  * using namespace core;
-
+ *
  * struct my_string_scribe {
  * 	const char* strings[3];
  * };
@@ -62,7 +62,7 @@
  * 	print(a, stdout, printer);
  * }
  * ```
- * 
+ *
  * This example has expected output `[1, 2, 0] [1, 2, 0] [veni, vidi, vici]`.
  *
  * <!-- Created on: Aug 29, 2014

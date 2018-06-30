@@ -1,6 +1,6 @@
 /**
  * \file lex.h
- * 
+ *
  * This file implements common functionality for lexical analysis, such as
  * string comparison, tokenization (splitting strings by whitespace), and
  * parsing arithmetic types from strings.
@@ -12,6 +12,7 @@
 #ifndef LEX_H_
 #define LEX_H_
 
+#include "map.h"
 #include "utility.h"
 
 #include <ctype.h>
