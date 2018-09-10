@@ -182,7 +182,7 @@ struct string {
 	 * strings to be used as keys in hashtables.
 	 */
 	static inline void set_empty(string* keys, unsigned int length) {
-		memset(keys, 0, sizeof(string) * length);
+		memset(static_cast<void*>(keys), 0, sizeof(string) * length);
 	}
 
 	/**
