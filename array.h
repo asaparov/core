@@ -58,7 +58,7 @@ template<typename T> struct is_resizeable : decltype(core::detail::test_resizeab
 template<typename T, typename SizeType,
 	typename std::enable_if<std::is_integral<SizeType>::value>::type* = nullptr>
 inline bool resize(T*& data, const SizeType& new_capacity) {
-	T* new_data = (T*) realloc(data, new_capacity * sizeof(T));
+	T* new_data = (T*) realloc(static_cast<void*>(data), new_capacity * sizeof(T));
 	if (new_data == NULL) {
 		fprintf(stderr, "resize ERROR: Out of memory.\n");
 		return false;
@@ -314,7 +314,7 @@ struct array {
 	 * address, and `T` satisfies is_resizeable, then `x.on_resize()` is called
 	 * for every element `x` in the array.
 	 */
-	template<typename C = T, typename std::enable_if<is_resizeable<C>::value>::type* = nullptr>
+	template<typename C = T, typename std::enable_if<std::is_same<C, T>::value && is_resizeable<C>::value>::type* = nullptr>
 	bool ensure_capacity(size_t new_length) {
 		const T* old_data = data;
 		if (!core::ensure_capacity(data, capacity, new_length)) return false;
@@ -325,7 +325,7 @@ struct array {
 		return true;
 	}
 
-	template<typename C = T, typename std::enable_if<!is_resizeable<C>::value>::type* = nullptr>
+	template<typename C = T, typename std::enable_if<std::is_same<C, T>::value && !is_resizeable<C>::value>::type* = nullptr>
 	bool ensure_capacity(size_t new_length) {
 		return core::ensure_capacity(data, capacity, new_length);
 	}
