@@ -23,7 +23,7 @@
 #include <string.h>
 #include <algorithm>
 
-#include "core.h"
+#include <core/core.h>
 
 /**
  * The multiplicative factor by which array capacity is changed.
@@ -201,7 +201,7 @@ inline unsigned int last_index_of(const T& element, const T* data, const SizeTyp
  * 
  * 
  * Also note that a number of member functions require that `T` be
- * [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable).
+ * [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable).
  * In other cases, elements should be added manually to the underlying native
  * array array::data. This structure also defines array::begin and array::end,
  * similar to Standard Template Library iterators, which enables the use of the
@@ -334,9 +334,9 @@ struct array {
 	 * Adds the given native array of elements to this structure. This function
 	 * uses [memcpy](http://en.cppreference.com/w/cpp/string/byte/memcpy),
 	 * and so it should not be used if the elements are not
-	 * [TriviallyCopyable](http://en.cppreference.com/w/cpp/concept/TriviallyCopyable).
+	 * [TriviallyCopyable](https://en.cppreference.com/w/cpp/named_req/TriviallyCopyable).
 	 * In such a case, addition should be performed manually using the public fields.
-	 * \tparam T is [TriviallyCopyable](http://en.cppreference.com/w/cpp/concept/TriviallyCopyable).
+	 * \tparam T is [TriviallyCopyable](https://en.cppreference.com/w/cpp/named_req/TriviallyCopyable).
 	 */
 	bool append(const T* elements, size_t size)
 	{
@@ -400,9 +400,9 @@ struct array {
 	 * Adds the given element to this array, increasing its capacity if
 	 * necessary. The assignment operator performs the addition, and so this
 	 * function should not be used if `T` is not
-	 * [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable).
+	 * [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable).
 	 * In such a case, addition should be performed manually using the public fields.
-	 * \tparam T is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable).
+	 * \tparam T is [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable).
 	 */
 	bool add(const T& element)
 	{
@@ -578,9 +578,9 @@ inline bool operator != (const array<T>& a, const array<T>& b) {
 
 /**
  * Performs insertion sort on the given native array `keys` with given `length`.
- * \tparam T is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable),
- * 		[CopyConstructible](http://en.cppreference.com/w/cpp/concept/CopyConstructible),
- * 		and [LessThanComparable](http://en.cppreference.com/w/cpp/concept/LessThanComparable).
+ * \tparam T is [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable),
+ * 		[CopyConstructible](https://en.cppreference.com/w/cpp/named_req/CopyConstructible),
+ * 		and [LessThanComparable](https://en.cppreference.com/w/cpp/named_req/LessThanComparable).
  */
 template<typename T>
 void insertion_sort(T* keys, unsigned int length)
@@ -625,11 +625,11 @@ void insertion_sort(T* keys, unsigned int length, const Sorter& sorter)
 
 /**
  * Performs insertion sort on the given native arrays `keys` and `values` with given `length`.
- * \tparam K is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable),
- * 		[CopyConstructible](http://en.cppreference.com/w/cpp/concept/CopyConstructible),
- * 		and [LessThanComparable](http://en.cppreference.com/w/cpp/concept/LessThanComparable).
- * \tparam V is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable),
- * 		[CopyConstructible](http://en.cppreference.com/w/cpp/concept/CopyConstructible).
+ * \tparam K is [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable),
+ * 		[CopyConstructible](https://en.cppreference.com/w/cpp/named_req/CopyConstructible),
+ * 		and [LessThanComparable](https://en.cppreference.com/w/cpp/named_req/LessThanComparable).
+ * \tparam V is [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable),
+ * 		[CopyConstructible](https://en.cppreference.com/w/cpp/named_req/CopyConstructible).
  */
 template<typename K, typename V>
 void insertion_sort(K* keys, V* values, unsigned int length)
@@ -682,9 +682,9 @@ void insertion_sort(K* keys, V* values, unsigned int length, const Sorter& sorte
 
 /**
  * Performs insertion sort on the given array `keys`.
- * \tparam T is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable),
- * 		[CopyConstructible](http://en.cppreference.com/w/cpp/concept/CopyConstructible),
- * 		and [LessThanComparable](http://en.cppreference.com/w/cpp/concept/LessThanComparable).
+ * \tparam T is [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable),
+ * 		[CopyConstructible](https://en.cppreference.com/w/cpp/named_req/CopyConstructible),
+ * 		and [LessThanComparable](https://en.cppreference.com/w/cpp/named_req/LessThanComparable).
  */
 template<typename T>
 inline void insertion_sort(array<T>& keys) {
@@ -705,11 +705,11 @@ inline void insertion_sort(array<T>& keys, const Sorter& sorter)
 
 /**
  * Performs insertion sort on the given arrays `keys` and `values`.
- * \tparam K is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable),
- * 		[CopyConstructible](http://en.cppreference.com/w/cpp/concept/CopyConstructible),
- * 		and [LessThanComparable](http://en.cppreference.com/w/cpp/concept/LessThanComparable).
- * \tparam V is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable),
- * 		[CopyConstructible](http://en.cppreference.com/w/cpp/concept/CopyConstructible).
+ * \tparam K is [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable),
+ * 		[CopyConstructible](https://en.cppreference.com/w/cpp/named_req/CopyConstructible),
+ * 		and [LessThanComparable](https://en.cppreference.com/w/cpp/named_req/LessThanComparable).
+ * \tparam V is [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable),
+ * 		[CopyConstructible](https://en.cppreference.com/w/cpp/named_req/CopyConstructible).
  */
 template<typename K, typename V>
 inline void insertion_sort(array<K>& keys, array<V>& values) {
@@ -894,8 +894,8 @@ void quick_sort(K* keys, V* values,
  * Performs Quicksort on the given native array `keys` with given `length`.
  * This function assumes `length > 0`. If the preprocessor `NDEBUG` is not
  * defined, this function outputs a warning when `length == 0`.
- * \tparam T is [CopyConstructible](http://en.cppreference.com/w/cpp/concept/CopyConstructible),
- * 			[LessThanComparable](http://en.cppreference.com/w/cpp/concept/LessThanComparable),
+ * \tparam T is [CopyConstructible](https://en.cppreference.com/w/cpp/named_req/CopyConstructible),
+ * 			[LessThanComparable](https://en.cppreference.com/w/cpp/named_req/LessThanComparable),
  * 			and is_swappable.
  */
 template<typename T>
@@ -934,8 +934,8 @@ inline void quick_sort(T* keys, unsigned int length, const Sorter& sorter)
  * Performs Quicksort on the given native arrays `keys` and `values` with given
  * `length`. This function assumes `length > 0`. If the preprocessor `NDEBUG`
  * is not defined, this function outputs a warning when `length == 0`.
- * \tparam K is [CopyConstructible](http://en.cppreference.com/w/cpp/concept/CopyConstructible),
- * 			[LessThanComparable](http://en.cppreference.com/w/cpp/concept/LessThanComparable),
+ * \tparam K is [CopyConstructible](https://en.cppreference.com/w/cpp/named_req/CopyConstructible),
+ * 			[LessThanComparable](https://en.cppreference.com/w/cpp/named_req/LessThanComparable),
  * 			and is_swappable.
  * \tparam V satisfies is_swappable.
  */
@@ -976,8 +976,8 @@ inline void quick_sort(K* keys, V* values, unsigned int length, const Sorter& so
  * Performs Quicksort on the given array `keys`. This function assumes
  * `length > 0`. If the preprocessor `NDEBUG` is not defined, this function
  * outputs a warning when `length == 0`.
- * \tparam T is [CopyConstructible](http://en.cppreference.com/w/cpp/concept/CopyConstructible),
- * 			[LessThanComparable](http://en.cppreference.com/w/cpp/concept/LessThanComparable),
+ * \tparam T is [CopyConstructible](https://en.cppreference.com/w/cpp/named_req/CopyConstructible),
+ * 			[LessThanComparable](https://en.cppreference.com/w/cpp/named_req/LessThanComparable),
  * 			and is_swappable.
  */
 template<typename T>
@@ -1016,8 +1016,8 @@ inline void quick_sort(array<T>& keys, const Sorter& sorter)
  * Performs Quicksort on the given arrays `keys` and `values`. This function
  * assumes `length > 0`. If the preprocessor `NDEBUG` is not defined, this
  * function outputs a warning when `length == 0`.
- * \tparam K is [CopyConstructible](http://en.cppreference.com/w/cpp/concept/CopyConstructible),
- * 			[LessThanComparable](http://en.cppreference.com/w/cpp/concept/LessThanComparable),
+ * \tparam K is [CopyConstructible](https://en.cppreference.com/w/cpp/named_req/CopyConstructible),
+ * 			[LessThanComparable](https://en.cppreference.com/w/cpp/named_req/LessThanComparable),
  * 			and is_swappable.
  * \tparam V satisfies is_swappable.
  */
@@ -1127,9 +1127,9 @@ void sort(K* keys, V* values, unsigned int start, unsigned int end, const Sorter
  * insertion sort for small partitions. This function assumes `length > 0`. If
  * the preprocessor `NDEBUG` is not defined, this function outputs a warning
  * when `length == 0`.
- * \tparam T is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable),
- * 			[CopyConstructible](http://en.cppreference.com/w/cpp/concept/CopyConstructible)
- * 			[LessThanComparable](http://en.cppreference.com/w/cpp/concept/LessThanComparable),
+ * \tparam T is [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable),
+ * 			[CopyConstructible](https://en.cppreference.com/w/cpp/named_req/CopyConstructible)
+ * 			[LessThanComparable](https://en.cppreference.com/w/cpp/named_req/LessThanComparable),
  * 			and is_swappable.
  */
 template<typename T>
@@ -1172,9 +1172,9 @@ inline void sort(T* keys, unsigned int length, const Sorter& sorter)
  * switches to insertion sort for small partitions. This function assumes
  * `length > 0`. If the preprocessor `NDEBUG` is not defined, this function
  * outputs a warning when `length == 0`.
- * \tparam K is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable),
- * 			[CopyConstructible](http://en.cppreference.com/w/cpp/concept/CopyConstructible)
- * 			[LessThanComparable](http://en.cppreference.com/w/cpp/concept/LessThanComparable),
+ * \tparam K is [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable),
+ * 			[CopyConstructible](https://en.cppreference.com/w/cpp/named_req/CopyConstructible)
+ * 			[LessThanComparable](https://en.cppreference.com/w/cpp/named_req/LessThanComparable),
  * 			and is_swappable.
  * \tparam V satisfies is_swappable and is_moveable.
  */
@@ -1218,9 +1218,9 @@ inline void sort(K* keys, V* values, unsigned int length, const Sorter& sorter)
  * improve performance, the Quicksort switches to insertion sort for small
  * partitions. This function assumes `length > 0`. If the preprocessor `NDEBUG`
  * is not defined, this function outputs a warning when `length == 0`.
- * \tparam T is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable),
- * 			[CopyConstructible](http://en.cppreference.com/w/cpp/concept/CopyConstructible)
- * 			[LessThanComparable](http://en.cppreference.com/w/cpp/concept/LessThanComparable),
+ * \tparam T is [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable),
+ * 			[CopyConstructible](https://en.cppreference.com/w/cpp/named_req/CopyConstructible)
+ * 			[LessThanComparable](https://en.cppreference.com/w/cpp/named_req/LessThanComparable),
  * 			and is_swappable.
  */
 template<typename T>
@@ -1263,9 +1263,9 @@ inline void sort(array<T>& keys, const Sorter& sorter)
  * for small partitions. This function assumes `length > 0`. If the
  * preprocessor `NDEBUG` is not defined, this function outputs a warning when
  * `length == 0`.
- * \tparam K is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable),
- * 			[CopyConstructible](http://en.cppreference.com/w/cpp/concept/CopyConstructible)
- * 			[LessThanComparable](http://en.cppreference.com/w/cpp/concept/LessThanComparable),
+ * \tparam K is [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable),
+ * 			[CopyConstructible](https://en.cppreference.com/w/cpp/named_req/CopyConstructible)
+ * 			[LessThanComparable](https://en.cppreference.com/w/cpp/named_req/LessThanComparable),
  * 			and is_swappable.
  * \tparam V satisfies is_swappable and is_moveable.
  */
@@ -1319,7 +1319,7 @@ inline bool less_than(const T& first, const T& second, const default_sorter& sor
 /**
  * Deletes consecutive duplicates in the given native `array` with given
  * `length` and returns the new length. Note the deleted elements are not freed.
- * \tparam T is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable).
+ * \tparam T is [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable).
  */
 template<typename T>
 unsigned int unique(T* array, size_t length)
@@ -1335,7 +1335,7 @@ unsigned int unique(T* array, size_t length)
 /**
  * Deletes consecutive duplicates in the given `array` with given and returns
  * the new length. Note the deleted elements are not freed.
- * \tparam T is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable).
+ * \tparam T is [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable).
  */
 template<typename T>
 inline void unique(array<T>& a) {
@@ -1605,7 +1605,8 @@ inline void set_union_helper(UnionFunc do_union, const T& item,
  * 		union functions more than once for each element.
  */
 template<typename T, typename UnionBoth,
-	typename UnionFirst, typename UnionSecond, bool RemoveDuplicates = true>
+	typename UnionFirst, typename UnionSecond,
+	bool RemoveDuplicates = true>
 void set_union(UnionBoth union_both,
 	UnionFirst union_first, UnionSecond union_second,
 	const T* first, unsigned int first_length,
@@ -1649,9 +1650,9 @@ inline void set_union_helper(T* dst, SizeType& dst_length, const T& item) {
  * Given ordered native arrays `first` and `second`, compute their union and
  * appends the result to `dst`. The union is also ordered. This function
  * assumes `dst` has sufficient capacity to store the union.
- * \tparam T satisfies [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable)
+ * \tparam T satisfies [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable)
  * 		and implements the operators `==` and `<`.
- * \tparam RemoveDuplicates if `true`, this function ignore duplicate elements.
+ * \tparam RemoveDuplicates if `true`, this function ignores duplicate elements.
  */
 template<typename T, typename SizeType, bool RemoveDuplicates = true,
 	typename std::enable_if<std::is_integral<SizeType>::value>::type* = nullptr>
@@ -1686,7 +1687,7 @@ void set_union(T* dst, SizeType& dst_length,
 /**
  * Given ordered native arrays `first` and `second`, compute their union and
  * appends the result to `dst`. The union is also ordered.
- * \tparam T satisfies [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable)
+ * \tparam T satisfies [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable)
  * 		and implements the operators `==` and `<`.
  * \tparam RemoveDuplicates if `true`, this function ignore duplicate elements.
  */
@@ -1704,7 +1705,7 @@ inline bool set_union(array<T>& dst,
 /**
  * Given ordered arrays `first` and `second`, compute their union and appends
  * the result to `dst`. The union is also ordered.
- * \tparam T satisfies [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable)
+ * \tparam T satisfies [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable)
  * 		and implements the operators `==` and `<`.
  * \tparam RemoveDuplicates if `true`, this function ignore duplicate elements.
  */
@@ -1726,7 +1727,7 @@ struct array_position {
  * Given a collection of ordered arrays `arrays`, compute their union and
  * appends the result to `dst`. The union is also ordered.
  * NOTE: this function assumes the given arrays are all non-empty.
- * \tparam T satisfies [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable)
+ * \tparam T satisfies [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable)
  * 		and implements the operators `==` and `<`.
  * \tparam ArraySetCollection a collection type where each element is accessed
  * 		using `arrays[i]` and the size of each array can be obtained using
@@ -1831,7 +1832,7 @@ bool set_intersect(Intersect intersect,
  * Given ordered native arrays `first` and `second`, compute the intersection
  * and append it to the native array `intersection`. The computed intersection
  * is also ordered. This function assumes `intersection` has sufficient capacity.
- * \tparam T satisfies [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable)
+ * \tparam T satisfies [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable)
  * 		and implements the operators `==` and `<`.
  * \tparam BinarySearch if `true`, binary search is used to find indices of
  * 		identical elements rather than linear search.
@@ -1875,7 +1876,7 @@ bool set_intersect(
  * Given ordered native arrays `first` and `second`, compute the intersection
  * and append it to the array `intersection`. The computed intersection is also
  * ordered.
- * \tparam T satisfies [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable)
+ * \tparam T satisfies [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable)
  * 		and implements the operators `==` and `<`.
  * \tparam BinarySearch if `true`, binary search is used to find indices of
  * 		identical elements rather than linear search.
@@ -1898,7 +1899,7 @@ inline bool set_intersect(
  * Given ordered arrays `first` and `second`, compute the intersection and
  * append it to the array `intersection`. The computed intersection is also
  * ordered.
- * \tparam T satisfies [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable)
+ * \tparam T satisfies [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable)
  * 		and implements the operators `==` and `<`.
  * \tparam BinarySearch if `true`, binary search is used to find indices of
  * 		identical elements rather than linear search.
@@ -1917,7 +1918,7 @@ inline bool set_intersect(
 /**
  * Given ordered native arrays `first` and `second`, compute the intersection
  * in-place and store it in `first`. The computed intersection is also ordered.
- * \tparam T satisfies [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable)
+ * \tparam T satisfies [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable)
  * 		and implements the operators `==` and `<`.
  * \tparam BinarySearch if `true`, binary search is used to find indices of
  * 		identical elements rather than linear search.
@@ -1960,7 +1961,7 @@ void set_intersect(
  * Given ordered array `first` and ordered native array `second`, compute the
  * intersection in-place and store it in `first`. The computed intersection is
  * also ordered.
- * \tparam T satisfies [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable)
+ * \tparam T satisfies [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable)
  * 		and implements the operators `==` and `<`.
  * \tparam BinarySearch if `true`, binary search is used to find indices of
  * 		identical elements rather than linear search.
@@ -1976,7 +1977,7 @@ inline void set_intersect(array<T>& first,
 /**
  * Given ordered arrays `first` and `second`, compute the intersection in-place
  * and store it in `first`. The computed intersection is also ordered.
- * \tparam T satisfies [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable)
+ * \tparam T satisfies [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable)
  * 		and implements the operators `==` and `<`.
  * \tparam BinarySearch if `true`, binary search is used to find indices of
  * 		identical elements rather than linear search.
@@ -2124,7 +2125,7 @@ void set_subtract(EmitFunction emit,
  * set difference between `first` and `second` and stores the result in `dst`.
  * This function assumes `dst` has sufficient capacity. The set difference is
  * also ordered.
- * \tparam T satisfies [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable)
+ * \tparam T satisfies [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable)
  * 		and implements the operators `==` and `<`.
  * \tparam BinarySearch if `true`, binary search is used to find indices of
  * 		identical elements rather than linear search.
@@ -2174,7 +2175,7 @@ void set_subtract(T* dst, SizeType& dst_length,
  * Given ordered native arrays `first` and `second`, this function computes the
  * set difference between `first` and `second` and stores the result in `dst`.
  * The set difference is also ordered.
- * \tparam T satisfies [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable)
+ * \tparam T satisfies [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable)
  * 		and implements the operators `==` and `<`.
  * \tparam BinarySearch if `true`, binary search is used to find indices of
  * 		identical elements rather than linear search.
@@ -2194,7 +2195,7 @@ bool set_subtract(array<T>& dst,
  * Given ordered arrays `first` and `second`, this function computes the set
  * difference between `first` and `second` and stores the result in `dst`. The
  * set difference is also ordered.
- * \tparam T satisfies [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable)
+ * \tparam T satisfies [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable)
  * 		and implements the operators `==` and `<`.
  * \tparam BinarySearch if `true`, binary search is used to find indices of
  * 		identical elements rather than linear search.
@@ -2213,7 +2214,7 @@ inline bool set_subtract(array<T>& dst,
  * Given ordered native arrays `first` and `second`, this function computes the
  * set difference in-place between `first` and `second` and stores the result
  * in `first`. The set difference is also ordered.
- * \tparam T satisfies [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable)
+ * \tparam T satisfies [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable)
  * 		and implements the operators `==` and `<`.
  * \tparam BinarySearch if `true`, binary search is used to find indices of
  * 		identical elements rather than linear search.
@@ -2266,7 +2267,7 @@ void set_subtract(
  * Given ordered arrays `first` and `second`, this function computes the set
  * difference in-place between `first` and `second` and stores the result in
  * `first`. The set difference is also ordered.
- * \tparam T satisfies [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable)
+ * \tparam T satisfies [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable)
  * 		and implements the operators `==` and `<`.
  * \tparam BinarySearch if `true`, binary search is used to find indices of
  * 		identical elements rather than linear search.

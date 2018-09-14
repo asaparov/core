@@ -374,7 +374,7 @@ inline bool index_between(unsigned int probe, unsigned int start, unsigned int e
  *
  *
  * A number of member functions require `T` to be
- * [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable).
+ * [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable).
  * If this is not the case, those operations can be performed directly on the
  * public fields, as in the following example. In addition, when using a custom
  * struct/class with hash_set, it must implement public static functions, like
@@ -607,7 +607,7 @@ struct hash_set
 	/**
 	 * Add the given `element` to this set. The assignment operator is used to
 	 * insert each element, and so this function should not be used if `T` is not
-	 * [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable).
+	 * [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable).
 	 * In such a case, insertion should be performed manually using
 	 * hash_set::index_of to find the appropriate index and directly modifying
 	 * hash_set::keys and hash_set::size. See the example in the hash_set
@@ -616,7 +616,7 @@ struct hash_set
 	 * 		`void* alloc_keys(size_t count, size_t size)` that allocates space for
 	 * 		`count` items, each with size `size`, and initializes them such that
 	 * 		core::is_empty() returns `true` for each element.
-	 * \tparam T is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable).
+	 * \tparam T is [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable).
 	 */
 	bool add(const T& element, alloc_keys_func alloc_keys = calloc)
 	{
@@ -629,7 +629,7 @@ struct hash_set
 	 * Adds all the elements in the hash_set `elements` to this set. The
 	 * assignment operator is used to insert each element, and so this function
 	 * should not be used if `T` is not
-	 * [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable).
+	 * [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable).
 	 * In such a case, insertion should be performed manually using
 	 * hash_set::index_of or hash_set::index_to_insert to find the appropriate
 	 * index and directly modifying hash_set::keys and hash_set::size. See the
@@ -638,7 +638,7 @@ struct hash_set
 	 * 		`void* alloc_keys(size_t count, size_t size)` that allocates space for
 	 * 		`count` items, each with size `size`, and initializes them such that
 	 * 		core::is_empty() returns `true` for each element.
-	 * \tparam T is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable).
+	 * \tparam T is [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable).
 	 */
 	bool add_all(const hash_set<T>& elements,
 			alloc_keys_func alloc_keys = calloc)
@@ -654,7 +654,7 @@ struct hash_set
 	 * Adds all the elements in the native array `elements` with length `count`
 	 * to this set. The assignment operator is used to insert each element, and
 	 * so this function should not be used if `T` is not
-	 * [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable).
+	 * [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable).
 	 * In such a case, insertion should be performed manually using
 	 * hash_set::index_of or hash_set::index_to_insert and direct modification
 	 * of the public fields.
@@ -662,7 +662,7 @@ struct hash_set
 	 * 		`void* alloc_keys(size_t count, size_t size)` that allocates space for
 	 * 		`count` items, each with size `size`, and initializes them such that
 	 * 		core::is_empty() returns `true` for each element.
-	 * \tparam T is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable).
+	 * \tparam T is [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable).
 	 */
 	bool add_all(const T* elements, unsigned int count,
 			alloc_keys_func alloc_keys = calloc)
@@ -1196,7 +1196,7 @@ void swap(hash_set<T>& first, hash_set<T>& second) {
  *
  *
  * A number of member functions require `K` and `V` to be
- * [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable).
+ * [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable).
  * If this is not the case, those operations can be performed directly on the
  * public fields, as in the following example. In addition, when using a custom
  * struct/class as the key type in hash_map, it must implement public static
@@ -1489,7 +1489,7 @@ struct hash_map
 	/**
 	 * Adds the given key-value pair to this map. The assignment operator is
 	 * used insert the entry, and so this function should not be used if `K`
-	 * and `V` are not [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable).
+	 * and `V` are not [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable).
 	 * In such a case, insertion should be performed manually by using
 	 * hash_map::get or hash_set::index_to_insert to find the appropriate index
 	 * and directly modifying hash_map::table.keys, hash_map::table.size, and
@@ -1498,8 +1498,8 @@ struct hash_map
 	 * 		`void* alloc_keys(size_t count, size_t size)` that allocates space for
 	 * 		`count` items, each with size `size`, and initializes them such that
 	 * 		core::is_empty() returns `true` for each key.
-	 * \tparam K is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable).
-	 * \tparam V is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable).
+	 * \tparam K is [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable).
+	 * \tparam V is [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable).
 	 */
 	bool put(const K& key, const V& value,
 			alloc_keys_func alloc_keys = calloc)
@@ -1512,7 +1512,7 @@ struct hash_map
 	/**
 	 * Adds the given key-value pairs in `elements` to this map. The assignment
 	 * operator is used insert each entry, and so this function should not be
-	 * used if `K` and `V` are not [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable).
+	 * used if `K` and `V` are not [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable).
 	 * In such a case, insertion should be performed manually by using
 	 * hash_map::get or hash_map::index_to_insert to find the appropriate index
 	 * and directly modifying hash_map::table.keys, hash_map::table.size, and
@@ -1521,8 +1521,8 @@ struct hash_map
 	 * 		`void* alloc_keys(size_t count, size_t size)` that allocates space for
 	 * 		`count` items, each with size `size`, and initializes them such that
 	 * 		core::is_empty() returns `true` for each key.
-	 * \tparam K is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable).
-	 * \tparam V is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable).
+	 * \tparam K is [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable).
+	 * \tparam V is [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable).
 	 */
 	bool put_all(const hash_map<K, V>& elements,
 			alloc_keys_func alloc_keys = calloc)
@@ -1890,7 +1890,7 @@ void swap(hash_map<K, V>& first, hash_map<K, V>& second) {
  *
  *
  * A number of member functions require `K` and `V` to be
- * [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable).
+ * [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable).
  * If this is not the case, those operations can be performed directly on the
  * public fields, as in the following example. The expected output is
  * `first:1 second:2 `.
@@ -2024,12 +2024,12 @@ struct array_map {
 	/**
 	 * Adds the given key-value pair to this map. The assignment operator is
 	 * used insert the entry, and so this function should not be used if `K`
-	 * and `V` are not [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable).
+	 * and `V` are not [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable).
 	 * In such a case, insertion should be performed manually by using
 	 * array_map::get to compute the appropriate index and directly modifying
 	 * the the public fields. See the example in the description of array_map.
-	 * \tparam K is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable).
-	 * \tparam V is [CopyAssignable](http://en.cppreference.com/w/cpp/concept/CopyAssignable).
+	 * \tparam K is [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable).
+	 * \tparam V is [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable).
 	 */
 	bool put(const K& key, const V& value) {
 		size_t index = index_of(key);
