@@ -757,6 +757,21 @@ inline bool read(T* a, Stream& in, SizeType length, Reader&&... reader) {
 }
 
 /**
+ * Reads an array of `N` elements from `in` and stores the result in the given
+ * native array `a`.
+ * \param reader a scribe for which the function `bool read(T&, Stream&, Reader&&...)`
+ * 		is defined. Note that since this is a variadic argument, it may be empty.
+ * \tparam Stream satisfies is_readable.
+ */
+template<typename T, size_t N, typename Stream, typename... Reader,
+	typename std::enable_if<is_readable<Stream>::value>::type* = nullptr>
+inline bool read(T (&a)[N], Stream& in, Reader&&... reader) {
+	for (size_t i = 0; i < N; i++)
+		if (!read(a[i], in, std::forward<Reader>(reader)...)) return false;
+	return true;
+}
+
+/**
  * Reads a core::array structure from `in` and stores the result in `a`.
  * \param a an uninitialized core::array structure. This function initializes
  * 		`a`, and the caller is responsible for its memory and must call free
@@ -794,6 +809,21 @@ template<typename T, typename Stream, typename SizeType, typename... Writer,
 	typename std::enable_if<is_writeable<Stream>::value>::type* = nullptr>
 inline bool write(const T* a, Stream& out, SizeType length, Writer&&... writer) {
 	for (SizeType i = 0; i < length; i++)
+		if (!write(a[i], out, std::forward<Writer>(writer)...)) return false;
+	return true;
+}
+
+/**
+ * Writes the given native array `a` of elements to `out`, each of type `T`,
+ * where the number of elements is given by `N`.
+ * \param writer a scribe for which the function `bool write(const T&, Stream&, Writer&&...)`
+ * 		is defined. Note that since this is a variadic argument, it may be empty.
+ * \tparam Stream satisfies is_writeable.
+ */
+template<typename T, size_t N, typename Stream, typename... Writer,
+	typename std::enable_if<is_writeable<Stream>::value>::type* = nullptr>
+inline bool write(const T (&a)[N], Stream& out, Writer&&... writer) {
+	for (size_t i = 0; i < N; i++)
 		if (!write(a[i], out, std::forward<Writer>(writer)...)) return false;
 	return true;
 }
