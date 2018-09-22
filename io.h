@@ -699,7 +699,7 @@ inline bool read(T*& value, Stream& in, const pointer_scribe& scribe, Reader&&..
 }
 
 /**
- * Calls and returns `write(*value, in, writer)`, dropping the pointer_scribe
+ * Calls and returns `write(*value, out, writer)`, dropping the pointer_scribe
  * argument. Note that since `writer` is a variadic argument, it may be empty.
  * \tparam Stream satisfies is_writeable.
  */
@@ -710,7 +710,7 @@ inline bool write(const T* const value, Stream& out, const pointer_scribe& scrib
 }
 
 /**
- * Calls and returns `print(*value, in, printer)`, dropping the pointer_scribe
+ * Calls and returns `print(*value, out, printer)`, dropping the pointer_scribe
  * argument. Note that since `printer` is a variadic argument, it may be empty.
  * \tparam Stream satisfies is_printable.
  */
