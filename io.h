@@ -673,37 +673,76 @@ inline auto print(const T& value, Stream& out, default_scribe& scribe) -> declty
 }
 
 /**
- * Prints the given native array of `values` each of type `T`, where `length`
- * is the number of elements in the array. The output stream is `out`.
- * \param printer a scribe for which the function `bool print(const T&, Stream&, Printer&)` is defined.
+ * A scribe that prints pointers by dereferencing the pointer and calling the
+ * read/write/print function.
+ * \see [Section on scribes](#scribes).
+ */
+struct pointer_scribe { };
+
+/**
+ * Calls and returns `read(value, in)`, dropping the pointer_scribe argument.
+ * \tparam Stream satisfies is_readable.
+ */
+template<typename T, typename Stream, typename... Reader,
+	typename std::enable_if<is_readable<Stream>::value>::type* = nullptr>
+inline bool read(T*& value, Stream& in, const pointer_scribe& scribe, Reader&&... reader) {
+	value = (T*) malloc(sizeof(T));
+	if (value == NULL) {
+		fprintf(stderr, "read ERROR: Out of memory.\n");
+		return false;
+	} else if (!read(*value, in, std::forward<Reader>(reader)...)) {
+		free(value);
+		return false;
+	}
+	return true;
+}
+
+/**
+ * Calls and returns `write(value, out)`, dropping the pointer_scribe argument.
+ * \tparam Stream satisfies is_writeable.
+ */
+template<typename T, typename Stream, typename... Writer,
+	typename std::enable_if<is_writeable<Stream>::value>::type* = nullptr>
+inline bool write(const T* const value, Stream& out, const pointer_scribe& scribe, Writer&&... writer) {
+	return write(*value, out, std::forward<Writer>(writer)...);
+}
+
+/**
+ * Calls and returns `print(value, out)`, dropping the pointer_scribe argument.
  * \tparam Stream satisfies is_printable.
  */
-template<typename T, char LeftBracket = '[', char RightBracket = ']',
-	typename SizeType, typename Stream, typename Printer,
+template<typename T, typename Stream, typename... Printer,
 	typename std::enable_if<is_printable<Stream>::value>::type* = nullptr>
-bool print(const T* values, SizeType length, Stream& out, Printer& printer) {
-	if (!print(LeftBracket, out)) return false;
-	if (length == 0)
-		return print(RightBracket, out);
-	if (!print(values[0], out, printer)) return false;
-	for (SizeType i = 1; i < length; i++) {
-		if (!print(", ", out) || !print(values[i], out, printer))
-			return false;
-	}
-	return print(RightBracket, out);
+inline bool print(const T* const value, Stream& out, const pointer_scribe& scribe, Printer&&... printer) {
+	return print(*value, out, std::forward<Printer>(printer)...);
 }
+
+/**
+ * The default separator between elements ", " for the array print functions.
+ */
+char default_array_separator[] = ", ";
 
 /**
  * Prints the given native array of `values` each of type `T`, where `length`
  * is the number of elements in the array. The output stream is `out`.
+ * \param printer a scribe for which the function `bool print(const T&, Stream&, Printer&)`
+ * 		is defined. Note that since this is a variadic argument, it may be empty.
  * \tparam Stream satisfies is_printable.
  */
 template<typename T, char LeftBracket = '[', char RightBracket = ']',
-	typename Stream, typename SizeType,
+	char const* Separator = default_array_separator,
+	typename SizeType, typename Stream, typename... Printer,
 	typename std::enable_if<is_printable<Stream>::value>::type* = nullptr>
-inline bool print(const T* values, SizeType length, Stream& out) {
-	default_scribe printer;
-	return print<T, LeftBracket, RightBracket>(values, length, out, printer);
+bool print(const T* values, SizeType length, Stream& out, Printer&&... printer) {
+	if (!print(LeftBracket, out)) return false;
+	if (length == 0)
+		return print(RightBracket, out);
+	if (!print(values[0], out, std::forward<Printer>(printer)...)) return false;
+	for (SizeType i = 1; i < length; i++) {
+		if (!print(Separator, out) || !print(values[i], out, std::forward<Printer>(printer)...))
+			return false;
+	}
+	return print(RightBracket, out);
 }
 
 /**
@@ -713,8 +752,10 @@ inline bool print(const T* values, SizeType length, Stream& out) {
  * 		is defined. Note that since this is a variadic argument, it may be empty.
  * \tparam Stream satisfies is_printable.
  */
-template<typename T, size_t N, char LeftBracket = '[',
-	char RightBracket = ']', typename Stream, typename... Printer,
+template<typename T, size_t N,
+	char LeftBracket = '[', char RightBracket = ']',
+	char const* Separator = default_array_separator,
+	typename Stream, typename... Printer,
 	typename std::enable_if<is_printable<Stream>::value>::type* = nullptr>
 bool print(const T (&values)[N], Stream& out, Printer&&... printer) {
 	if (!print(LeftBracket, out)) return false;
@@ -722,23 +763,10 @@ bool print(const T (&values)[N], Stream& out, Printer&&... printer) {
 		return print(RightBracket, out);
 	if (!print(values[0], out, std::forward<Printer>(printer)...)) return false;
 	for (size_t i = 1; i < N; i++) {
-		if (!print(", ", out) || !print(values[i], out, std::forward<Printer>(printer)...))
+		if (!print(Separator, out) || !print(values[i], out, std::forward<Printer>(printer)...))
 			return false;
 	}
 	return print(RightBracket, out);
-}
-
-/**
- * Prints the given native static array of `values` each of type `T`, where `N`
- * is the number of elements in the array. The output stream is `out`.
- * \tparam Stream satisfies is_printable.
- */
-template<typename T, size_t N, char LeftBracket = '[',
-	char RightBracket = ']', typename Stream,
-	typename std::enable_if<is_printable<Stream>::value>::type* = nullptr>
-inline bool print(const T (&values)[N], Stream& out) {
-	default_scribe printer;
-	return print<T, N, LeftBracket, RightBracket>(values, out, printer);
 }
 
 /**
