@@ -680,8 +680,9 @@ inline auto print(const T& value, Stream& out, default_scribe& scribe) -> declty
 struct pointer_scribe { };
 
 /**
- * Calls and returns `read(*value, in, reader)`, dropping the pointer_scribe
- * argument. Note that since `reader` is a variadic argument, it may be empty.
+ * Allocates memory and stores the address in `value`, and then calls
+ * `read(*value, in, reader)`, dropping the pointer_scribe argument. Note that
+ * since `reader` is a variadic argument, it may be empty.
  * \tparam Stream satisfies is_readable.
  */
 template<typename T, typename Stream, typename... Reader,
