@@ -674,13 +674,14 @@ inline auto print(const T& value, Stream& out, default_scribe& scribe) -> declty
 
 /**
  * A scribe that prints pointers by dereferencing the pointer and calling the
- * read/write/print function.
+ * appropriate read/write/print function.
  * \see [Section on scribes](#scribes).
  */
 struct pointer_scribe { };
 
 /**
- * Calls and returns `read(value, in)`, dropping the pointer_scribe argument.
+ * Calls and returns `read(*value, in, reader)`, dropping the pointer_scribe
+ * argument. Note that since `reader` is a variadic argument, it may be empty.
  * \tparam Stream satisfies is_readable.
  */
 template<typename T, typename Stream, typename... Reader,
@@ -698,7 +699,8 @@ inline bool read(T*& value, Stream& in, const pointer_scribe& scribe, Reader&&..
 }
 
 /**
- * Calls and returns `write(value, out)`, dropping the pointer_scribe argument.
+ * Calls and returns `write(*value, in, writer)`, dropping the pointer_scribe
+ * argument. Note that since `writer` is a variadic argument, it may be empty.
  * \tparam Stream satisfies is_writeable.
  */
 template<typename T, typename Stream, typename... Writer,
@@ -708,7 +710,8 @@ inline bool write(const T* const value, Stream& out, const pointer_scribe& scrib
 }
 
 /**
- * Calls and returns `print(value, out)`, dropping the pointer_scribe argument.
+ * Calls and returns `print(*value, in, printer)`, dropping the pointer_scribe
+ * argument. Note that since `printer` is a variadic argument, it may be empty.
  * \tparam Stream satisfies is_printable.
  */
 template<typename T, typename Stream, typename... Printer,
