@@ -125,71 +125,62 @@ inline bool init(T& a, const T& b) {
 }
 
 /**
- * If `T` satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental)
- * or [is_enum](http://en.cppreference.com/w/cpp/types/is_enum),
+ * If `T` satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental),
+ * [is_enum](http://en.cppreference.com/w/cpp/types/is_enum),
+ * or [is_pointer](http://en.cppreference.com/w/cpp/types/is_pointer),
  * `dst` is assigned to `src`. Otherwise, this function calls
  * `T::move(src, dst)`. This function is intended to be used to effectively
  * move the object stored in `src` into the location specified by `dst`.
  */
 template<typename T,
-	typename std::enable_if<!std::is_fundamental<T>::value && !std::is_enum<T>::value>::type* = nullptr>
+	typename std::enable_if<!std::is_fundamental<T>::value && !std::is_enum<T>::value && !std::is_pointer<T>::value>::type* = nullptr>
 inline void move(const T& src, T& dst) {
 	T::move(src, dst);
 }
 
-template<typename T>
-inline void move(T* a, T*& b) {
-	b = a;
-}
-
 template<typename T,
-	typename std::enable_if<std::is_fundamental<T>::value || std::is_enum<T>::value>::type* = nullptr>
+	typename std::enable_if<std::is_fundamental<T>::value || std::is_enum<T>::value || std::is_pointer<T>::value>::type* = nullptr>
 inline void move(const T& a, T& b) {
 	b = a;
 }
 
 /**
- * If `T` satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental)
- * or [is_enum](http://en.cppreference.com/w/cpp/types/is_enum),
+ * If `T` satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental),
+ * [is_enum](http://en.cppreference.com/w/cpp/types/is_enum),
+ * or [is_pointer](http://en.cppreference.com/w/cpp/types/is_pointer),
  * `dst` is assigned to `src`. Otherwise, this function calls and returns the
  * result of `T::copy(src, dst)`. This function is intended to be used to copy
  * the object stored in `src` into the location specified by `dst`.
  */
 template<typename T,
-	typename std::enable_if<!std::is_fundamental<T>::value && !std::is_enum<T>::value>::type* = nullptr>
+	typename std::enable_if<!std::is_fundamental<T>::value && !std::is_enum<T>::value && !std::is_pointer<T>::value>::type* = nullptr>
 inline bool copy(const T& src, T& dst) {
 	return T::copy(src, dst);
 }
 
 template<typename T,
-	typename std::enable_if<std::is_fundamental<T>::value || std::is_enum<T>::value>::type* = nullptr>
+	typename std::enable_if<std::is_fundamental<T>::value || std::is_enum<T>::value || std::is_pointer<T>::value>::type* = nullptr>
 inline bool copy(const T& a, T& b) {
 	b = a;
 	return true;
 }
 
 /**
- * If `T` satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental)
- * or [is_enum](http://en.cppreference.com/w/cpp/types/is_enum),
+ * If `T` satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental),
+ * [is_enum](http://en.cppreference.com/w/cpp/types/is_enum),
+ * or [is_pointer](http://en.cppreference.com/w/cpp/types/is_pointer),
  * the values of `a` and `b` are swapped. Otherwise, this function calls
  * `T::swap(a, b)`. This function is intended to be used to swap the object
  * stored in `a` with the object stored in `b`.
  */
 template<typename T,
-	typename std::enable_if<!std::is_fundamental<T>::value && !std::is_enum<T>::value>::type* = nullptr>
+	typename std::enable_if<!std::is_fundamental<T>::value && !std::is_enum<T>::value && !std::is_pointer<T>::value>::type* = nullptr>
 inline void swap(T& a, T& b) {
 	T::swap(a, b);
 }
 
-template<typename T>
-inline void swap(T*& a, T*& b) {
-	T* temp = a;
-	a = b;
-	b = temp;
-}
-
 template<typename T,
-	typename std::enable_if<std::is_fundamental<T>::value || std::is_enum<T>::value>::type* = nullptr>
+	typename std::enable_if<std::is_fundamental<T>::value || std::is_enum<T>::value || std::is_pointer<T>::value>::type* = nullptr>
 inline void swap(T& a, T& b) {
 	T temp = a;
 	a = b;
@@ -211,7 +202,7 @@ inline constexpr long unsigned int size_of(const E& a) {
 struct default_metric { };
 
 template<typename T,
-	typename std::enable_if<!std::is_fundamental<T>::value && !std::is_pointer<T>::value && !std::is_enum<T>::value>::type* = nullptr>
+	typename std::enable_if<!std::is_fundamental<T>::value && !std::is_enum<T>::value && !std::is_pointer<T>::value>::type* = nullptr>
 inline long unsigned int size_of(const T& a) {
 	return T::size_of(a, default_metric());
 }
@@ -259,7 +250,7 @@ inline void free(T& a, Args&&... args) {
 }
 
 /**
- * This function calls [std::free](http://en.cppreference.com/w/c/memory/free)
+ * This function calls [free](http://en.cppreference.com/w/c/memory/free)
  * on `a`.
  */
 template<typename T>
@@ -291,7 +282,8 @@ namespace detail {
  * if and only if `T` satisfies any of the following:
  * 	1. [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental),
  * 	2. [is_enum](http://en.cppreference.com/w/cpp/types/is_enum),
- * 	3. or implements the public static method `void T::move(const T&, T&)`.
+ * 	3. [is_pointer](http://en.cppreference.com/w/cpp/types/is_pointer),
+ * 	4. or implements the public static method `void T::move(const T&, T&)`.
  */
 template<typename T> struct is_moveable : decltype(core::detail::test_moveable<T>(0)){};
 
@@ -300,7 +292,8 @@ template<typename T> struct is_moveable : decltype(core::detail::test_moveable<T
  * if and only if `T` satisfies any of the following:
  * 	1. [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental),
  * 	2. [is_enum](http://en.cppreference.com/w/cpp/types/is_enum),
- * 	3. or implements the public static method `void T::swap(T&, T&)`.
+ * 	3. [is_pointer](http://en.cppreference.com/w/cpp/types/is_pointer),
+ * 	4. or implements the public static method `void T::swap(T&, T&)`.
  */
 template<typename T> struct is_swappable : decltype(core::detail::test_swappable<T>(0)){};
 
@@ -309,7 +302,8 @@ template<typename T> struct is_swappable : decltype(core::detail::test_swappable
  * if and only if `T` satisfies any of the following:
  * 	1. [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental),
  * 	2. [is_enum](http://en.cppreference.com/w/cpp/types/is_enum),
- * 	3. or implements the public static method `bool T::copy(const T&, T&)`.
+ * 	3. [is_pointer](http://en.cppreference.com/w/cpp/types/is_pointer),
+ * 	4. or implements the public static method `bool T::copy(const T&, T&)`.
  */
 template<typename T> struct is_copyable : decltype(core::detail::test_copyable<T>(0)){};
 
@@ -378,26 +372,7 @@ struct hasher {
 };
 
 template<typename K>
-struct hasher<K*> {
-	static inline bool is_empty(const K* const& key) {
-		return (key == NULL);
-	}
-
-	static inline void set_empty(K* const& key) {
-		key = NULL;
-	}
-
-	static inline void set_empty(K* const* keys, unsigned int length) {
-		set_all_empty(keys, length);
-	}
-
-	static inline unsigned int hash(const K* const& key) {
-		return default_hash(key);
-	}
-};
-
-template<typename K>
-struct hasher<K, typename std::enable_if<std::is_fundamental<K>::value || std::is_enum<K>::value>::type> {
+struct hasher<K, typename std::enable_if<std::is_fundamental<K>::value || std::is_enum<K>::value || std::is_pointer<K>::value>::type> {
 	static inline bool is_empty(const K& key) {
 		return (key == static_cast<K>(0));
 	}
@@ -418,8 +393,9 @@ struct hasher<K, typename std::enable_if<std::is_fundamental<K>::value || std::i
 /**
  * Hashtables in this library require the type `K` to define a special
  * "empty value" to indicate that a bucket is empty. For `K` that satisfies
- * [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental)
- * or [is_enum](http://en.cppreference.com/w/cpp/types/is_enum),
+ * [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental),
+ * [is_enum](http://en.cppreference.com/w/cpp/types/is_enum),
+ * or [is_pointer](http://en.cppreference.com/w/cpp/types/is_pointer),
  * this function returns whether `key == static_cast<K>(0)`. Otherwise, this
  * function returns `K::is_empty(key)`. Thus, to enable the use of a custom
  * struct/class as a hashtable key, it must implement the public static
@@ -433,8 +409,9 @@ inline bool is_empty(const K& key) {
 /**
  * Hashtables in this library require the type `K` to define a special
  * "empty value" to indicate that a bucket is empty. For `K` that satisfies
- * [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental)
- * or [is_enum](http://en.cppreference.com/w/cpp/types/is_enum),
+ * [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental),
+ * [is_enum](http://en.cppreference.com/w/cpp/types/is_enum),
+ * or [is_pointer](http://en.cppreference.com/w/cpp/types/is_pointer),
  * this function sets `key` to `static_cast<K>(0)`. Otherwise, this function
  * calls `K::set_empty(key)`. Some hashtable operations use this operation, and
  * therefore, if a custom struct/class is used as a hashtable key, it must

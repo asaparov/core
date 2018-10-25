@@ -1697,7 +1697,7 @@ struct hash_map
 		if (dst.table.keys == NULL) return false;
 		dst.values = (V*) malloc(sizeof(V) * src.table.capacity);
 		if (dst.values == NULL) {
-			free(dst.table.keys);
+			core::free(dst.table.keys);
 			return false;
 		}
 
