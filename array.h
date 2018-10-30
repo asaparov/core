@@ -1305,6 +1305,17 @@ inline void sort(array<K>& keys, array<V>& values, const Sorter& sorter)
 }
 
 /**
+ * Returns `true` if and only if the given array `items` is sorted in
+ * non-decreasing order.
+ * \tparam T a generic type for which a function `bool less_than(const T&, const T&, const Sorter&)`
+ * 			is defined.
+ */
+template<typename T, typename Sorter>
+inline bool is_sorted(const array<T>& items, const Sorter& sorter) {
+	return is_sorted(items.data, items.length, sorter);
+}
+
+/**
  * The default_sorter provides a default implementation of
  * `bool less_than(const T&, const T&, const default_sorter&)`
  * where the comparison is done using the operator `<`.
