@@ -113,13 +113,14 @@ inline bool ensure_capacity(T*& data, SizeType& capacity, size_t new_length)
 /**
  * Performs a linear search through the array `data` to find the smallest index
  * `i` such that `element == data[i]`.
- * \tparam T a generic type for which the operator `==` is defined.
+ * \tparam Key a generic type for which operator `==` is defined for arguments of type `Key` and `T`.
+ * \tparam T a generic type for which operator `==` is defined for arguments of type `Key` and `T`.
  * \return an index in `start, start + 1, ..., length - 1` if the element was found.
  * \return `length` if the element was not found.
  */
-template<typename T, typename SizeType,
+template<typename Key, typename T, typename SizeType,
 	typename std::enable_if<std::is_integral<SizeType>::value>::type* = nullptr>
-inline SizeType index_of(const T& element, const T* data,
+inline SizeType index_of(const Key& element, const T* data,
 		const SizeType& length, const SizeType& start = 0)
 {
 	for (SizeType i = start; i < length; i++)
@@ -131,13 +132,14 @@ inline SizeType index_of(const T& element, const T* data,
 /**
  * Performs a linear search through the array `data` to find the largest index
  * `i` such that `element == data[i]`.
- * \tparam T a generic type for which the operator `==` is defined.
+ * \tparam Key a generic type for which operator `==` is defined for arguments of type `Key` and `T`.
+ * \tparam T a generic type for which operator `==` is defined for arguments of type `Key` and `T`.
  * \return an index in `0, 1, ..., length - 1` if the element was found.
  * \return `static_cast<unsigned int>(-1)` if the element was not found.
  */
-template<typename T, typename SizeType,
+template<typename Key, typename T, typename SizeType,
 	typename std::enable_if<std::is_integral<SizeType>::value>::type* = nullptr>
-inline unsigned int last_index_of(const T& element, const T* data, const SizeType& length)
+inline unsigned int last_index_of(const Key& element, const T* data, const SizeType& length)
 {
 	unsigned int i = length;
 	while (i != 0) {
@@ -153,53 +155,53 @@ inline unsigned int last_index_of(const T& element, const T* data, const SizeTyp
  * type `T`. This structure does not automatically initialize or free its
  * elements, and so the user must appropriately free each element before the
  * array is destroyed.
- * 
+ *
  * In the following example, we demonstrate a simple use-case of array. Here,
  * `a` is automatically freed by the destructor since it was initialized on the
  * stack. The expected output is `-1 -1 0 3 `.
- * 
+ *
  * ```{.cpp}
  * #include <core/array.h>
  * #include <stdio.h>
  * using namespace core;
- * 
+ *
  * int main() {
  * 	array<int> a = array<int>(8);
  * 	a.add(-1); a.add(-4);
  * 	a.add(3); a.add(0);
  * 	a.remove(1);
- * 
+ *
  * 	printf("%d ", a[0]);
  * 	for (int element : a)
  * 		printf("%d ", element);
  * }
  * ```
- * 
- * 
+ *
+ *
  * However, if `a` is not allocated on the stack, the destructor will not be
  * automatically called, and so it must be freed manually using `core::free` or
  * `array::free`.
- * 
+ *
  * ```{.cpp}
  * #include <core/array.h>
  * #include <stdio.h>
  * using namespace core;
- * 
+ *
  * int main() {
  * 	array<int>& a = *((array<int>*) alloca(sizeof(array<int>)));
  * 	array_init(a, 8);
  * 	a.add(-1); a.add(-4);
  * 	a.add(3); a.add(0);
  * 	a.remove(1);
- * 
+ *
  * 	printf("%d ", a[0]);
  * 	for (int element : a)
  * 		printf("%d ", element);
  * 	free(a);
  * }
  * ```
- * 
- * 
+ *
+ *
  * Also note that a number of member functions require that `T` be
  * [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable).
  * In other cases, elements should be added manually to the underlying native
@@ -207,21 +209,21 @@ inline unsigned int last_index_of(const T& element, const T* data, const SizeTyp
  * similar to Standard Template Library iterators, which enables the use of the
  * range-based for loop in the example below. In this example, the expected
  * output is `first second `.
- * 
+ *
  * ```{.cpp}
  * #include <core/array.h>
  * #include <stdio.h>
  * #include <string.h>
  * using namespace core;
- * 
+ *
  * struct custom_string {
  * 	char* buffer;
- * 
+ *
  * 	static void free(custom_string& s) {
  * 		core::free(s.buffer);
  * 	}
  * };
- * 
+ *
  * bool init(custom_string& s, const char* src) {
  * 	s.buffer = (char*) malloc(sizeof(char) * (strlen(src) + 1));
  * 	if (s.buffer == NULL)
@@ -229,13 +231,13 @@ inline unsigned int last_index_of(const T& element, const T* data, const SizeTyp
  * 	memcpy(s.buffer, src, sizeof(char) * (strlen(src) + 1));
  * 	return true;
  * }
- * 
+ *
  * int main() {
  * 	array<custom_string> a = array<custom_string>(8);
  * 	init(a[0], "first");
  * 	init(a[1], "second");
  * 	a.length = 2;
- * 
+ *
  * 	for (const custom_string& s : a)
  * 		printf("%s ", s.buffer);
  * 	for (custom_string& s : a)

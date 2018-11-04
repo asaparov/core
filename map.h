@@ -2050,7 +2050,8 @@ struct array_map {
 	 * Performs a linear search to find the index of the given `key`. If the
 	 * `key` is not in this map, array_map::size is returned.
 	 */
-	inline size_t index_of(const K& key) const {
+	template<typename Key>
+	inline size_t index_of(const Key& key) const {
 		return core::index_of(key, keys, size);
 	}
 
@@ -2059,7 +2060,8 @@ struct array_map {
 	 * search beginning at the index `start`. If the `key` is not in this map,
 	 * array_map::size is returned.
 	 */
-	inline unsigned int index_of(const K& key, unsigned int start) const {
+	template<typename Key>
+	inline unsigned int index_of(const Key& key, unsigned int start) const {
 		for (unsigned int i = start; i < size; i++)
 			if (keys[i] == key)
 				return i;
@@ -2071,7 +2073,8 @@ struct array_map {
 	 * If the `key` is not in this map, `static_cast<unsigned int>(-1)` is
 	 * returned.
 	 */
-	inline unsigned int last_index_of(const K& key) const {
+	template<typename Key>
+	inline unsigned int last_index_of(const Key& key) const {
 		return core::last_index_of(key, keys, size);
 	}
 
@@ -2086,7 +2089,8 @@ struct array_map {
 	 * Retrieves the value associated with the given `key`. This function
 	 * assumes the given key exists in the map.
 	 */
-	inline V& get(const K& key) {
+	template<typename Key>
+	inline V& get(const Key& key) {
 		return values[index_of(key)];
 	}
 
@@ -2094,7 +2098,8 @@ struct array_map {
 	 * Retrieves the const value associated with the given `key`. This function
 	 * assumes the given key exists in the map.
 	 */
-	inline const V& get(const K& key) const {
+	template<typename Key>
+	inline const V& get(const Key& key) const {
 		return values[index_of(key)];
 	}
 
@@ -2104,7 +2109,8 @@ struct array_map {
 	 * array_map::keys where the key is located. If `key` does not exist in the
 	 * map, `index` is set to array_map::size.
 	 */
-	inline V& get(const K& key, unsigned int& index) {
+	template<typename Key>
+	inline V& get(const Key& key, unsigned int& index) {
 		index = index_of(key);
 		return values[index];
 	}
@@ -2114,7 +2120,8 @@ struct array_map {
 	 * associated with the key, and sets `contains` to `true`. If `key` does
 	 * not exist in the map, `contains` is set to `false`.
 	 */
-	inline V& get(const K& key, bool& contains) {
+	template<typename Key>
+	inline V& get(const Key& key, bool& contains) {
 		size_t index = index_of(key);
 		contains = (index != size);
 		return values[index];
@@ -2125,7 +2132,8 @@ struct array_map {
 	 * value associated with the key, and sets `contains` to `true`. If `key`
 	 * does not exist in the map, `contains` is set to `false`.
 	 */
-	inline const V& get(const K& key, bool& contains) const {
+	template<typename Key>
+	inline const V& get(const Key& key, bool& contains) const {
 		unsigned int index = index_of(key);
 		contains = (index != size);
 		return values[index];
