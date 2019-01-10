@@ -458,6 +458,30 @@ inline wint_t fgetwc(memory_stream& out) {
 }
 
 /**
+ * Retrieves the current position in the given memory_stream.
+ * \see This function mirrors the equivalent [fgetpos](http://en.cppreference.com/w/c/io/fgetpos)
+ * 		for [FILE](http://en.cppreference.com/w/c/io) pointer streams.
+ * \returns 0 on success; nonzero value otherwise.
+ */
+inline int fgetpos(const memory_stream& stream, fpos_t* pos) {
+	pos->__pos = stream.position;
+	pos->__state = stream.shift;
+	return 0;
+}
+
+/**
+ * Sets the current position in the given memory_stream.
+ * \see This function mirrors the equivalent [fsetpos](http://en.cppreference.com/w/c/io/fsetpos)
+ * 		for [FILE](http://en.cppreference.com/w/c/io) pointer streams.
+ * \returns 0 on success; nonzero value otherwise.
+ */
+inline int fsetpos(memory_stream& stream, const fpos_t* pos) {
+	stream.position = pos->__pos;
+	stream.shift = pos->__state;
+	return 0;
+}
+
+/**
  * Writes the given character `c` to the memory_stream `out`.
  * \see This function mirrors the equivalent [fputc](http://en.cppreference.com/w/cpp/io/c/fputc)
  * 		for [FILE](http://en.cppreference.com/w/c/io) pointer streams.
