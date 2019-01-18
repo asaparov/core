@@ -387,6 +387,22 @@ bool expect_token(const array<lexical_token<TokenType>>& tokens,
 	return true;
 }
 
+/**
+ * Appends the given wide character `next` to the char array `token` which
+ * represents a multi-byte string.
+ */
+inline bool append_to_token(
+	array<char>& token, wint_t next, std::mbstate_t& shift)
+{
+	if (!token.ensure_capacity(token.length + MB_CUR_MAX))
+		return false;
+	size_t written = wcrtomb(token.data + token.length, next, &shift);
+	if (written == static_cast<std::size_t>(-1))
+		return false;
+	token.length += written;
+	return true;
+}
+
 } /* namespace core */
 
 #endif /* LEX_H_ */
