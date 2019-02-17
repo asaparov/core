@@ -330,20 +330,22 @@ template<typename... T> struct and_type<std::false_type, T...> {
  * <!-- Common functionality for hashing. -->
  */
 
+#define DEFAULT_HASH_SEED 0
+
 /* these are defined in map.h */
 #if defined(__LP64__) || defined(_WIN64) || defined(__x86_64__) || defined(__ppc64__)
 
-template<typename K>
+template<typename K, unsigned int Seed = DEFAULT_HASH_SEED>
 inline uint_fast32_t default_hash(const K& key);
 
-template<typename K>
+template<typename K, unsigned int Seed = DEFAULT_HASH_SEED>
 inline uint_fast32_t default_hash(const K* keys, unsigned int length);
 
 #else
-template<typename K>
+template<typename K, unsigned int Seed = DEFAULT_HASH_SEED>
 inline unsigned int default_hash(const K& key);
 
-template<typename K>
+template<typename K, unsigned int Seed = DEFAULT_HASH_SEED>
 inline unsigned int default_hash(const K* keys, unsigned int length);
 #endif
 

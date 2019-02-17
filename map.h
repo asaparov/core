@@ -42,8 +42,6 @@ namespace core {
  */
 #define RESIZE_FACTOR 2
 
-#define XXHASH_SEED 0
-
 /**
  * A function pointer type describing a function that returns a pointer to
  * allocated memory. The first argument is the number of elements to allocate,
@@ -70,57 +68,31 @@ struct array_map;
 
 
 #if defined(__LP64__) || defined(_WIN64) || defined(__x86_64__) || defined(__ppc64__)
-template<typename K>
+template<typename K, unsigned int Seed = DEFAULT_HASH_SEED>
 inline uint_fast32_t default_hash(const K& key) {
-	return (uint_fast32_t) XXH64(&key, sizeof(K), XXHASH_SEED);
+	return (uint_fast32_t) XXH64(&key, sizeof(K), Seed);
 }
 
-template<typename K>
+template<typename K, unsigned int Seed = DEFAULT_HASH_SEED>
 inline uint_fast32_t default_hash(const K* keys, unsigned int length) {
-	return (uint_fast32_t) XXH64(keys, sizeof(K) * length, XXHASH_SEED);
-}
-
-template<typename K>
-inline uint_fast32_t default_hash(const K& key, unsigned int seed) {
-	return (uint_fast32_t) XXH64(&key, sizeof(K), seed);
-}
-
-template<typename K>
-inline uint_fast32_t default_hash(const K* keys, unsigned int length, unsigned int seed) {
-	return (uint_fast32_t) XXH64(keys, sizeof(K) * length, seed);
+	return (uint_fast32_t) XXH64(keys, sizeof(K) * length, Seed);
 }
 
 #else
 /**
- * Evaluates the hash function of the given value `key` using the default implementation.
+ * Evaluates the hash function of the given value `key` with the given `Seed` using the default implementation.
  */
-template<typename K>
+template<typename K, unsigned int Seed = DEFAULT_HASH_SEED>
 inline unsigned int default_hash(const K& key) {
-	return XXH32(&key, sizeof(K), XXHASH_SEED);
+	return XXH32(&key, sizeof(K), Seed);
 }
 
 /**
- * Evaluates the hash function of the given native array of values `keys` using the default implementation.
+ * Evaluates the hash function of the given native array of values `keys` with the given `Seed` using the default implementation.
  */
-template<typename K>
+template<typename K, unsigned int Seed = DEFAULT_HASH_SEED>
 inline unsigned int default_hash(const K* keys, unsigned int length) {
-	return XXH32(keys, sizeof(K) * length, XXHASH_SEED);
-}
-
-/**
- * Evaluates the hash function of the given value `key` with the given `seed` using the default implementation.
- */
-template<typename K>
-inline unsigned int default_hash(const K& key, unsigned int seed) {
-	return XXH32(&key, sizeof(K), seed);
-}
-
-/**
- * Evaluates the hash function of the given native array of values `keys` with the given `seed` using the default implementation.
- */
-template<typename K>
-inline unsigned int default_hash(const K* keys, unsigned int length, unsigned int seed) {
-	return XXH32(keys, sizeof(K) * length, seed);
+	return XXH32(keys, sizeof(K) * length, Seed);
 }
 #endif
 
