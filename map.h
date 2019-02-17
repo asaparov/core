@@ -80,6 +80,16 @@ inline uint_fast32_t default_hash(const K* keys, unsigned int length) {
 	return (uint_fast32_t) XXH64(keys, sizeof(K) * length, XXHASH_SEED);
 }
 
+template<typename K>
+inline uint_fast32_t default_hash(const K& key, unsigned int seed) {
+	return (uint_fast32_t) XXH64(&key, sizeof(K), seed);
+}
+
+template<typename K>
+inline uint_fast32_t default_hash(const K* keys, unsigned int length, unsigned int seed) {
+	return (uint_fast32_t) XXH64(keys, sizeof(K) * length, seed);
+}
+
 #else
 /**
  * Evaluates the hash function of the given value `key` using the default implementation.
@@ -95,6 +105,22 @@ inline unsigned int default_hash(const K& key) {
 template<typename K>
 inline unsigned int default_hash(const K* keys, unsigned int length) {
 	return XXH32(keys, sizeof(K) * length, XXHASH_SEED);
+}
+
+/**
+ * Evaluates the hash function of the given value `key` with the given `seed` using the default implementation.
+ */
+template<typename K>
+inline unsigned int default_hash(const K& key, unsigned int seed) {
+	return XXH32(&key, sizeof(K), seed);
+}
+
+/**
+ * Evaluates the hash function of the given native array of values `keys` with the given `seed` using the default implementation.
+ */
+template<typename K>
+inline unsigned int default_hash(const K* keys, unsigned int length, unsigned int seed) {
+	return XXH32(keys, sizeof(K) * length, seed);
 }
 #endif
 
