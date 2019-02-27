@@ -68,12 +68,12 @@ struct array_map;
 
 
 #if defined(__LP64__) || defined(_WIN64) || defined(__x86_64__) || defined(__ppc64__)
-template<typename K, unsigned int Seed = DEFAULT_HASH_SEED>
+template<typename K, unsigned int Seed>
 inline uint_fast32_t default_hash(const K& key) {
 	return (uint_fast32_t) XXH64(&key, sizeof(K), Seed);
 }
 
-template<typename K, unsigned int Seed = DEFAULT_HASH_SEED>
+template<typename K, unsigned int Seed>
 inline uint_fast32_t default_hash(const K* keys, unsigned int length) {
 	return (uint_fast32_t) XXH64(keys, sizeof(K) * length, Seed);
 }
@@ -82,7 +82,7 @@ inline uint_fast32_t default_hash(const K* keys, unsigned int length) {
 /**
  * Evaluates the hash function of the given value `key` with the given `Seed` using the default implementation.
  */
-template<typename K, unsigned int Seed = DEFAULT_HASH_SEED>
+template<typename K, unsigned int Seed>
 inline unsigned int default_hash(const K& key) {
 	return XXH32(&key, sizeof(K), Seed);
 }
@@ -90,7 +90,7 @@ inline unsigned int default_hash(const K& key) {
 /**
  * Evaluates the hash function of the given native array of values `keys` with the given `Seed` using the default implementation.
  */
-template<typename K, unsigned int Seed = DEFAULT_HASH_SEED>
+template<typename K, unsigned int Seed>
 inline unsigned int default_hash(const K* keys, unsigned int length) {
 	return XXH32(keys, sizeof(K) * length, Seed);
 }
@@ -835,7 +835,7 @@ struct hash_set
 	 * the bucket where the element would be inserted, for example by a call to
 	 * hash_set::add, **assuming** `element` does not already exist in the set.
 	 */
-	inline unsigned int index_to_insert(const T& element)
+	inline unsigned int index_to_insert(const T& element, bool& contains)
 	{
 #if !defined(NDEBUG)
 		if (size == capacity)
@@ -844,9 +844,10 @@ struct hash_set
 		unsigned int index = hasher<T>::hash(element) % capacity;
 		while (true) {
 			if (hasher<T>::is_empty(keys[index])) {
-				break;
-			} if (keys[index] == element)
-				break;
+				contains = false; break;
+			} if (keys[index] == element) {
+				contains = true; break;
+			}
 			index = (index + 1) % capacity;
 		}
 		return index;
@@ -1049,8 +1050,12 @@ private:
 
 	inline void insert(const T& element)
 	{
-		place(element, index_to_insert(element));
-		size++;
+		bool contains;
+		unsigned int index = index_to_insert(element, contains);
+		if (!contains) {
+			place(element, index);
+			size++;
+		}
 	}
 
 	template<typename V>
@@ -1770,8 +1775,12 @@ private:
 
 	inline void insert(const K& key, const V& value)
 	{
-		place(key, value, table.index_to_insert(key));
-		table.size++;
+		bool contains;
+		unsigned int index = table.index_to_insert(key, contains);
+		if (!contains) {
+			place(key, value, index);
+			table.size++;
+		}
 	}
 
 	template<typename T, typename U>
