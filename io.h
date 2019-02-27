@@ -464,8 +464,12 @@ inline wint_t fgetwc(memory_stream& out) {
  * \returns 0 on success; nonzero value otherwise.
  */
 inline int fgetpos(const memory_stream& stream, fpos_t* pos) {
+#if defined(__APPLE__) /* on Mac */
+	*pos = (long long) stream.position;
+#else /* on Windows or Linux */
 	pos->__pos = stream.position;
 	pos->__state = stream.shift;
+#endif
 	return 0;
 }
 
@@ -476,8 +480,13 @@ inline int fgetpos(const memory_stream& stream, fpos_t* pos) {
  * \returns 0 on success; nonzero value otherwise.
  */
 inline int fsetpos(memory_stream& stream, const fpos_t* pos) {
+#if defined(__APPLE__) /* on Mac */
+	stream.position = (unsigned int) *pos;
+	memset(&stream.shift, );
+#else /* on Windows or Linux */
 	stream.position = pos->__pos;
 	stream.shift = pos->__state;
+#endif
 	return 0;
 }
 
