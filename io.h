@@ -482,7 +482,7 @@ inline int fgetpos(const memory_stream& stream, fpos_t* pos) {
 inline int fsetpos(memory_stream& stream, const fpos_t* pos) {
 #if defined(__APPLE__) /* on Mac */
 	stream.position = (unsigned int) *pos;
-	memset(&stream.shift, );
+	memset(&stream.shift, 0, sizeof(stream.shift));
 #else /* on Windows or Linux */
 	stream.position = pos->__pos;
 	stream.shift = pos->__state;
