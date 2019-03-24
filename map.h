@@ -833,7 +833,8 @@ struct hash_set
 	/**
 	 * For a given `element`, this function computes and returns the index of
 	 * the bucket where the element would be inserted, for example by a call to
-	 * hash_set::add, **assuming** `element` does not already exist in the set.
+	 * hash_set::add. `contains` is set to `true` if and only if the given
+	 * `element` already exists in the set.
 	 */
 	inline unsigned int index_to_insert(const T& element, bool& contains)
 	{
@@ -848,6 +849,25 @@ struct hash_set
 			} if (keys[index] == element) {
 				contains = true; break;
 			}
+			index = (index + 1) % capacity;
+		}
+		return index;
+	}
+
+	/**
+	 * For a given `element`, this function computes and returns the index of
+	 * the bucket where the element would be inserted, for example by a call to
+	 * hash_set::add, **assuming** the given element is not in the set.
+	 */
+	inline unsigned int index_to_insert(const T& element)
+	{
+#if !defined(NDEBUG)
+		if (size == capacity)
+			fprintf(stderr, "hashtable.index_to_insert WARNING: Hashtable is full!\n");
+#endif
+		unsigned int index = hasher<T>::hash(element) % capacity;
+		while (true) {
+			if (hasher<T>::is_empty(keys[index])) break;
 			index = (index + 1) % capacity;
 		}
 		return index;

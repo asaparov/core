@@ -205,7 +205,7 @@ inline bool print(const double& value, FILE* out, unsigned int precision) {
  * [FILE](http://en.cppreference.com/w/c/io) pointer `out`.
  */
 inline bool print(const char* values, FILE* out) {
-	return (fprintf(out, "%s", values) > 0);
+	return (fprintf(out, "%s", values) >= 0);
 }
 
 namespace detail {
@@ -755,6 +755,16 @@ inline bool print(const T* const value, Stream& out, const pointer_scribe& scrib
 }
 
 /**
+ * The default left delimitter "[" for the array print functions.
+ */
+char default_left_bracket[] = "[";
+
+/**
+ * The default right delimitter "]" for the array print functions.
+ */
+char default_right_bracket[] = "]";
+
+/**
  * The default separator between elements ", " for the array print functions.
  */
 char default_array_separator[] = ", ";
@@ -766,7 +776,9 @@ char default_array_separator[] = ", ";
  * 		is defined. Note that since this is a variadic argument, it may be empty.
  * \tparam Stream satisfies is_printable.
  */
-template<typename T, char LeftBracket = '[', char RightBracket = ']',
+template<typename T,
+	const char* LeftBracket = default_left_bracket,
+	const char* RightBracket = default_right_bracket,
 	char const* Separator = default_array_separator,
 	typename SizeType, typename Stream, typename... Printer,
 	typename std::enable_if<is_printable<Stream>::value>::type* = nullptr>
@@ -790,7 +802,8 @@ bool print(const T* values, SizeType length, Stream& out, Printer&&... printer) 
  * \tparam Stream satisfies is_printable.
  */
 template<typename T, size_t N,
-	char LeftBracket = '[', char RightBracket = ']',
+	const char* LeftBracket = default_left_bracket,
+	const char* RightBracket = default_right_bracket,
 	char const* Separator = default_array_separator,
 	typename Stream, typename... Printer,
 	typename std::enable_if<is_printable<Stream>::value>::type* = nullptr>
@@ -912,10 +925,14 @@ bool write(const array<T>& a, Stream& out, Writer&&... writer) {
  * 		is defined. Note that since this is a variadic argument, it may be empty.
  * \tparam Stream satisfies is_printable.
  */
-template<typename T, typename Stream, typename... Printer,
+template<typename T,
+	char const* LeftBracket = default_left_bracket,
+	char const* RightBracket = default_right_bracket,
+	char const* Separator = default_array_separator,
+	typename Stream, typename... Printer,
 	typename std::enable_if<is_printable<Stream>::value>::type* = nullptr>
 inline bool print(const array<T>& a, Stream& out, Printer&&... printer) {
-	return print(a.data, a.length, out, std::forward<Printer>(printer)...);
+	return print<T, LeftBracket, RightBracket, Separator>(a.data, a.length, out, std::forward<Printer>(printer)...);
 }
 
 /**
