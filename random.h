@@ -233,7 +233,7 @@ inline bool sample_bernoulli(const V& p) {
  */
 template<typename V>
 inline unsigned int sample_geometric(const V& p) {
-	static auto geom = std::geometric_distribution<unsigned int>(p);
+	auto geom = std::geometric_distribution<unsigned int>(p);
 	return geom(engine);
 }
 
