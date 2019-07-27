@@ -668,11 +668,19 @@ struct default_scribe { };
 
 /* a type trait for detecting whether the function 'print' is defined with a default_scribe argument */
 namespace detail {
+	template<typename T, typename Stream> static auto test_default_read(int) ->
+			decltype(bool(read(std::declval<T&>(), std::declval<Stream&>(), std::declval<default_scribe&>())), std::true_type{});
+	template<typename T, typename Stream> static auto test_default_read(long) -> std::false_type;
+	template<typename T, typename Stream> static auto test_default_write(int) ->
+			decltype(bool(write(std::declval<const T&>(), std::declval<Stream&>(), std::declval<default_scribe&>())), std::true_type{});
+	template<typename T, typename Stream> static auto test_default_write(long) -> std::false_type;
 	template<typename T, typename Stream> static auto test_default_print(int) ->
 			decltype(bool(print(std::declval<const T&>(), std::declval<Stream&>(), std::declval<default_scribe&>())), std::true_type{});
 	template<typename T, typename Stream> static auto test_default_print(long) -> std::false_type;
 }
 
+template<typename T, typename Stream> struct has_default_read : decltype(core::detail::test_default_read<T, Stream>(0)){};
+template<typename T, typename Stream> struct has_default_write : decltype(core::detail::test_default_write<T, Stream>(0)){};
 template<typename T, typename Stream> struct has_default_print : decltype(core::detail::test_default_print<T, Stream>(0)){};
 
 /**
@@ -680,7 +688,7 @@ template<typename T, typename Stream> struct has_default_print : decltype(core::
  * \tparam Stream satisfies is_readable.
  */
 template<typename T, typename Stream,
-	typename std::enable_if<is_readable<Stream>::value>::type* = nullptr>
+	typename std::enable_if<is_readable<Stream>::value && !has_default_read<T, Stream>::value>::type** = nullptr>
 inline bool read(T& value, Stream& in, default_scribe& scribe) {
 	return read(value, in);
 }
@@ -690,7 +698,7 @@ inline bool read(T& value, Stream& in, default_scribe& scribe) {
  * \tparam Stream satisfies is_writeable.
  */
 template<typename T, typename Stream,
-	typename std::enable_if<is_writeable<Stream>::value>::type* = nullptr>
+	typename std::enable_if<is_writeable<Stream>::value && !has_default_write<T, Stream>::value>::type* = nullptr>
 inline bool write(const T& value, Stream& out, default_scribe& scribe) {
 	return write(value, out);
 }
