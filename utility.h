@@ -656,7 +656,7 @@ inline FILE* open_file(const char* filename, const char* mode) {
 template<bool AppendNull>
 inline char* read_file(const char* filename, size_t& bytes_read)
 {
-	FILE* fin = open_file(filename, "r");
+	FILE* fin = open_file(filename, "rb");
 	if (fin == NULL || fseek(fin, 0, SEEK_END) != 0)
 		return NULL;
 
