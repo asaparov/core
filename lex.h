@@ -147,6 +147,35 @@ inline bool parse_uint(const CharArray& token, unsigned int& value) {
 }
 
 /**
+ * Attempts to parse the string given by `token` as an `unsigned int`.
+ * \tparam CharArray a string type that implements two fields: (1) `data` which
+ * 		returns the underlying `char*` array, and (2) `length` which returns
+ * 		the length of the string.
+ * \returns `true` if successful, or `false` if there is insufficient memory or
+ * 		`token` is not an appropriate string representation of a unsigned
+ * 		integer.
+ */
+template<typename CharArray>
+inline bool parse_ulonglong(const CharArray& token, unsigned long long& value) {
+	char* buffer = (char*) malloc(sizeof(char) * (token.length + 1));
+	if (buffer == NULL) {
+		fprintf(stderr, "parse_ulonglong ERROR: Unable to allocate temporary string buffer.\n");
+		return false;
+	}
+	memcpy(buffer, token.data, sizeof(char) * token.length);
+	buffer[token.length] = '\0';
+
+	char* end_ptr;
+	value = strtoull(buffer, &end_ptr, 0);
+	if (*end_ptr != '\0') {
+		free(buffer);
+		return false;
+	}
+	free(buffer);
+	return true;
+}
+
+/**
  * Attempts to parse the string given by `token` as an `int`.
  * \tparam CharArray a string type that implements two fields: (1) `data` which
  * 		returns the underlying `char*` array, and (2) `length` which returns
