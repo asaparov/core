@@ -1496,8 +1496,12 @@ struct pair {
 
 	pair(const K& key, const V& value) : key(key), value(value) { }
 
-	inline bool operator == (const pair<K, V>& other) {
+	inline bool operator == (const pair<K, V>& other) const {
 		return key == other.key && value == other.value;
+	}
+
+	inline bool operator != (const pair<K, V>& other) const {
+		return key != other.key || value != other.value;
 	}
 
 	static inline void move(const pair<K, V>& src, pair<K, V>& dst) {

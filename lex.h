@@ -127,7 +127,7 @@ inline bool parse_float(const CharArray& token, double& value) {
  * 		integer.
  */
 template<typename CharArray>
-inline bool parse_uint(const CharArray& token, unsigned int& value) {
+inline bool parse_uint(const CharArray& token, unsigned int& value, unsigned int base = 0) {
 	char* buffer = (char*) malloc(sizeof(char) * (token.length + 1));
 	if (buffer == NULL) {
 		fprintf(stderr, "parse_uint ERROR: Unable to allocate temporary string buffer.\n");
@@ -137,7 +137,7 @@ inline bool parse_uint(const CharArray& token, unsigned int& value) {
 	buffer[token.length] = '\0';
 
 	char* end_ptr;
-	value = strtoul(buffer, &end_ptr, 0);
+	value = strtoul(buffer, &end_ptr, base);
 	if (*end_ptr != '\0') {
 		free(buffer);
 		return false;
