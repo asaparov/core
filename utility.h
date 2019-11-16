@@ -134,6 +134,22 @@ struct string {
 	}
 
 	/**
+	 * Appends the given string to this string.
+	 */
+	inline void operator += (const string& src) {
+		unsigned int src_length = src.length;
+		char* new_data = (char*) realloc(data, sizeof(char) * (length + src_length));
+		if (new_data == NULL) {
+			fprintf(stderr, "string.operator += ERROR: Unable to expand string.\n");
+			exit(EXIT_FAILURE);
+		}
+
+		data = new_data;
+		memcpy(data + length, src.data, sizeof(char) * src_length);
+		length += src_length;
+	}
+
+	/**
 	 * Returns whether the current string precedes `other` in lexicographical order.
 	 */
 	inline bool operator < (const string& other) const {
