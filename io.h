@@ -314,6 +314,7 @@ struct memory_stream {
 			fprintf(stderr, "memory_stream ERROR: Unable to initialize buffer.\n");
 			exit(EXIT_FAILURE);
 		}
+		shift = {0};
 	}
 
 	/**
@@ -328,6 +329,7 @@ struct memory_stream {
 			exit(EXIT_FAILURE);
 		}
 		memcpy(buffer, buf, sizeof(char) * length);
+		shift = {0};
 	}
 
 	~memory_stream() {
