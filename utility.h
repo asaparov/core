@@ -673,22 +673,40 @@ template<bool AppendNull>
 inline char* read_file(const char* filename, size_t& bytes_read)
 {
 	FILE* fin = open_file(filename, "rb");
-	if (fin == NULL || fseek(fin, 0, SEEK_END) != 0)
+	if (fin == NULL || fseek(fin, 0, SEEK_END) != 0) {
+		if (fin != NULL) {
+#if defined(_WIN32)
+			errno = (int) GetLastError();
+#endif
+			perror("read_file ERROR");
+			fclose(fin);
+		}
 		return NULL;
+	}
 
 	long int filesize = ftell(fin);
-	if (filesize == -1L)
+	if (filesize == -1L) {
+		fprintf(stderr, "read_file ERROR: `ftell` returned error.\n");
+		fclose(fin);
 		return NULL;
+	}
 
-	if (AppendNull) filesize++;
-	char* data = (char*) malloc(sizeof(char) * filesize);
-	if (data == NULL)
+	if (fseek(fin, 0, SEEK_SET) != 0) {
+		fprintf(stderr, "read_file ERROR: `seek` returned error.\n");
+		fclose(fin);
 		return NULL;
-	if (fseek(fin, 0, SEEK_SET) != 0)
+	}
+
+	char* data = (char*) malloc(sizeof(char) * AppendNull ? (filesize + 1) : filesize);
+	if (data == NULL) {
+		fprintf(stderr, "read_file ERROR: Out of memory.\n");
+		fclose(fin);
 		return NULL;
+	}
 	bytes_read = fread(data, sizeof(char), filesize, fin);
+	fclose(fin);
 	if (AppendNull)
-		data[filesize - 1] = '\0';
+		data[filesize] = '\0';
 	return data;
 }
 
