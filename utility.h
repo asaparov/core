@@ -724,19 +724,20 @@ inline bool get_files_in_directory(array<string>& out, const char* directory)
 	size_t required;
 	if (mbstowcs_s(&required, NULL, 0, directory, 0) != 0)
 		return false;
-	wchar_t* dir_prefix = (wchar_t*) malloc(sizeof(wchar_t) * (required + 4));
+	required--; /* ignore the null terminator */
+	wchar_t* dir_prefix = (wchar_t*) malloc(sizeof(wchar_t) * (required + 3));
 	if (dir_prefix == NULL) {
 		fprintf(stderr, "get_files_in_directory ERROR: Out of memory.\n");
 		return false;
 	}
-	if (mbstowcs_s(&required, dir_prefix, required + 4, directory, required) != 0) {
+	if (mbstowcs_s(&required, dir_prefix, required + 3, directory, required) != 0) {
 		free(dir_prefix);
 		return false;
 	}
+	required--; /* ignore the null terminator */
 	dir_prefix[required] = '/';
 	dir_prefix[required + 1] = '*';
-	dir_prefix[required + 2] = ' ';
-	dir_prefix[required + 3] = '\0';
+	dir_prefix[required + 2] = '\0';
 	if ((dir = FindFirstFile(dir_prefix, &file_data)) == INVALID_HANDLE_VALUE) {
 		free(dir_prefix);
 		return false;
@@ -752,11 +753,12 @@ inline bool get_files_in_directory(array<string>& out, const char* directory)
 			return false;
 
 		if (wcstombs_s(&required, NULL, 0, file_data.cFileName, 0) != 0
-		 || !init(out[(unsigned int) out.length], (unsigned int) required + 1))
+		 || !init(out[(unsigned int) out.length], (unsigned int) required))
 			return false;
 		out.length++;
-		if (wcstombs_s(&required, out.last().data, required + 1, file_data.cFileName, wcslen(file_data.cFileName)) != 0)
+		if (wcstombs_s(&required, out.last().data, required, file_data.cFileName, wcslen(file_data.cFileName)) != 0)
 			return false;
+		out.last().length--; /* remove the null terminator */
 	} while (FindNextFile(dir, &file_data));
 
     FindClose(dir);
