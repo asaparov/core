@@ -1330,6 +1330,17 @@ inline bool less_than(const T& first, const T& second, const default_sorter& sor
 }
 
 /**
+ * The pointer_sorter compares items using the `<` operator on the dereferenced
+ * arguments.
+ */
+struct pointer_sorter { };
+
+template<typename T>
+inline bool less_than(const T* first, const T* second, const pointer_sorter& sorter) {
+	return (*first < *second);
+}
+
+/**
  * Deletes consecutive duplicates in the given native `array` with given
  * `length` and returns the new length. Note the deleted elements are not freed.
  * \tparam T is [CopyAssignable](https://en.cppreference.com/w/cpp/named_req/CopyAssignable).

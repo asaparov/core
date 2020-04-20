@@ -697,7 +697,7 @@ inline char* read_file(const char* filename, size_t& bytes_read)
 		return NULL;
 	}
 
-	char* data = (char*) malloc(sizeof(char) * AppendNull ? (filesize + 1) : filesize);
+	char* data = (char*) malloc(sizeof(char) * (AppendNull ? (filesize + 1) : filesize));
 	if (data == NULL) {
 		fprintf(stderr, "read_file ERROR: Out of memory.\n");
 		fclose(fin);
