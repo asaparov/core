@@ -351,18 +351,22 @@ struct array {
 
 	/**
 	 * Calls array::index_of to determine whether `element` exists in this array.
+	 * \tparam Key a generic type for which operator `==` is defined for arguments of type `Key` and `T`.
 	 */
-	inline bool contains(const T& element) const {
+	template<typename Key>
+	inline bool contains(const Key& element) const {
 		return index_of(element) < length;
 	}
 
 	/**
 	 * Performs a linear search of the array to find the smallest index `i`
 	 * such that `element == array::data[i]`.
+	 * \tparam Key a generic type for which operator `==` is defined for arguments of type `Key` and `T`.
 	 * \return an index in `0, 1, ..., array::length - 1` if the element was found.
 	 * \return `array::length` if the element was not found.
 	 */
-	inline unsigned int index_of(const T& element) const {
+	template<typename Key>
+	inline unsigned int index_of(const Key& element) const {
 		return core::index_of(element, data, (unsigned int) length);
 	}
 
