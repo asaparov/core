@@ -85,8 +85,8 @@ namespace core {
 /**
  * Reads `sizeof(T)` bytes from `in` and writes them to the memory referenced
  * by `value`. This function does not perform endianness transformations.
- * \param in the stream given by a [FILE](http://en.cppreference.com/w/c/io) pointer.
- * \tparam T satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental).
+ * \param in the stream given by a [FILE](https://en.cppreference.com/w/c/io) pointer.
+ * \tparam T satisfies [is_fundamental](https://en.cppreference.com/w/cpp/types/is_fundamental).
  */
 template<typename T, typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
 inline bool read(T& value, FILE* in) {
@@ -96,8 +96,8 @@ inline bool read(T& value, FILE* in) {
 /**
  * Reads `length` elements from `in` and writes them to the native array
  * `values`. This function does not perform endianness transformations.
- * \param in the stream given by a [FILE](http://en.cppreference.com/w/c/io) pointer.
- * \tparam T satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental).
+ * \param in the stream given by a [FILE](https://en.cppreference.com/w/c/io) pointer.
+ * \tparam T satisfies [is_fundamental](https://en.cppreference.com/w/cpp/types/is_fundamental).
  */
 template<typename T, typename SizeType, typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
 inline bool read(T* values, FILE* in, SizeType length) {
@@ -107,8 +107,8 @@ inline bool read(T* values, FILE* in, SizeType length) {
 /**
  * Writes `sizeof(T)` bytes to `out` from the memory referenced by `value`.
  * This function does not perform endianness transformations.
- * \param out the stream given by a [FILE](http://en.cppreference.com/w/c/io) pointer.
- * \tparam T satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental).
+ * \param out the stream given by a [FILE](https://en.cppreference.com/w/c/io) pointer.
+ * \tparam T satisfies [is_fundamental](https://en.cppreference.com/w/cpp/types/is_fundamental).
  */
 template<typename T, typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
 inline bool write(const T& value, FILE* out) {
@@ -118,8 +118,8 @@ inline bool write(const T& value, FILE* out) {
 /**
  * Writes `length` elements to `out` from the native array `values`. This
  * function does not perform endianness transformations.
- * \param out the stream given by a [FILE](http://en.cppreference.com/w/c/io) pointer.
- * \tparam T satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental).
+ * \param out the stream given by a [FILE](https://en.cppreference.com/w/c/io) pointer.
+ * \tparam T satisfies [is_fundamental](https://en.cppreference.com/w/cpp/types/is_fundamental).
  */
 template<typename T, typename SizeType, typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
 inline bool write(const T* values, FILE* out, SizeType length) {
@@ -128,7 +128,7 @@ inline bool write(const T* values, FILE* out, SizeType length) {
 
 /**
  * Prints the character `value` to the stream given by the
- * [FILE](http://en.cppreference.com/w/c/io) pointer `out`.
+ * [FILE](https://en.cppreference.com/w/c/io) pointer `out`.
  */
 inline bool print(const char& value, FILE* out) {
 	return (fputc(value, out) != EOF);
@@ -136,15 +136,31 @@ inline bool print(const char& value, FILE* out) {
 
 /**
  * Prints the int `value` to the stream given by the
- * [FILE](http://en.cppreference.com/w/c/io) pointer `out`.
+ * [FILE](https://en.cppreference.com/w/c/io) pointer `out`.
  */
 inline bool print(const int& value, FILE* out) {
 	return (fprintf(out, "%d", value) > 0);
 }
 
 /**
+ * Prints the long `value` to the stream given by the
+ * [FILE](https://en.cppreference.com/w/c/io) pointer `out`.
+ */
+inline bool print(const long& value, FILE* out) {
+	return (fprintf(out, "%ld", value) > 0);
+}
+
+/**
+ * Prints the long long `value` to the stream given by the
+ * [FILE](https://en.cppreference.com/w/c/io) pointer `out`.
+ */
+inline bool print(const long long& value, FILE* out) {
+	return (fprintf(out, "%lld", value) > 0);
+}
+
+/**
  * Prints the unsigned int `value` to the stream given by the
- * [FILE](http://en.cppreference.com/w/c/io) pointer `out`.
+ * [FILE](https://en.cppreference.com/w/c/io) pointer `out`.
  */
 inline bool print(const unsigned int& value, FILE* out) {
 	return (fprintf(out, "%u", value) > 0);
@@ -152,7 +168,7 @@ inline bool print(const unsigned int& value, FILE* out) {
 
 /**
  * Prints the unsigned long `value` to the stream given by the
- * [FILE](http://en.cppreference.com/w/c/io) pointer `out`.
+ * [FILE](https://en.cppreference.com/w/c/io) pointer `out`.
  */
 inline bool print(const unsigned long& value, FILE* out) {
 	return (fprintf(out, "%lu", value) > 0);
@@ -160,7 +176,7 @@ inline bool print(const unsigned long& value, FILE* out) {
 
 /**
  * Prints the unsigned long long `value` to the stream given by the
- * [FILE](http://en.cppreference.com/w/c/io) pointer `out`.
+ * [FILE](https://en.cppreference.com/w/c/io) pointer `out`.
  */
 inline bool print(const unsigned long long& value, FILE* out) {
 	return (fprintf(out, "%llu", value) > 0);
@@ -168,7 +184,7 @@ inline bool print(const unsigned long long& value, FILE* out) {
 
 /**
  * Prints the float `value` to the stream given by the
- * [FILE](http://en.cppreference.com/w/c/io) pointer `out`.
+ * [FILE](https://en.cppreference.com/w/c/io) pointer `out`.
  */
 inline bool print(const float& value, FILE* out) {
 	return (fprintf(out, "%f", (double) value) > 0);
@@ -176,7 +192,7 @@ inline bool print(const float& value, FILE* out) {
 
 /**
  * Prints the double `value` to the stream given by the
- * [FILE](http://en.cppreference.com/w/c/io) pointer `out`.
+ * [FILE](https://en.cppreference.com/w/c/io) pointer `out`.
  */
 inline bool print(const double& value, FILE* out) {
 	return (fprintf(out, "%lf", value) > 0);
@@ -184,7 +200,7 @@ inline bool print(const double& value, FILE* out) {
 
 /**
  * Prints the float `value` to the stream given by the
- * [FILE](http://en.cppreference.com/w/c/io) pointer `out`
+ * [FILE](https://en.cppreference.com/w/c/io) pointer `out`
  * with the given `precision`.
  */
 inline bool print(const float& value, FILE* out, unsigned int precision) {
@@ -193,7 +209,7 @@ inline bool print(const float& value, FILE* out, unsigned int precision) {
 
 /**
  * Prints the double `value` to the stream given by the
- * [FILE](http://en.cppreference.com/w/c/io) pointer `out`
+ * [FILE](https://en.cppreference.com/w/c/io) pointer `out`
  * with the given `precision`.
  */
 inline bool print(const double& value, FILE* out, unsigned int precision) {
@@ -202,7 +218,7 @@ inline bool print(const double& value, FILE* out, unsigned int precision) {
 
 /**
  * Prints the null-terminated C string `value` to the stream given by the
- * [FILE](http://en.cppreference.com/w/c/io) pointer `out`.
+ * [FILE](https://en.cppreference.com/w/c/io) pointer `out`.
  */
 inline bool print(const char* values, FILE* out) {
 	return (fprintf(out, "%s", values) >= 0);
@@ -223,7 +239,7 @@ namespace detail {
 }
 
 /**
- * This type trait is [true_type](http://en.cppreference.com/w/cpp/types/integral_constant)
+ * This type trait is [true_type](https://en.cppreference.com/w/cpp/types/integral_constant)
  * if and only if the function `bool read(integral&, T&)` is defined where
  * `integral` is any integral type.
  */
@@ -244,7 +260,7 @@ template<typename T> struct is_readable : and_type<
 	decltype(core::detail::test_readable<unsigned long long, T>(0))>::type {};
 
 /**
- * This type trait is [true_type](http://en.cppreference.com/w/cpp/types/integral_constant)
+ * This type trait is [true_type](https://en.cppreference.com/w/cpp/types/integral_constant)
  * if and only if the function `bool fwrite(const integral&, T&)` is defined where
  * `integral` is any integral type.
  */
@@ -265,7 +281,7 @@ template<typename T> struct is_writeable : and_type<
 	decltype(core::detail::test_writeable<unsigned long long, T>(0))>::type {};
 
 /**
- * This type trait is [true_type](http://en.cppreference.com/w/cpp/types/integral_constant)
+ * This type trait is [true_type](https://en.cppreference.com/w/cpp/types/integral_constant)
  * if and only if the function `bool print(value, T&)` is defined.
  */
 template<typename T> struct is_printable : and_type<
@@ -383,7 +399,7 @@ struct memory_stream {
  * Reads `sizeof(T)` bytes from `in` and writes them to the memory referenced
  * by `value`. This function does not perform endianness transformations.
  * \param in a memory_stream.
- * \tparam T satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental).
+ * \tparam T satisfies [is_fundamental](https://en.cppreference.com/w/cpp/types/is_fundamental).
  */
 template<typename T, typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
 inline bool read(T& value, memory_stream& in) {
@@ -394,7 +410,7 @@ inline bool read(T& value, memory_stream& in) {
  * Reads `length` elements from `in` and writes them to the native array
  * `values`. This function does not perform endianness transformations.
  * \param in a memory_stream.
- * \tparam T satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental).
+ * \tparam T satisfies [is_fundamental](https://en.cppreference.com/w/cpp/types/is_fundamental).
  */
 template<typename T, typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
 inline bool read(T* values, memory_stream& in, unsigned int length) {
@@ -405,7 +421,7 @@ inline bool read(T* values, memory_stream& in, unsigned int length) {
  * Writes `sizeof(T)` bytes to `out` from the memory referenced by `value`.
  * This function does not perform endianness transformations.
  * \param out a memory_stream.
- * \tparam T satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental).
+ * \tparam T satisfies [is_fundamental](https://en.cppreference.com/w/cpp/types/is_fundamental).
  */
 template<typename T, typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
 inline bool write(const T& value, memory_stream& out) {
@@ -416,7 +432,7 @@ inline bool write(const T& value, memory_stream& out) {
  * Writes `length` elements to `out` from the native array `values`. This
  * function does not perform endianness transformations.
  * \param out a memory_stream.
- * \tparam T satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental).
+ * \tparam T satisfies [is_fundamental](https://en.cppreference.com/w/cpp/types/is_fundamental).
  */
 template<typename T, typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
 inline bool write(const T* values, memory_stream& out, unsigned int length) {
@@ -427,7 +443,7 @@ inline bool write(const T* values, memory_stream& out, unsigned int length) {
  * Writes the array of `n` elements, each with a size of `size` bytes, from the
  * memory address referenced by `src` to the memory_stream `out`.
  * \see This function mirrors the equivalent [fwrite](http://en.cppreference.com/w/cpp/io/c/fwrite)
- * 			for [FILE](http://en.cppreference.com/w/c/io) pointer streams.
+ * 			for [FILE](https://en.cppreference.com/w/c/io) pointer streams.
  * \returns either `n` if the write is successful, or `0` upon failure.
  */
 inline size_t fwrite(const void* src, size_t size, size_t n, memory_stream& out) {
@@ -439,7 +455,7 @@ inline size_t fwrite(const void* src, size_t size, size_t n, memory_stream& out)
 /**
  * Reads and returns a wide character from the given memory_stream.
  * \see This function mirrors the equivalent [fgetwc](http://en.cppreference.com/w/cpp/io/c/fgetwc)
- * 		for [FILE](http://en.cppreference.com/w/c/io) pointer streams.
+ * 		for [FILE](https://en.cppreference.com/w/c/io) pointer streams.
  * \returns on success, the next wide character from the stream.
  * \returns `WEOF` on failure. If the next bytes in the stream cannot be
  * 		interpreted as a wide character, [errno](http://en.cppreference.com/w/c/error/errno)
@@ -461,8 +477,8 @@ inline wint_t fgetwc(memory_stream& out) {
 
 /**
  * Retrieves the current position in the given memory_stream.
- * \see This function mirrors the equivalent [fgetpos](http://en.cppreference.com/w/c/io/fgetpos)
- * 		for [FILE](http://en.cppreference.com/w/c/io) pointer streams.
+ * \see This function mirrors the equivalent [fgetpos](https://en.cppreference.com/w/c/io/fgetpos)
+ * 		for [FILE](https://en.cppreference.com/w/c/io) pointer streams.
  * \returns 0 on success; nonzero value otherwise.
  */
 inline int fgetpos(const memory_stream& stream, fpos_t* pos) {
@@ -477,8 +493,8 @@ inline int fgetpos(const memory_stream& stream, fpos_t* pos) {
 
 /**
  * Sets the current position in the given memory_stream.
- * \see This function mirrors the equivalent [fsetpos](http://en.cppreference.com/w/c/io/fsetpos)
- * 		for [FILE](http://en.cppreference.com/w/c/io) pointer streams.
+ * \see This function mirrors the equivalent [fsetpos](https://en.cppreference.com/w/c/io/fsetpos)
+ * 		for [FILE](https://en.cppreference.com/w/c/io) pointer streams.
  * \returns 0 on success; nonzero value otherwise.
  */
 inline int fsetpos(memory_stream& stream, const fpos_t* pos) {
@@ -495,7 +511,7 @@ inline int fsetpos(memory_stream& stream, const fpos_t* pos) {
 /**
  * Writes the given character `c` to the memory_stream `out`.
  * \see This function mirrors the equivalent [fputc](http://en.cppreference.com/w/cpp/io/c/fputc)
- * 		for [FILE](http://en.cppreference.com/w/c/io) pointer streams.
+ * 		for [FILE](https://en.cppreference.com/w/c/io) pointer streams.
  */
 inline int fputc(int c, memory_stream& out) {
 	char ch = (char) c;
@@ -507,7 +523,7 @@ inline int fputc(int c, memory_stream& out) {
 /**
  * Writes the given null-terminated C string `s` to the memory_stream `out`.
  * \see This function mirrors the equivalent [fputs](http://en.cppreference.com/w/cpp/io/c/fputs)
- * 		for [FILE](http://en.cppreference.com/w/c/io) pointer streams.
+ * 		for [FILE](https://en.cppreference.com/w/c/io) pointer streams.
  */
 inline int fputs(const char* s, memory_stream& out) {
 	if (out.write(s, (unsigned int) strlen(s)))
@@ -519,7 +535,7 @@ inline int fputs(const char* s, memory_stream& out) {
  * Writes the given arguments according to the format string `format` to the
  * memory_stream `out`.
  * \see This function mirrors the equivalent [fprintf](http://en.cppreference.com/w/cpp/io/c/fprintf)
- * 		for [FILE](http://en.cppreference.com/w/c/io) pointer streams.
+ * 		for [FILE](https://en.cppreference.com/w/c/io) pointer streams.
  * \returns the number of bytes written to the stream, or `-1` upon error.
  */
 inline int fprintf(memory_stream& out, const char* format, ...) {
@@ -597,7 +613,7 @@ struct fixed_width_stream {
  * argument in the fixed_width_stream and writes them to the memory referenced
  * by `value`. This function does not perform endianness transformations.
  * \param in a fixed_width_stream.
- * \tparam T satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental).
+ * \tparam T satisfies [is_fundamental](https://en.cppreference.com/w/cpp/types/is_fundamental).
  */
 template<typename T, typename Stream, typename... Args,
 	typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
@@ -613,7 +629,7 @@ inline bool read(T& value, fixed_width_stream<Stream, Args...>& in) {
  * Reads `length` elements from `in` and writes them to the native array
  * `values`. This function does not perform endianness transformations.
  * \param in a fixed_width_stream.
- * \tparam T satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental).
+ * \tparam T satisfies [is_fundamental](https://en.cppreference.com/w/cpp/types/is_fundamental).
  */
 template<typename T, typename Stream, typename SizeType, typename... Args,
 	typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
@@ -628,7 +644,7 @@ inline bool read(T* values, fixed_width_stream<Stream, Args...>& in, SizeType le
  * where `K` is the appropriate template argument in the fixed_width_stream.
  * This function does not perform endianness transformations.
  * \param out a fixed_width_stream.
- * \tparam T satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental).
+ * \tparam T satisfies [is_fundamental](https://en.cppreference.com/w/cpp/types/is_fundamental).
  */
 template<typename T, typename Stream, typename... Args,
 	typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>
@@ -641,7 +657,7 @@ inline bool write(const T& value, fixed_width_stream<Stream, Args...>& out) {
  * Writes `length` elements to `out` from the native array `values`. This
  * function does not perform endianness transformations.
  * \param out a fixed_width_stream.
- * \tparam T satisfies [is_fundamental](http://en.cppreference.com/w/cpp/types/is_fundamental).
+ * \tparam T satisfies [is_fundamental](https://en.cppreference.com/w/cpp/types/is_fundamental).
  */
 template<typename T, typename Stream, typename SizeType, typename... Args,
 	typename std::enable_if<std::is_fundamental<T>::value>::type* = nullptr>

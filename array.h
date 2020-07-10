@@ -112,7 +112,7 @@ inline bool ensure_capacity(T*& data, SizeType& capacity, size_t new_length)
 
 /**
  * Performs a linear search through the array `data` to find the smallest index
- * `i` such that `element == data[i]`.
+ * `i >= start` such that `element == data[i]`.
  * \tparam Key a generic type for which operator `==` is defined for arguments of type `Key` and `T`.
  * \tparam T a generic type for which operator `==` is defined for arguments of type `Key` and `T`.
  * \return an index in `start, start + 1, ..., length - 1` if the element was found.
@@ -368,6 +368,18 @@ struct array {
 	template<typename Key>
 	inline unsigned int index_of(const Key& element) const {
 		return core::index_of(element, data, (unsigned int) length);
+	}
+
+	/**
+	 * Performs a linear search through the array to find the smallest index
+	 * `i >= start` such that `element == array::data[i]`.
+	 * \tparam Key a generic type for which operator `==` is defined for arguments of type `Key` and `T`.
+	 * \return an index in `start, start + 1, ..., length - 1` if the element was found.
+	 * \return `length` if the element was not found.
+	 */
+	template<typename Key, typename SizeType>
+	inline unsigned int index_of(const Key& element, SizeType start) const {
+		return core::index_of(element, data, (unsigned int) length, start);
 	}
 
 	/**

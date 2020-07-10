@@ -204,6 +204,34 @@ inline bool parse_int(const CharArray& token, int& value) {
 }
 
 /**
+ * Attempts to parse the string given by `token` as a `long`.
+ * \tparam CharArray a string type that implements two fields: (1) `data` which
+ * 		returns the underlying `char*` array, and (2) `length` which returns
+ * 		the length of the string.
+ * \returns `true` if successful, or `false` if there is insufficient memory or
+ * 		`token` is not an appropriate string representation of a long.
+ */
+template<typename CharArray>
+inline bool parse_long(const CharArray& token, long& value) {
+	char* buffer = (char*) malloc(sizeof(char) * (token.length + 1));
+	if (buffer == NULL) {
+		fprintf(stderr, "parse_longlong ERROR: Unable to allocate temporary string buffer.\n");
+		return false;
+	}
+	memcpy(buffer, token.data, sizeof(char) * token.length);
+	buffer[token.length] = '\0';
+
+	char* end_ptr;
+	value = strtol(buffer, &end_ptr, 0);
+	if (*end_ptr != '\0') {
+		free(buffer);
+		return false;
+	}
+	free(buffer);
+	return true;
+}
+
+/**
  * Attempts to parse the string given by `token` as an `unsigned int`.
  * \param base if `0`, the numeric base of the integer is detected
  * 		automatically in the same way as [strtoul](http://en.cppreference.com/w/cpp/string/byte/strtoul).
