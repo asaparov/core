@@ -98,17 +98,19 @@ inline constexpr std::size_t array_length(const T (&array)[N]) {
 /**
  * Returns `first` if `first < second`, and returns `second` otherwise.
  */
-template<typename T>
-inline T min(const T& first, const T& second) {
-	return (first < second) ? first : second;
+template<typename A, typename B>
+inline typename std::common_type<A, B>::type min(const A& first, const B& second) {
+	typedef typename std::common_type<A, B>::type C;
+	return (static_cast<C>(first) < static_cast<C>(second)) ? first : second;
 }
 
 /**
  * Returns `second` if `first < second`, and returns `first` otherwise.
  */
-template<typename T>
-inline T max(const T& first, const T& second) {
-	return (first < second) ? second : first;
+template<typename A, typename B>
+inline typename std::common_type<A, B>::type max(const A& first, const B& second) {
+	typedef typename std::common_type<A, B>::type C;
+	return (static_cast<C>(first) < static_cast<C>(second)) ? second : first;
 }
 
 /**
