@@ -2250,7 +2250,7 @@ bool set_subtract(array<T>& dst,
 {
 	if (!dst.ensure_capacity(dst.length + max(first_length, second_length)))
 		return false;
-	set_subtract(dst.data, dst.length, first, first_length, second, second_length);
+	set_subtract<T, BinarySearch>(dst.data, dst.length, first, first_length, second, second_length);
 	return true;
 }
 
@@ -2338,7 +2338,7 @@ void set_subtract(
 template<typename T, bool BinarySearch = false>
 inline void set_subtract(array<T>& first, const array<T>& second)
 {
-	return set_subtract(first.data, first.length, second.data, second.length);
+	return set_subtract<T, BinarySearch>(first.data, first.length, second.data, second.length);
 }
 
 inline void array_test(void)
