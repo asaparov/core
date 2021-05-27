@@ -2250,7 +2250,7 @@ bool set_subtract(array<T>& dst,
 {
 	if (!dst.ensure_capacity(dst.length + max(first_length, second_length)))
 		return false;
-	set_subtract<T, BinarySearch>(dst.data, dst.length, first, first_length, second, second_length);
+	set_subtract<T, decltype(dst.length), BinarySearch>(dst.data, dst.length, first, first_length, second, second_length);
 	return true;
 }
 
