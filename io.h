@@ -577,6 +577,96 @@ inline int fprintf(memory_stream& out, const char* format, ...) {
 }
 
 /**
+ * Prints the character `value` to the stream given by the memory_stream `out`.
+ */
+inline bool print(const char& value, memory_stream& out) {
+	return (fputc(value, out) != EOF);
+}
+
+/**
+ * Prints the int `value` to the stream given by the memory_stream `out`.
+ */
+inline bool print(const int& value, memory_stream& out) {
+	return (fprintf(out, "%d", value) > 0);
+}
+
+/**
+ * Prints the long `value` to the stream given by the memory_stream `out`.
+ */
+inline bool print(const long& value, memory_stream& out) {
+	return (fprintf(out, "%ld", value) > 0);
+}
+
+/**
+ * Prints the long long `value` to the stream given by the memory_stream `out`.
+ */
+inline bool print(const long long& value, memory_stream& out) {
+	return (fprintf(out, "%lld", value) > 0);
+}
+
+/**
+ * Prints the unsigned int `value` to the stream given by the memory_stream
+ * `out`.
+ */
+inline bool print(const unsigned int& value, memory_stream& out) {
+	return (fprintf(out, "%u", value) > 0);
+}
+
+/**
+ * Prints the unsigned long `value` to the stream given by the memory_stream
+ * `out`.
+ */
+inline bool print(const unsigned long& value, memory_stream& out) {
+	return (fprintf(out, "%lu", value) > 0);
+}
+
+/**
+ * Prints the unsigned long long `value` to the stream given by the
+ * memory_stream `out`.
+ */
+inline bool print(const unsigned long long& value, memory_stream& out) {
+	return (fprintf(out, "%llu", value) > 0);
+}
+
+/**
+ * Prints the float `value` to the stream given by the memory_stream `out`.
+ */
+inline bool print(const float& value, memory_stream& out) {
+	return (fprintf(out, "%f", (double) value) > 0);
+}
+
+/**
+ * Prints the double `value` to the stream given by the memory_stream `out`.
+ */
+inline bool print(const double& value, memory_stream& out) {
+	return (fprintf(out, "%lf", value) > 0);
+}
+
+/**
+ * Prints the float `value` to the stream given by the memory_stream `out` with
+ * the given `precision`.
+ */
+inline bool print(const float& value, memory_stream& out, unsigned int precision) {
+	return (fprintf(out, "%.*f", precision, (double) value) > 0);
+}
+
+/**
+ * Prints the double `value` to the stream given by the memory_stream `out`
+ * with the given `precision`.
+ */
+inline bool print(const double& value, memory_stream& out, unsigned int precision) {
+	return (fprintf(out, "%.*lf", precision, value) > 0);
+}
+
+/**
+ * Prints the null-terminated C string `value` to the stream given by the
+ * memory_stream `out`.
+ */
+inline bool print(const char* values, memory_stream& out) {
+	return (fprintf(out, "%s", values) >= 0);
+}
+
+/**
  * A stream wrapper for reading/writing integral types as fixed-width integral
  * values. This is useful for cross-platform readability and writeability.
  */
