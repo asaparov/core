@@ -318,7 +318,7 @@ inline bool write(const string& s, Stream& out) {
  * Prints the string `s` to `stream`.
  */
 template<typename Stream>
-inline bool print(const string& s, Stream& stream) {
+inline bool print(const string& s, Stream&& stream) {
 	return fwrite(s.data, sizeof(char), s.length, stream) == s.length;
 }
 
@@ -503,7 +503,7 @@ inline bool write(const sequence& item, Stream& out) {
 
 template<typename Stream, typename... Printer>
 inline bool print(const sequence& item,
-	Stream& out, Printer&&... printer)
+	Stream&& out, Printer&&... printer)
 {
 	if (item.length == 0) return true;
 	bool success = print(item[0], out, std::forward<Printer>(printer)...);
@@ -606,7 +606,7 @@ inline bool print_special_string_helper(unsigned int item, Stream& out, Printer&
  * 		argument, it may be empty.
  */
 template<typename Stream, typename... Printer>
-inline bool print(unsigned int item, Stream& out, const string_map_scribe& printer, Printer&&... string_printer)
+inline bool print(unsigned int item, Stream&& out, const string_map_scribe& printer, Printer&&... string_printer)
 {
 	if (item < printer.length)
 		return print(*printer.map[item], out, std::forward<Printer>(string_printer)...);

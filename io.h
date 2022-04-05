@@ -77,7 +77,7 @@
 
 #include <stdarg.h>
 #include <cstdint>
-#include <cwchar>
+#include <uchar.h>
 #include <errno.h>
 
 namespace core {
@@ -312,8 +312,6 @@ struct memory_stream {
 	 */
 	char* buffer;
 
-	std::mbstate_t shift; /* for wide character operations (such as reading UTF8 symbols using fgetwc) */
-
 	/**
 	 * The default constructor does not initialize any fields.
 	 */
@@ -330,7 +328,6 @@ struct memory_stream {
 			fprintf(stderr, "memory_stream ERROR: Unable to initialize buffer.\n");
 			exit(EXIT_FAILURE);
 		}
-		shift = {0};
 	}
 
 	/**
@@ -345,7 +342,6 @@ struct memory_stream {
 			exit(EXIT_FAILURE);
 		}
 		memcpy(buffer, buf, sizeof(char) * length);
-		shift = {0};
 	}
 
 	~memory_stream() {
@@ -440,6 +436,25 @@ inline bool write(const T* values, memory_stream& out, unsigned int length) {
 }
 
 /**
+ * Reads an array of `n` elements, each with a size of `size` bytes, from the
+ * memory_stream `in`, to the memory address referenced by `dst`.
+ * \see This function mirrors the equivalent [fread](http://en.cppreference.com/w/cpp/io/c/fread)
+ * 			for [FILE](https://en.cppreference.com/w/c/io) pointer streams.
+ * \returns the number of elements read.
+ */
+inline size_t fread(void* dst, size_t size, size_t count, memory_stream& in) {
+	size_t num_bytes = size * count;
+	if (in.position + num_bytes > in.length) {
+		count = (in.length - in.position) / size;
+		num_bytes = size * count;
+	}
+
+	memcpy(dst, in.buffer + in.position, num_bytes);
+	in.position += num_bytes;
+	return count;
+}
+
+/**
  * Writes the array of `n` elements, each with a size of `size` bytes, from the
  * memory address referenced by `src` to the memory_stream `out`.
  * \see This function mirrors the equivalent [fwrite](http://en.cppreference.com/w/cpp/io/c/fwrite)
@@ -453,29 +468,6 @@ inline size_t fwrite(const void* src, size_t size, size_t n, memory_stream& out)
 }
 
 /**
- * Reads and returns a wide character from the given memory_stream.
- * \see This function mirrors the equivalent [fgetwc](http://en.cppreference.com/w/cpp/io/c/fgetwc)
- * 		for [FILE](https://en.cppreference.com/w/c/io) pointer streams.
- * \returns on success, the next wide character from the stream.
- * \returns `WEOF` on failure. If the next bytes in the stream cannot be
- * 		interpreted as a wide character, [errno](http://en.cppreference.com/w/c/error/errno)
- * 		is set to [EILSEQ](http://en.cppreference.com/w/c/error/errno_macros).
- */
-inline wint_t fgetwc(memory_stream& out) {
-	wchar_t c;
-	size_t length = mbrtowc(&c, out.buffer + out.position, out.length - out.position, &out.shift);
-	if (length == 0) {
-		return WEOF;
-	} else if (length == static_cast<std::size_t>(-1) || length == static_cast<std::size_t>(-2)) {
-		errno = EILSEQ;
-		return WEOF;
-	}
-
-	out.position += (unsigned int) length;
-	return c;
-}
-
-/**
  * Retrieves the current position in the given memory_stream.
  * \see This function mirrors the equivalent [fgetpos](https://en.cppreference.com/w/c/io/fgetpos)
  * 		for [FILE](https://en.cppreference.com/w/c/io) pointer streams.
@@ -486,7 +478,6 @@ inline int fgetpos(const memory_stream& stream, fpos_t* pos) {
 	*pos = (fpos_t) stream.position;
 #else /* on Windows or Linux */
 	pos->__pos = stream.position;
-	pos->__state = stream.shift;
 #endif
 	return 0;
 }
@@ -500,10 +491,8 @@ inline int fgetpos(const memory_stream& stream, fpos_t* pos) {
 inline int fsetpos(memory_stream& stream, const fpos_t* pos) {
 #if defined(_WIN32) || defined(__APPLE__) /* on Windows or Mac */
 	stream.position = (unsigned int) *pos;
-	memset(&stream.shift, 0, sizeof(stream.shift));
 #else /* on Windows or Linux */
 	stream.position = pos->__pos;
-	stream.shift = pos->__state;
 #endif
 	return 0;
 }
@@ -664,6 +653,107 @@ inline bool print(const double& value, memory_stream& out, unsigned int precisio
  */
 inline bool print(const char* values, memory_stream& out) {
 	return (fprintf(out, "%s", values) >= 0);
+}
+
+/**
+ * A stream wrapper for reading UTF-32 characters from an underlying multibyte
+ * stream (such as UTF-8).
+ */
+template<unsigned int BufferSize, typename Stream>
+struct buffered_stream {
+	Stream& underlying_stream;
+	char buffer[BufferSize];
+	unsigned int position;
+	unsigned int length;
+	mbstate_t shift;
+
+	buffered_stream(Stream& underlying_stream) : underlying_stream(underlying_stream), position(0) {
+		shift = {0};
+		fill_buffer();
+	}
+
+	inline void fill_buffer() {
+		length = fread(buffer, sizeof(char), BufferSize, underlying_stream);
+	}
+
+	/**
+	 * Returns the next UTF-32 character (as a `char32_t`) from the stream. If
+	 * there are no further bytes in the underlying stream or an error occurred,
+	 * `static_cast<char32_t>(-1)` is returned.
+	 */
+	char32_t fgetc32() {
+		static_assert(BufferSize >= MB_LEN_MAX, "BufferSize must be at least MB_LEN_MAX");
+
+		while (true)
+		{
+			if (length == 0)
+				return static_cast<char32_t>(-1);
+
+			char32_t c;
+			size_t status = mbrtoc32(&c, buffer + position, sizeof(char) * (length - position), &shift);
+			if (status == static_cast<size_t>(-1)) {
+				/* encoding error occurred */
+				return static_cast<char32_t>(-1);
+			} else if (status == static_cast<size_t>(-2)) {
+				/* the character is valid but incomplete */
+				position = 0;
+				fill_buffer();
+				continue;
+			} else {
+				if (status == 0)
+					position += 1;
+				else position += status;
+				if (position == length) {
+					position = 0;
+					fill_buffer();
+				}
+				return c;
+			}
+		}
+	}
+};
+
+template<unsigned int BufferSize>
+struct buffered_stream<BufferSize, memory_stream> {
+	memory_stream& underlying_stream;
+	mbstate_t shift;
+
+	buffered_stream(memory_stream& underlying_stream) : underlying_stream(underlying_stream) {
+		shift = {0};
+	}
+
+	/**
+	 * Returns the next UTF-32 character (as a `char32_t`) from the stream. If
+	 * there are no further bytes in the underlying stream or an error occurred,
+	 * `static_cast<char32_t>(-1)` is returned.
+	 */
+	char32_t fgetc32() {
+		if (underlying_stream.position == underlying_stream.length)
+			return static_cast<char32_t>(-1);
+
+		char32_t c;
+		size_t status = mbrtoc32(&c, underlying_stream.buffer + underlying_stream.position, sizeof(char) * (underlying_stream.length - underlying_stream.position), &shift);
+		if (status == static_cast<size_t>(-1) || status == static_cast<size_t>(-2)) {
+			/* encoding error occurred or the character is incomplete */
+			return static_cast<char32_t>(-1);
+		}
+
+		if (status == 0)
+			underlying_stream.position += 1;
+		else underlying_stream.position += status;
+		return c;
+	}
+};
+
+/**
+ * Returns the next UTF-32 character (as a `char32_t`) from the buffered_stream
+ * `input`. If there are no further bytes in the underlying stream or an error
+ * occurred, `static_cast<char32_t>(-1)` is returned.
+ */
+template<unsigned int BufferSize, typename Stream>
+inline char32_t fgetc32(buffered_stream<BufferSize, Stream>& input)
+{
+	return input.fgetc32();
 }
 
 /**
@@ -1047,7 +1137,7 @@ template<typename T,
 	char const* Separator = default_array_separator,
 	typename Stream, typename... Printer,
 	typename std::enable_if<is_printable<Stream>::value>::type* = nullptr>
-inline bool print(const array<T>& a, Stream& out, Printer&&... printer) {
+inline bool print(const array<T>& a, Stream&& out, Printer&&... printer) {
 	return print<T, LeftBracket, RightBracket, Separator>(a.data, a.length, out, std::forward<Printer>(printer)...);
 }
 

@@ -2020,7 +2020,7 @@ struct array_map {
 	/**
 	 * Constructs the hash_map with the given `initial_capacity`.
 	 */
-	array_map(unsigned int initial_capacity) : size(0) {
+	array_map(size_t initial_capacity) : size(0) {
 		if (!initialize(initial_capacity)) {
 			fprintf(stderr, "array_map ERROR: Error during initialization.\n");
 			exit(EXIT_FAILURE);
@@ -2277,7 +2277,7 @@ struct array_map {
 	static inline void free(array_map<K, V>& map) { map.free(); }
 
 private:
-	inline bool initialize(unsigned int initial_capacity) {
+	inline bool initialize(size_t initial_capacity) {
 		capacity = initial_capacity;
 		keys = (K*) malloc(sizeof(K) * capacity);
 		if (keys == NULL) {
@@ -2299,14 +2299,14 @@ private:
 	}
 
 	template<typename A, typename B>
-	friend bool array_map_init(array_map<A, B>&, unsigned int);
+	friend bool array_map_init(array_map<A, B>&, size_t);
 };
 
 /**
  * Initializes the array_map `map` with the given `initial_capacity`.
  */
 template<typename K, typename V>
-bool array_map_init(array_map<K, V>& map, unsigned int initial_capacity) {
+bool array_map_init(array_map<K, V>& map, size_t initial_capacity) {
 	map.size = 0;
 	return map.initialize(initial_capacity);
 }

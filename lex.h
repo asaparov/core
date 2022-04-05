@@ -16,6 +16,7 @@
 #include "utility.h"
 
 #include <ctype.h>
+#include <uchar.h>
 
 
 namespace core {
@@ -223,6 +224,34 @@ inline bool parse_long(const CharArray& token, long& value) {
 
 	char* end_ptr;
 	value = strtol(buffer, &end_ptr, 0);
+	if (*end_ptr != '\0') {
+		free(buffer);
+		return false;
+	}
+	free(buffer);
+	return true;
+}
+
+/**
+ * Attempts to parse the string given by `token` as a `long`.
+ * \tparam CharArray a string type that implements two fields: (1) `data` which
+ * 		returns the underlying `char*` array, and (2) `length` which returns
+ * 		the length of the string.
+ * \returns `true` if successful, or `false` if there is insufficient memory or
+ * 		`token` is not an appropriate string representation of a long.
+ */
+template<typename CharArray>
+inline bool parse_long_long(const CharArray& token, long long& value) {
+	char* buffer = (char*)malloc(sizeof(char) * (token.length + 1));
+	if (buffer == NULL) {
+		fprintf(stderr, "parse_longlong ERROR: Unable to allocate temporary string buffer.\n");
+		return false;
+	}
+	memcpy(buffer, token.data, sizeof(char) * token.length);
+	buffer[token.length] = '\0';
+
+	char* end_ptr;
+	value = strtoll(buffer, &end_ptr, 0);
 	if (*end_ptr != '\0') {
 		free(buffer);
 		return false;
@@ -449,12 +478,12 @@ bool expect_token(const array<lexical_token<TokenType>>& tokens,
  * represents a multi-byte string.
  */
 inline bool append_to_token(
-	array<char>& token, wint_t next, std::mbstate_t& shift)
+	array<char>& token, char32_t next, mbstate_t& shift)
 {
 	if (!token.ensure_capacity(token.length + MB_CUR_MAX))
 		return false;
-	size_t written = wcrtomb(token.data + token.length, next, &shift);
-	if (written == static_cast<std::size_t>(-1))
+	size_t written = c32rtomb(token.data + token.length, next, &shift);
+	if (written == static_cast<size_t>(-1))
 		return false;
 	token.length += written;
 	return true;
