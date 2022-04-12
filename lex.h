@@ -17,7 +17,7 @@
 
 #include <ctype.h>
 
-#if !defined(__APPLE__)
+#if defined(__APPLE__)
 #include <cwchar>
 #if !defined(char32_t)
 typedef uint32_t char32_t;
