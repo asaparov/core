@@ -19,9 +19,6 @@
 
 #if defined(__APPLE__)
 #include <cwchar>
-#if !defined(char32_t)
-typedef uint32_t char32_t;
-#endif
 
 inline size_t c32rtomb(char* s, char32_t wc, mbstate_t* ps) {
 	return wcrtomb(s, (wchar_t) wc, ps);
