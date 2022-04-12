@@ -77,8 +77,25 @@
 
 #include <stdarg.h>
 #include <cstdint>
-#include <uchar.h>
 #include <errno.h>
+
+#if !defined(__APPLE__)
+#include <cwchar>
+#if !defined(char32_t)
+typedef uint32_t char32_t;
+#endif
+
+inline size_t mbrtoc32(char32_t* wc, const char* s, size_t n, mbstate_t* ps) {
+	wchar_t c;
+	size_t result = mbrtowc(&c, s, n, ps);
+	if (result < (size_t) -2 && wc != nullptr)
+		*wc = c;
+	return result;
+}
+
+#else /* __APPLE__ */
+#include <cuchar>
+#endif /* __APPLE__ */
 
 namespace core {
 
