@@ -1555,6 +1555,11 @@ struct pair {
 		core::move(src.value, dst.value);
 	}
 
+	static inline void swap(pair<K, V>& first, pair<K, V>& second) {
+		core::swap(first.key, second.key);
+		core::swap(first.value, second.value);
+	}
+
 	static inline unsigned int hash(const pair<K, V>& pair) {
 		return hasher<K>::hash(pair.key) + hasher<V>::hash(pair.value);
 	}
