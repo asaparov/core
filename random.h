@@ -125,7 +125,7 @@ inline unsigned int select_categorical(
 	unsigned int selected_table = length - 1;
 	for (unsigned int j = 0; j < length; j++) {
 		aggregator += probability[j];
-		if (random < aggregator) {
+		if (random <= aggregator) {
 			selected_table = j;
 			break;
 		}
